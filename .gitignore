@@ -1,0 +1,4 @@
+AST/*.png
+data
+TestData
+__pycache__
