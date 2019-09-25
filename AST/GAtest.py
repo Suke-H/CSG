@@ -21,18 +21,36 @@ def InitializeRandomPeople(n):
 
     return People_list
 
+#Scoreの大きい順に並び変え
 def Rank(People_list):
-    Score_list = []
+    score_list = []
 
     #リストにスコアを記録していく
     for p in People:
-        Score_list.append(p.Score())
+        score_list.append(p.Score())
 
     #Scoreの大きい順からインデックスを読み上げ、リストに記録
-    index_list = sorted(range(len(Score_list)), reverse=True, key=lambda k: Score_list[k])
+    index_list = sorted(range(len(score_list)), reverse=True, key=lambda k: score_list[k])
 
     #index_listの順にPeople_listを並べる
     return np.array(People_list)[index_list]
+
+def DrawTree(tree):
+    #木をスキャン
+    node_num_list, node_key_list, L, edge_list = tree.Scan()
+
+    # formatはpngを指定(他にはPDF, PNG, SVGなどが指定可)
+    G = Digraph(format='png')
+    G.attr('node', shape='circle')
+
+    #二分木作成
+    for num, key in zip(node_num_list, node_key_list):
+        G.node(str(num), key)
+
+    for i, j in edge_list:
+        G.edge(str(i), str(j))
+
+    G.render("GAtest")
 
 
 #10人作ってみる
@@ -49,3 +67,6 @@ new_list = []
 for p in sorted_People:
     new_list.append(p.Score())
 print(new_list)
+
+#一位を描画
+DrawTree(sorted_People[0])

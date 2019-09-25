@@ -4,45 +4,9 @@ from scipy.optimize import minimize
 import open3d
 from loadOBJ import loadOBJ
 from OBB import buildOBB
+from PreProcess import PreProcess
 
-import sys
-import time
-import codecs
-
-#球：０、平面：１、円柱：２
-fig = 0
-
-
-#################点群と法線準備#########################
-
-#objファイルをnumpyで読み込んで,open3dのデータ形式に
-points, _, _, _ = loadOBJ("../data/pumpkin.obj")
-pointcloud = open3d.PointCloud()
-pointcloud.points = open3d.Vector3dVector(points)
-
-# 法線推定
-open3d.estimate_normals(
-    pointcloud,
-    search_param = open3d.KDTreeSearchParamHybrid(
-    radius = 5, max_nn = 30))
-
-# 法線の方向を視点ベースでそろえる
-open3d.orient_normals_towards_camera_location(
-    pointcloud,
-    camera_location = np.array([0., 10., 10.], dtype="float64"))
-
-#nキーで法線表示
-#open3d.draw_geometries([pointcloud])
-
-#法線,点群をnumpyへ変換
-normals = np.asarray(pointcloud.normals)
-
-###########OBB生成###############################################
-#(最適化の条件にも使いたい)
-_, _, length = buildOBB(points)
-print("OBB_length: {}".format(length))
-
-##########図形の関数##########################################
+##########図形の設定##########################################
 class sphere:
 	def __init__(self, p):
 		self.p = p
@@ -82,9 +46,11 @@ class plane:
 		else:
 			return normal / np.linalg.norm(normal)
 
+
 #####最適化する関数#################################################
 ###epsilon, alphaは調整が必要
-def func(p, epsilon=0.7*length, alpha=np.pi/12):
+def func(p, points, normals, fig, epsilon=0.7, alpha=np.pi/12):
+	#print(points.shape, normals.shape, fig, epsilon, alpha)
 	E = 0
 
 	if fig == 0:
@@ -93,7 +59,6 @@ def func(p, epsilon=0.7*length, alpha=np.pi/12):
 		figure = plane(p)
 
 	for xi, ni in zip(points, normals):
-
         #pと平面の距離(あとで二乗する)
 		dist = figure.f_rep(xi) / epsilon
         #平面の法線とpの法線との偏差:0と180度がmax(これも二乗する)
@@ -110,14 +75,17 @@ def func(p, epsilon=0.7*length, alpha=np.pi/12):
 	return -E
 
 #####最適化#####################################################
-def figOptimize(fig_type=0):
-	global fig
-	fig = fig_type
+def figOptimize(path, fig=0):
 
-	####条件。eqは=, ineqは>=####
+	#点群,法線,OBBの対角線の長さ  取得
+	points, normals, length = PreProcess(path)
+
+	####条件###################
+	# eqは=, ineqは>=
+
 	#球の条件
 	if fig == 0:
-		print("球の条件")
+		print("球")
 		cons = (
         {'type': 'ineq',
          'fun' : lambda p: np.array([p[3]])}
@@ -127,7 +95,7 @@ def figOptimize(fig_type=0):
 
 	#平面の条件
 	if fig == 1:
-		print("平面の条件")
+		print("平面")
 		cons = (
         {'type': 'eq',
          'fun' : lambda p: np.array([p[0]**2 + p[1]**2 + p[2]**2 - 1])}
@@ -135,10 +103,12 @@ def figOptimize(fig_type=0):
 
 		p_0 = [1/np.sqrt(3), 1/np.sqrt(3), 1/np.sqrt(3), 0.1]
 
+	#定数(数？)
+	arg = (points, normals, fig, 0.7*length, np.pi/12)
 
     #最適化
-	result = minimize(func, p_0, constraints=cons, method='SLSQP')
+	result = minimize(func, p_0, args=arg, constraints=cons, method='SLSQP')
 
 	return result
 
-print(figOptimize(0))
+print(figOptimize("../data/pumpkin.obj"))

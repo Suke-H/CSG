@@ -7,12 +7,17 @@ class AST:
     def __init__(self, depth):
         #木の深さ
         self.depth = depth
+        #最大要素数(深さ"depth"での完全二分木の要素数)
+        self.max_size = 2**self.depth-1
+        #ASTの配列
+        self.ast = np.asarray([None for i in range(self.max_size)])
+
+        ###この2つはできれば使わないようにするプログラムにしたい##
         #要素数
         self.size = 0
         #葉の候補数
         self.leaf_num = 1
-        #ASTの配列
-        self.ast = np.asarray([None for i in range(2**self.depth-1)])
+
         #後置記法リスト
         self.postorder_list = np.asarray([])
 
@@ -111,8 +116,6 @@ class AST:
                 edge_list = np.append(edge_list, np.asarray([[abs((num-1)//2), num]]), axis=0)
 
         return node_num_list, node_key_list, leaf_list, edge_list
-
-
     
 
     #####スコアメソッド#########################################
