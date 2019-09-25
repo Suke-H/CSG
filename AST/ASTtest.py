@@ -18,7 +18,7 @@ class AST:
 
     #####AST生成用メソッド#########################################
 
-    def InitializeRandomPopulation(self, num, leaf_list):
+    def InitializeRandomPerson(self, num, leaf_list):
         #key_list作成...ランダムにand,or,notを入れたもの
         key_list = np.asarray([])
         for i in range(num):
@@ -210,13 +210,14 @@ class AST:
 
         return score
 
+"""
 count = score = 0
 
 while(score != 8):
 
     test = AST(15)
     leaf_list = np.asarray(["X1", "X2", "X3"])
-    node_num_list, node_key_list, L, edge_list = test.InitializeRandomPopulation(5 , leaf_list)
+    node_num_list, node_key_list, L, edge_list = test.InitializeRandomPerson(5 , leaf_list)
     #print(node_num_list, node_key_list, L, edge_list)
     score = test.Score()
     print(count, score)
@@ -236,9 +237,10 @@ for i, j in edge_list:
 
 G.render("ASTtest2")
 
-"""
+
 print(test.size, test.leaf_num)
 node_num_list, node_key_list, leaf_list, edge_list = test.scan()
 print(node_num_list, node_key_list, leaf_list, edge_list)
 print(test.ast[0:30])
+
 """

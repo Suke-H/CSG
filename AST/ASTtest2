@@ -1,24 +1,24 @@
 digraph {
 	node [shape=circle]
-	0.0 [label=or]
-	1.0 [label=and]
-	2.0 [label=and]
-	3.0 [label=X2]
-	4.0 [label=and]
-	5.0 [label=X3]
-	6.0 [label=X1]
-	9.0 [label=or]
-	10.0 [label=X2]
-	19.0 [label=X1]
-	20.0 [label=X3]
+	0.0 [label=and]
+	1.0 [label=or]
+	2.0 [label=or]
+	3.0 [label=X1]
+	4.0 [label=X3]
+	5.0 [label=X2]
+	6.0 [label=and]
+	13.0 [label=or]
+	14.0 [label=X3]
+	27.0 [label=X1]
+	28.0 [label=X2]
 	0.0 -> 1.0
 	0.0 -> 2.0
 	1.0 -> 3.0
 	1.0 -> 4.0
 	2.0 -> 5.0
 	2.0 -> 6.0
-	4.0 -> 9.0
-	4.0 -> 10.0
-	9.0 -> 19.0
-	9.0 -> 20.0
+	6.0 -> 13.0
+	6.0 -> 14.0
+	13.0 -> 27.0
+	13.0 -> 28.0
 }
