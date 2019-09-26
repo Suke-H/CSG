@@ -1,38 +1,47 @@
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
 import numpy as np
 
+class sphere:
+    def __init__(self, p):
+        self.p = p
 
-def sphere(theta, phi, r=1, r0=[0,0,0]):
-    x = r * np.cos(theta) * np.cos(phi) + r0[0]
-    y = r * np.cos(theta) * np.sin(phi) + r0[1]
-    z = r * np.sin(theta) + r0[2]
-
-    return x, y, z
-
-def plane(X, Y, n, d):
-    return (d - n[0]*X - n[1]*Y)/n[2]
+	#球の関数:f = r - √(x-x0)^2+(y-y0)^2+(z-z0)^2
+    def f_rep(self, xi):
+        r0 = np.asarray([self.p[i] for i in range(3)])
+        return self.p[3] - np.linalg.norm(xi-r0)
+        
+    def f_rep_draw(self, x, y, z):
+        return self.p[3] - np.sqrt((x-self.p[0])**2 + (y-self.p[1])**2 + (z-self.p[2])**2)
 
 
-"""
-theta = np.arange(-np.pi, np.pi, 0.01)
-phi = np.arange(-2*np.pi, 2*np.pi, 0.02)
+	#球の法線:[2(x-x0), 2(y-y0), 2(z-z0)]※単位ベクトルを返す
+    def normal(self, xi):
+        normal = np.asarray([2*(self.p[i]-xi[i]) for i in range(3)])
+        
+        if np.linalg.norm(normal) == 0:
+			#print("Warning: 法線ベクトルがゼロです！")
+            return normal
+        
+        else:
+            return normal / np.linalg.norm(normal)
 
-#二次元メッシュにしないといけない
-T, P = np.meshgrid(theta, phi)
+class plane:
+    def __init__(self, p):
+        self.p = p
 
-r0 = [1,2,3]
+	#平面の関数:f = d - (n1*x+n2*y+n3*z)
+    def f_rep(self, xi):
+        n = np.asarray([self.p[i] for i in range(3)])
+        return self.p[3] - np.dot(n, xi)
+        
+    def f_rep_draw(self, x, y, z):
+        return self.p[3] - (self.p[0]*x + self.p[1]*y + self.p[2]*z) 
 
-X, Y, Z = sphere(T, P, 2, r0)
-
-fig = plt.figure()
-ax = Axes3D(fig)
-
-ax.set_xlabel("x")
-ax.set_ylabel("y")
-ax.set_zlabel("z")
-
-ax.scatter(r0[0] , r0[1] , r0[2],  color='green')
-ax.plot_wireframe(X, Y, Z)
-plt.show()
-"""
+	#平面の法線:[n1, n2, n3]#すでに単位ベクトルだが一応#xiいらない
+    def normal(self, xi):
+        normal = np.asarray([self.p[i] for i in range(3)])
+        if np.linalg.norm(normal) == 0:
+			#print("Warning: 法線ベクトルがゼロです！")
+            return normal
+            
+        else:
+            return normal / np.linalg.norm(normal)

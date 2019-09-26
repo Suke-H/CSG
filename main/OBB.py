@@ -68,28 +68,9 @@ def buildOBB(points):
 
     return max_xyz_point, min_xyz_point, l
 
-"""
-def drawOBB(max_p, min_p):
-    #max_p = [smax, tmax, umax]
+def buildAABB(points):
+    #なんとこれで終わり
+    max_p = np.amax(points, axis=0)
+    min_p = np.amin(points, axis=0)
 
-    #直積：[smax, smin]*[tmax, tmin]*[umax, umin] <=> 頂点
-    s_axis = np.vstack((max_p[0], min_p[0]))
-    t_axis = np.vstack((max_p[1], min_p[1]))
-    u_axis = np.vstack((max_p[2], min_p[2]))
-
-    products = np.asarray(list(itertools.product(s_axis, t_axis, u_axis)))
-    vertices = np.sum(products, axis=1)
-
-    #各頂点に対応するビットの列を作成
-    bit = np.asarray([1, -1])
-    vertices_bit = np.asarray(list(itertools.product(bit, bit, bit)))
-
-    #頂点同士のハミング距離が1なら辺を引く
-    for i, v1 in enumerate(vertices_bit):
-        for j, v2 in enumerate(vertices_bit):
-            if np.count_nonzero(v1-v2) == 1:
-                line(vertices[i], vertices[j])
-        
-
-    return vertices
-"""
+    return max_p, min_p

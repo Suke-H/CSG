@@ -6,7 +6,15 @@ def plot_implicit(fn, bbox=(-2.5,2.5)):
     ''' 陰関数のグラフ描画
     fn  ...fn(x, y, z) = 0の左辺
     bbox ..x, y, zの範囲'''
-    xmin, xmax, ymin, ymax, zmin, zmax = bbox*3
+    #xmin, xmax, ymin, ymax, zmin, zmax = bbox*3
+    max_p = np.array([ 36.948601 , 39.3424  , -75.815994])*4
+    min_p = np.array([ -42.1959   , -37.601898 ,  -144.2155  ])*4
+
+    print(max_p, min_p)
+
+    xmax, ymax, zmax = max_p[0], max_p[1], max_p[2]
+    xmin, ymin, zmin = min_p[0], min_p[1], min_p[2]
+
     #グラフの枠を作っていく
     fig = plt.figure()
     ax1 = fig.add_subplot(221, projection='3d')
@@ -55,6 +63,9 @@ def plot_implicit(fn, bbox=(-2.5,2.5)):
     plt.show()
 
 def norm_sphere(x, y, z):
-    return x+y+z-1
+    return 1-np.sqrt(x**2+y**2+z**2)
 
-plot_implicit(norm_sphere)
+def sh(x, y, z):
+        return 37.29042182 - np.sqrt((x+3.10735045)**2 + (y-1.81359686)**2 + (z+110.75950196)**2)
+
+plot_implicit(sh)

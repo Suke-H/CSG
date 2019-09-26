@@ -4,26 +4,13 @@ from mpl_toolkits.mplot3d import Axes3D
 import itertools
 
 from loadOBJ import loadOBJ
-#from normal import normalEstimate
-from OBB import buildOBB
-from figure import sphere, plane
+from OBB import buildOBB, buildAABB
+import figure as F
+from optimize import figOptimize
 
 #seabornはimportしておくだけでもmatplotlibのグラフがきれいになる
 import seaborn as sns
 sns.set_style("darkgrid")
-
-####最初にグラフの初期化？をする#############################
-
-#グラフの枠を作っていく
-fig = plt.figure()
-ax = Axes3D(fig)
-
-#軸にラベルを付けたいときは書く
-ax.set_xlabel("X")
-ax.set_ylabel("Y")
-ax.set_zlabel("Z")
-
-#############################################################
 
 #点群データなどをx, y, zに分解する
 
@@ -49,8 +36,8 @@ def line(a, b):
     return x, y, z
 
 #点群を入力としてOBBを描画する
-def OBBViewer(vertices):
-    #OBB作成
+def OBBViewer(ax, vertices):
+    #OBB生成
     max_p, min_p, _ = buildOBB(vertices)
 
     #直積：[smax, smin]*[tmax, tmin]*[umax, umin] <=> 頂点
@@ -86,34 +73,56 @@ def OBBViewer(vertices):
     ax.plot(Xmin,Ymin,Zmin,marker="X",linestyle="None",color="blue")
     ax.plot([vert_max[0], vert_min[0]],[vert_max[1], vert_min[1]],[vert_max[2], vert_min[2]],marker="o",linestyle="None",color="black")
 
-#球描画
-def SphereViewer(p):
-    #媒介変数
-    theta = np.arange(-np.pi, np.pi, 0.01)
-    phi = np.arange(-2*np.pi, 2*np.pi, 0.02)
+#陰関数のグラフ描画
+#fn  ...fn(x, y, z) = 0の左辺
+def plot_implicit(ax, fn, vertices):
+    #AABB生成
+    max_p, min_p = buildAABB(vertices)
+    print(max_p, min_p)
+    max_p = max_p*4
+    min_p = min_p*4
 
-    #二次元メッシュにしないといけない
-    T, P = np.meshgrid(theta, phi)
+    xmax, ymax, zmax = max_p[0], max_p[1], max_p[2]
+    xmin, ymin, zmin = min_p[0], min_p[1], min_p[2]
 
-    #パラメータ
-    r0=[p[0], p[1], p[2]]       #中心座標
-    r=p[3]                      #半径
+    A = np.linspace(xmin, xmax, 100) #等高線の刻み
+    B = np.linspace(xmin, xmax, 15) #等高線の数
+    A1,A2 = np.meshgrid(A,A) # grid on which the contour is plotted
 
-    #球の方程式
-    x = r * np.cos(T) * np.cos(P) + r0[0]
-    y = r * np.cos(T) * np.sin(P) + r0[1]
-    z = r * np.sin(T) + r0[2]
+    for z in B: #XY平面に等高線をプロット
+        X,Y = A1,A2
+        Z = fn(X,Y,z)
+        cset = ax.contour(X, Y, Z+z, [z], zdir='z')
+        # [z] defines the only level to plot for this contour for this value of z
 
-    #描画
-    ax.scatter(r0[0] , r0[1] , r0[2],  color='yellow')
-    ax.plot_wireframe(x, y, z,  linestyle='dotted', linewidth=0.3)
+    for y in B: #XZ平面に等高線をプロット
+        X,Z = A1,A2
+        Y = fn(X,y,Z)
+        cset = ax.contour(X, Y+y, Z, [y], zdir='y')
 
-#平面描画
-def PlaneViewer(p):
-    print(p)
-    
+    for x in B: #YZ平面に等高線をプロット
+        Y,Z = A1,A2
+        X = fn(x,Y,Z)
+        cset = ax.contour(X+x, Y, Z, [x], zdir='x')
 
-def OptiViewer(path, result, fig_type):
+    #AABBの範囲に制限
+    ax.set_zlim3d(zmin,zmax)
+    ax.set_xlim3d(xmin,xmax)
+    ax.set_ylim3d(ymin,ymax)
+
+def sh(x, y, z):
+        return 37.29042182 - np.sqrt((x+3.10735045)**2 + (y-1.81359686)**2 + (z+110.75950196)**2)
+
+#mainの部分
+def OptiViewer(path, fig_type):
+    #グラフの枠を作っていく
+    fig = plt.figure()
+    ax = Axes3D(fig)
+
+    #軸にラベルを付けたいときは書く
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
 
     #点群をobjファイルから読み込み
     vertices, X, Y, Z = loadOBJ(path)
@@ -122,17 +131,22 @@ def OptiViewer(path, result, fig_type):
     ax.plot(X,Y,Z,marker=".",linestyle='None',color="green")
 
     #OBBを描画
-    OBBViewer(vertices)
+    OBBViewer(ax, vertices)
 
-    #最適化された図形を描画
-    if fig_type == 0:
-        SphereViewer(result)
+    ###最適化###
+    result = figOptimize(path, fig_type)
+    print(result.x)
 
-    elif fig_type == 1:
-        PlaneViewer(result)
+    #fig_typeに応じた図形を選択
+    if fig_type==0:
+        figure = F.sphere(result.x)
+    elif fig_type==1:
+        figure = F.plane(result.x)
 
+    #最適化された図形を描画figure.f_rep_draw
+    plot_implicit(ax, sh, vertices)
 
     #最後に.show()を書いてグラフ表示
     plt.show()
 
-OptiViewer("../data/pumpkin.obj", [-3.10735045,    1.81359686, -110.75950196, 37.29042182], 0)
+OptiViewer("../data/pumpkin.obj", 0)
