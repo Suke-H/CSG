@@ -35,10 +35,7 @@ def func(p, points, normals, fig, epsilon=0.7, alpha=np.pi/12):
 	return -E
 
 #####最適化#####################################################
-def figOptimize(path, fig):
-
-	#点群,法線,OBBの対角線の長さ  取得
-	points, normals, length = PreProcess(path)
+def figOptimize(points, normals, length, fig):
 
 	####条件###################
 	# eqは=, ineqは>=

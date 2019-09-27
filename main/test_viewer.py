@@ -7,6 +7,7 @@ from loadOBJ import loadOBJ
 from OBB import buildOBB, buildAABB
 import figure as F
 from optimize import figOptimize
+from PreProcess import PreProcess
 
 #seabornはimportしておくだけでもmatplotlibのグラフがきれいになる
 import seaborn as sns
@@ -36,9 +37,9 @@ def line(a, b):
     return x, y, z
 
 #点群を入力としてOBBを描画する
-def OBBViewer(ax, vertices):
+def OBBViewer(ax, points):
     #OBB生成
-    max_p, min_p, _ = buildOBB(vertices)
+    max_p, min_p, _ = buildOBB(points)
 
     #直積：[smax, smin]*[tmax, tmin]*[umax, umin] <=> 頂点
     s_axis = np.vstack((max_p[0], min_p[0]))
@@ -75,18 +76,25 @@ def OBBViewer(ax, vertices):
 
 #陰関数のグラフ描画
 #fn  ...fn(x, y, z) = 0の左辺
-def plot_implicit(ax, fn, vertices):
+#AABB_size ...AABBの各辺をAABB_size倍する
+def plot_implicit(ax, fn, points, AABB_size=2, contorNum=30):
     #AABB生成
-    max_p, min_p = buildAABB(vertices)
+    max_p, min_p = buildAABB(points)
     print(max_p, min_p)
-    max_p = max_p*4
-    min_p = min_p*4
 
     xmax, ymax, zmax = max_p[0], max_p[1], max_p[2]
     xmin, ymin, zmin = min_p[0], min_p[1], min_p[2]
 
+    #AABBの各辺がAABB_size倍されるように頂点を変更
+    xmax = xmax + (xmax - xmin)/2 * AABB_size
+    xmin = xmin - (xmax - xmin)/2 * AABB_size
+    ymax = ymax + (ymax - ymin)/2 * AABB_size
+    ymin = ymin - (ymax - ymin)/2 * AABB_size
+    zmax = zmax + (zmax - zmin)/2 * AABB_size
+    zmin = zmin - (zmax - zmin)/2 * AABB_size
+
     A = np.linspace(xmin, xmax, 100) #等高線の刻み
-    B = np.linspace(xmin, xmax, 15) #等高線の数
+    B = np.linspace(xmin, xmax, contorNum) #等高線の数
     A1,A2 = np.meshgrid(A,A) # grid on which the contour is plotted
 
     for z in B: #XY平面に等高線をプロット
@@ -105,7 +113,7 @@ def plot_implicit(ax, fn, vertices):
         X = fn(x,Y,Z)
         cset = ax.contour(X+x, Y, Z, [x], zdir='x')
 
-    #AABBの範囲に制限
+    #(拡大した)AABBの範囲に制限
     ax.set_zlim3d(zmin,zmax)
     ax.set_xlim3d(xmin,xmax)
     ax.set_ylim3d(ymin,ymax)
@@ -124,17 +132,17 @@ def OptiViewer(path, fig_type):
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
 
-    #点群をobjファイルから読み込み
-    vertices, X, Y, Z = loadOBJ(path)
+    #点群,法線,OBBの対角線の長さ  取得
+    points, X, Y, Z, normals, length = PreProcess(path)
 
     #点群を描画
     ax.plot(X,Y,Z,marker=".",linestyle='None',color="green")
 
     #OBBを描画
-    OBBViewer(ax, vertices)
+    OBBViewer(ax, points)
 
     ###最適化###
-    result = figOptimize(path, fig_type)
+    result = figOptimize(points, normals, length, fig_type)
     print(result.x)
 
     #fig_typeに応じた図形を選択
@@ -143,8 +151,8 @@ def OptiViewer(path, fig_type):
     elif fig_type==1:
         figure = F.plane(result.x)
 
-    #最適化された図形を描画figure.f_rep_draw
-    plot_implicit(ax, sh, vertices)
+    #最適化された図形を描画
+    plot_implicit(ax, figure.f_rep_draw, points, AABB_size=1.5, contorNum=45)
 
     #最後に.show()を書いてグラフ表示
     plt.show()
