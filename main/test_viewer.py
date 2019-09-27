@@ -77,7 +77,7 @@ def OBBViewer(ax, points):
 #陰関数のグラフ描画
 #fn  ...fn(x, y, z) = 0の左辺
 #AABB_size ...AABBの各辺をAABB_size倍する
-def plot_implicit(ax, fn, points, AABB_size=2, contorNum=30):
+def plot_implicit(ax, fn, points, AABB_size=2, contourNum=30):
     #AABB生成
     max_p, min_p = buildAABB(points)
     print(max_p, min_p)
@@ -93,25 +93,30 @@ def plot_implicit(ax, fn, points, AABB_size=2, contorNum=30):
     zmax = zmax + (zmax - zmin)/2 * AABB_size
     zmin = zmin - (zmax - zmin)/2 * AABB_size
 
-    A = np.linspace(xmin, xmax, 100) #等高線の刻み
-    B = np.linspace(xmin, xmax, contorNum) #等高線の数
-    A1,A2 = np.meshgrid(A,A) # grid on which the contour is plotted
+    A_X = np.linspace(xmin, xmax, 100) # resolution of the contour
+    A_Y = np.linspace(ymin, ymax, 100)
+    A_Z = np.linspace(zmin, zmax, 100)
+    B_X = np.linspace(xmin, xmax, 15) # number of slices
+    B_Y = np.linspace(ymin, ymax, 15)
+    B_Z = np.linspace(zmin, zmax, 15)
+    #A1,A2 = np.meshgrid(A,A) # grid on which the contour is plotted
 
-    for z in B: #XY平面に等高線をプロット
-        X,Y = A1,A2
+    for z in B_Z: # plot contours in the XY plane
+        X,Y = np.meshgrid(A_X, A_Y)
         Z = fn(X,Y,z)
         cset = ax.contour(X, Y, Z+z, [z], zdir='z')
         # [z] defines the only level to plot for this contour for this value of z
 
-    for y in B: #XZ平面に等高線をプロット
-        X,Z = A1,A2
+    for y in B_Y: # plot contours in the XZ plane
+        X,Z = np.meshgrid(A_X, A_Z)
         Y = fn(X,y,Z)
         cset = ax.contour(X, Y+y, Z, [y], zdir='y')
 
-    for x in B: #YZ平面に等高線をプロット
-        Y,Z = A1,A2
+    for x in B_X: # plot contours in the YZ plane
+        Y,Z = np.meshgrid(A_Y, A_Z)
         X = fn(x,Y,Z)
         cset = ax.contour(X+x, Y, Z, [x], zdir='x')
+
 
     #(拡大した)AABBの範囲に制限
     ax.set_zlim3d(zmin,zmax)
@@ -152,7 +157,7 @@ def OptiViewer(path, fig_type):
         figure = F.plane(result.x)
 
     #最適化された図形を描画
-    plot_implicit(ax, figure.f_rep_draw, points, AABB_size=1.5, contorNum=45)
+    plot_implicit(ax, figure.f_rep_draw, points, AABB_size=1, contourNum=15)
 
     #最後に.show()を書いてグラフ表示
     plt.show()
