@@ -105,17 +105,20 @@ def plot_implicit(ax, fn, points, AABB_size=2, contourNum=30):
         X,Y = np.meshgrid(A_X, A_Y)
         Z = fn(X,Y,z)
         cset = ax.contour(X, Y, Z+z, [z], zdir='z')
+        print(cset)
         # [z] defines the only level to plot for this contour for this value of z
 
     for y in B_Y: # plot contours in the XZ plane
         X,Z = np.meshgrid(A_X, A_Z)
         Y = fn(X,y,Z)
         cset = ax.contour(X, Y+y, Z, [y], zdir='y')
+        print(cset)
 
     for x in B_X: # plot contours in the YZ plane
         Y,Z = np.meshgrid(A_Y, A_Z)
         X = fn(x,Y,Z)
         cset = ax.contour(X+x, Y, Z, [x], zdir='x')
+        print(cset)
 
 
     #(拡大した)AABBの範囲に制限

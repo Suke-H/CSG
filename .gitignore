@@ -2,3 +2,4 @@ AST/*.png
 data
 TestData
 __pycache__
+main/txt
