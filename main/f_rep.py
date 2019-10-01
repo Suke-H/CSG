@@ -6,7 +6,8 @@ def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
     ''' 陰関数のグラフ描画
     fn  ...fn(x, y, z) = 0の左辺
     bbox ..x, y, zの範囲'''
-    #xmin, xmax, ymin, ymax, zmin, zmax = bbox*3
+    xmin, xmax, ymin, ymax, zmin, zmax = bbox*3
+    """
     max_p = np.array([ 36.948601 , 39.3424  , -75.815994])
     min_p = np.array([ -42.1959   , -37.601898 ,  -144.2155  ])
 
@@ -20,6 +21,7 @@ def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
     ymin = ymin - (ymax - ymin)/2 * AABB_size
     zmax = zmax + (zmax - zmin)/2 * AABB_size
     zmin = zmin - (zmax - zmin)/2 * AABB_size
+    """
 
     #グラフの枠を作っていく
     fig = plt.figure()
@@ -27,6 +29,22 @@ def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
     ax2 = fig.add_subplot(222, projection='3d')
     ax3 = fig.add_subplot(223, projection='3d')
     ax4 = fig.add_subplot(224, projection='3d')
+
+    #軸にラベルを付けたいときは書く
+    ax1.set_xlabel("X")
+    ax1.set_ylabel("Y")
+    ax1.set_zlabel("Z")
+    ax2.set_xlabel("X")
+    ax2.set_ylabel("Y")
+    ax2.set_zlabel("Z")
+    ax3.set_xlabel("X")
+    ax3.set_ylabel("Y")
+    ax3.set_zlabel("Z")
+    ax4.set_xlabel("X")
+    ax4.set_ylabel("Y")
+    ax4.set_zlabel("Z")
+
+
     A_X = np.linspace(xmin, xmax, 100) # resolution of the contour
     A_Y = np.linspace(ymin, ymax, 100)
     A_Z = np.linspace(zmin, zmax, 100)
@@ -34,23 +52,43 @@ def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
     B_Y = np.linspace(ymin, ymax, 15)
     B_Z = np.linspace(zmin, zmax, 15)
     #A1,A2 = np.meshgrid(A,A) # grid on which the contour is plotted
-
+    
     for z in B_Z: # plot contours in the XY plane
         X,Y = np.meshgrid(A_X, A_Y)
         Z = fn(X,Y,z)
+
+        #Zがnp配列じゃない<=>fnはzだけの関数
+        #そのときはここでは描画できないためbreak
+        if type(Z) is not np.ndarray:
+            print("警告:fnはzだけの関数")
+            break
+
         cset = ax1.contour(X, Y, Z+z, [z], zdir='z')
         cset = ax2.contour(X, Y, Z+z, [z], zdir='z')
         # [z] defines the only level to plot for this contour for this value of z
+    
 
     for y in B_Y: # plot contours in the XZ plane
         X,Z = np.meshgrid(A_X, A_Z)
         Y = fn(X,y,Z)
+
+        #Yがnp配列じゃない<=>fnはyだけの関数
+        if type(Y) is not np.ndarray:
+            print("警告:fnはyだけの関数")
+            break
+
         cset = ax1.contour(X, Y+y, Z, [y], zdir='y')
         cset = ax3.contour(X, Y+y, Z, [y], zdir='y')
 
     for x in B_Z: # plot contours in the YZ plane
         Y,Z = np.meshgrid(A_Y, A_Z)
         X = fn(x,Y,Z)
+
+        #Xがnp配列じゃない<=>fnはxだけの関数
+        if type(X) is not np.ndarray:
+            print("警告:fnはxだけの関数")
+            break
+
         cset = ax1.contour(X+x, Y, Z, [x], zdir='x')
         cset = ax4.contour(X+x, Y, Z, [x], zdir='x')
 
@@ -78,4 +116,21 @@ def norm_sphere(x, y, z):
 def sh(x, y, z):
         return 37.29042182 - np.sqrt((x+3.10735045)**2 + (y-1.81359686)**2 + (z+110.75950196)**2)
 
-plot_implicit(sh)
+def p_z0(x, y, z):
+    return z
+def p_z1(x, y, z):
+    return z-1
+def p_x0(x, y, z):
+    return x
+def p_x1(x, y, z):
+    return x-1
+def p_y0(x, y, z):
+    return y
+def p_y1(x, y, z):
+    return y-1
+
+def AND(x, y, z):
+    return p_z0(x,y,z)+p_x0(x,y,z)-np.sqrt(p_z0(x,y,z)**2+p_x0(x,y,z)**2)
+
+
+plot_implicit(AND)

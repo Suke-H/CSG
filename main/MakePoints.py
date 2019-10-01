@@ -14,6 +14,12 @@ def MakePoints(fn, bbox=(-2.5,2.5), AABB_size=2):
     ax2 = fig.add_subplot(222, projection='3d')
     ax3 = fig.add_subplot(223, projection='3d')
     ax4 = fig.add_subplot(224, projection='3d')
+
+    #軸にラベルを付けたいときは書く
+    ax1.set_xlabel("X")
+    ax1.set_ylabel("Y")
+    ax1.set_zlabel("Z")
+
     A_X = np.linspace(xmin, xmax, 100) # resolution of the contour
     A_Y = np.linspace(ymin, ymax, 100)
     A_Z = np.linspace(zmin, zmax, 100)
