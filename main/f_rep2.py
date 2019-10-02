@@ -48,9 +48,9 @@ def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
     A_X = np.linspace(xmin, xmax, 100) # resolution of the contour
     A_Y = np.linspace(ymin, ymax, 100)
     A_Z = np.linspace(zmin, zmax, 100)
-    B_X = np.linspace(xmin, xmax, 30) # number of slices
-    B_Y = np.linspace(ymin, ymax, 30)
-    B_Z = np.linspace(zmin, zmax, 30)
+    B_X = np.linspace(xmin, xmax, 10) # number of slices
+    B_Y = np.linspace(ymin, ymax, 10)
+    B_Z = np.linspace(zmin, zmax, 10)
     #A1,A2 = np.meshgrid(A,A) # grid on which the contour is plotted
     
     for z in B_Z: # plot contours in the XY plane
@@ -91,6 +91,7 @@ def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
 
         cset = ax1.contour(X+x, Y, Z, [x], zdir='x')
         cset = ax4.contour(X+x, Y, Z, [x], zdir='x')
+        print(cset)
 
     # must set plot limits because the contour will likely extend
     # way beyond the displayed level.  Otherwise matplotlib extends the plot limits
@@ -109,6 +110,32 @@ def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
     ax4.set_ylim3d(ymin,ymax)
 
     plt.show()
+
+def MakePoints(fn, bbox=(-2.5,2.5), epsilon=0.03):
+    xmin, xmax, ymin, ymax, zmin, zmax = bbox*3
+    x = np.linspace(xmin, xmax, 100)
+    y = np.linspace(ymin, ymax, 100)
+    z = np.linspace(zmin, zmax, 100)
+
+    #格子点X, Y, Zをすべてfnにぶち込んでみる
+    X, Y, Z = np.meshgrid(x, y, z)
+    W = fn(X, Y, Z)
+
+    #Ｗが0に近いインデックスを取り出す
+    index = np.where(np.abs(W)<=epsilon)
+    index = [(index[0][i], index[1][i], index[2][i]) for i in range(len(index[0]))]
+
+    #格子点から境界面(fn(x,y,z)=0)に近い要素のインデックスを取り出す
+    pointX = [X[i] for i in index]
+    pointY = [Y[i] for i in index]
+    pointZ = [Z[i] for i in index]
+
+    #pointsも作成    
+    points = np.stack([pointX, pointY, pointZ])
+    points = points.T
+
+    return points, pointX, pointY, pointZ
+
 
 def norm_sphere(x, y, z):
     return 1-np.sqrt(x**2+y**2+z**2)
@@ -132,6 +159,20 @@ def p_y1(x, y, z):
 def AND(f1, f2):
     return lambda x,y,z: f1(x,y,z) + f2(x,y,z) - np.sqrt(f1(x,y,z)**2 + f2(x,y,z)**2)
 
-cube = AND(AND(AND(AND(AND(p_z0, p_z1), p_x0), p_x1), p_y0), p_y1)
+cube = AND(AND(AND(AND(p_z0, p_z1), p_x0), p_x1), p_y0)
 
-plot_implicit(cube)
+"""
+#plot_implicit(cube)
+points, X, Y, Z = MakePoints(norm_sphere)
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+#軸にラベルを付けたいときは書く
+ax.set_xlabel("X")
+ax.set_ylabel("Y")
+ax.set_zlabel("Z")
+ax.plot([0], [0], [0], marker="o",linestyle="None",color="blue")
+ax.plot(X, Y, Z, marker=".",linestyle="None",color="orange")
+plt.show()
+"""
