@@ -104,18 +104,18 @@ def plot_implicit(ax, fn, points, AABB_size=2, contourNum=30):
     for z in B_Z: # plot contours in the XY plane
         X,Y = np.meshgrid(A_X, A_Y)
         Z = fn(X,Y,z)
-        cset = ax.contour(X, Y, Z+z, [z], zdir='z')
+        ax.contour(X, Y, Z+z, [z], zdir='z')
         # [z] defines the only level to plot for this contour for this value of z
 
     for y in B_Y: # plot contours in the XZ plane
         X,Z = np.meshgrid(A_X, A_Z)
         Y = fn(X,y,Z)
-        cset = ax.contour(X, Y+y, Z, [y], zdir='y')
+        ax.contour(X, Y+y, Z, [y], zdir='y')
 
     for x in B_X: # plot contours in the YZ plane
         Y,Z = np.meshgrid(A_Y, A_Z)
         X = fn(x,Y,Z)
-        cset = ax.contour(X+x, Y, Z, [x], zdir='x')
+        ax.contour(X+x, Y, Z, [x], zdir='x')
 
     #(拡大した)AABBの範囲に制限
     ax.set_zlim3d(zmin,zmax)
@@ -137,10 +137,10 @@ def OptiViewer(path, fig_type):
     ax.set_zlabel("Z")
 
     #点群,法線,OBBの対角線の長さ  取得
-    #points, X, Y, Z, normals, length = PreProcess(path)
+    points, X, Y, Z, normals, length = PreProcess(path)
     
     #自作の点群を扱いたいときはこちら
-    points, X, Y, Z, normals, length = PreProcess2()
+    #points, X, Y, Z, normals, length = PreProcess2()
 
     print("points:{}".format(points.shape[0]))
 
@@ -171,4 +171,4 @@ def OptiViewer(path, fig_type):
     #最後に.show()を書いてグラフ表示
     plt.show()
 
-OptiViewer("../data/pumpkin.obj", 1)
+OptiViewer("../data/purin_case v1.obj", 0)
