@@ -81,7 +81,6 @@ def OBBViewer(ax, points):
 def plot_implicit(ax, fn, points, AABB_size=2, contourNum=30):
     #AABB生成
     max_p, min_p = buildAABB(points)
-    print(max_p, min_p)
 
     xmax, ymax, zmax = max_p[0], max_p[1], max_p[2]
     xmin, ymin, zmin = min_p[0], min_p[1], min_p[2]
@@ -106,21 +105,17 @@ def plot_implicit(ax, fn, points, AABB_size=2, contourNum=30):
         X,Y = np.meshgrid(A_X, A_Y)
         Z = fn(X,Y,z)
         cset = ax.contour(X, Y, Z+z, [z], zdir='z')
-        print(cset)
         # [z] defines the only level to plot for this contour for this value of z
 
     for y in B_Y: # plot contours in the XZ plane
         X,Z = np.meshgrid(A_X, A_Z)
         Y = fn(X,y,Z)
         cset = ax.contour(X, Y+y, Z, [y], zdir='y')
-        print(cset)
 
     for x in B_X: # plot contours in the YZ plane
         Y,Z = np.meshgrid(A_Y, A_Z)
         X = fn(x,Y,Z)
         cset = ax.contour(X+x, Y, Z, [x], zdir='x')
-        print(cset)
-
 
     #(拡大した)AABBの範囲に制限
     ax.set_zlim3d(zmin,zmax)
@@ -143,10 +138,19 @@ def OptiViewer(path, fig_type):
 
     #点群,法線,OBBの対角線の長さ  取得
     #points, X, Y, Z, normals, length = PreProcess(path)
+    
+    #自作の点群を扱いたいときはこちら
     points, X, Y, Z, normals, length = PreProcess2()
+
+    print("points:{}".format(points.shape[0]))
 
     #点群を描画
     ax.plot(X,Y,Z,marker=".",linestyle='None',color="green")
+
+    U, V, W = Disassemble(normals)
+
+    #法線を描画
+    #ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
 
     #OBBを描画
     OBBViewer(ax, points)

@@ -1,6 +1,7 @@
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 
 def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
     ''' 陰関数のグラフ描画
@@ -111,11 +112,11 @@ def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
 
     plt.show()
 
-def MakePoints(fn, bbox=(-2.5,2.5), epsilon=0.03):
+def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.25, epsilon=0.05):
     xmin, xmax, ymin, ymax, zmin, zmax = bbox*3
-    x = np.linspace(xmin, xmax, 100)
-    y = np.linspace(ymin, ymax, 100)
-    z = np.linspace(zmin, zmax, 100)
+    x = np.linspace(xmin, xmax, grid_step)
+    y = np.linspace(ymin, ymax, grid_step)
+    z = np.linspace(zmin, zmax, grid_step)
 
     #格子点X, Y, Zをすべてfnにぶち込んでみる
     X, Y, Z = np.meshgrid(x, y, z)
@@ -125,14 +126,19 @@ def MakePoints(fn, bbox=(-2.5,2.5), epsilon=0.03):
     index = np.where(np.abs(W)<=epsilon)
     index = [(index[0][i], index[1][i], index[2][i]) for i in range(len(index[0]))]
 
+    #ランダムにダウンサンプリング
+    index = random.sample(index, int(len(index)*down_rate//1))
+
     #格子点から境界面(fn(x,y,z)=0)に近い要素のインデックスを取り出す
     pointX = [X[i] for i in index]
     pointY = [Y[i] for i in index]
     pointZ = [Z[i] for i in index]
 
-    #pointsも作成    
+    #points作成([[x1,y1,z1],[x2,y2,z2],...])    
     points = np.stack([pointX, pointY, pointZ])
     points = points.T
+
+
 
     return points, pointX, pointY, pointZ
 
@@ -159,7 +165,7 @@ def p_y1(x, y, z):
 def AND(f1, f2):
     return lambda x,y,z: f1(x,y,z) + f2(x,y,z) - np.sqrt(f1(x,y,z)**2 + f2(x,y,z)**2)
 
-cube = AND(AND(AND(AND(p_z0, p_z1), p_x0), p_x1), p_y0)
+cube = AND(AND(AND(AND(AND(p_z0, p_z1), p_x0), p_x1), p_y0), p_y1)
 
 """
 #plot_implicit(cube)
