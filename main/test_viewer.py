@@ -9,6 +9,7 @@ import figure as F
 from optimize import figOptimize
 from PreProcess import PreProcess
 from PreProcess2 import PreProcess2
+from optimize2 import figOptimize2
 
 #seabornはimportしておくだけでもmatplotlibのグラフがきれいになる
 import seaborn as sns
@@ -156,7 +157,8 @@ def OptiViewer(path, fig_type):
     OBBViewer(ax, points)
 
     ###最適化###
-    result = figOptimize(points, normals, length, fig_type)
+    #result = figOptimize(points, normals, length, fig_type)
+    result = figOptimize2(X, Y, Z, normals, length, fig_type)
     print(result.x)
 
     #fig_typeに応じた図形を選択
