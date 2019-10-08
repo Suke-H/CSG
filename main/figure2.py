@@ -82,7 +82,7 @@ class AND:
         
         return norm(normal)
 
-
+"""
 #f = z
 p1 = plane([0, 0, 1, 0])
 #f = 1.5 - z
@@ -99,6 +99,20 @@ X = np.array([1,0,0,0])
 Y = np.array([0,1,0,0])
 Z = np.array([0,0,1,0])
 
-#print(p3.normal(0,0,1))
+print(p3.f_rep(X,Y,Z))
 print(p3.normal(X,Y,Z))
 
+epsilon=0.7
+alpha=np.pi/12
+normals = np.array([[1,0,0],[1,0,0],[0,1,0],[0,0,1]])
+
+#dist[i] = i番目の点からの垂直距離
+dist = p3.f_rep(X,Y,Z) / epsilon
+#theta[i] = i番目の点の法線とnormalとの偏差(角度の差)
+theta = np.arccos(np.abs(np.sum(p3.normal(X,Y,Z) * normals, axis=1))) / alpha
+print("distance: {}".format(dist))
+print("theta: {}".format(theta))
+
+E = np.sum(np.exp(-dist**2) + np.exp(-theta**2))
+print(E)
+"""

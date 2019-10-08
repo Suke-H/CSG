@@ -18,13 +18,15 @@ def func(p, X, Y, Z, normals, fig, epsilon=0.7, alpha=np.pi/12):
 	elif fig == 1:
 		figure = F.plane(p)
 
-    #pと平面の距離(あとで二乗する)
-	dist = figure.f_rep(X, Y, Z) / epsilon
-    #平面の法線とpの法線との偏差:0と180度がmax(これも二乗する)
-	theta = np.arccos(abs(np.dot(figure.normal(X, Y, Z), normals) / alpha
-	
-	E = np.exp(-dist**2) + np.exp(-theta**2)
+    #dist[i] = i番目の点からの垂直距離
+	dist = figure.f_rep(X,Y,Z) / epsilon
 
+	#theta[i] = i番目の点の法線とnormalとの偏差(角度の差)
+	#np.sumは各点の法線同士の内積を取っている
+	#[nf_1*ni_1, nf_2*ni_2, ...]みたいな感じ
+	theta = np.arccos(np.abs(np.sum(figure.normal(X,Y,Z) * normals, axis=1))) / alpha
+
+	E = np.sum(np.exp(-dist**2) + np.exp(-theta**2))
 
     #最小化なのでマイナスを返す
 	return -E

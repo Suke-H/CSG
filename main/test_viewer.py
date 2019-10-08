@@ -159,7 +159,7 @@ def OptiViewer(path, fig_type):
     ###最適化###
     #result = figOptimize(points, normals, length, fig_type)
     result = figOptimize2(X, Y, Z, normals, length, fig_type)
-    print(result.x)
+    print(result)
 
     #fig_typeに応じた図形を選択
     if fig_type==0:
@@ -173,4 +173,4 @@ def OptiViewer(path, fig_type):
     #最後に.show()を書いてグラフ表示
     plt.show()
 
-OptiViewer("../data/purin_case v1.obj", 0)
+OptiViewer("../data/pumpkin.obj", 0)
