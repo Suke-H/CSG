@@ -7,6 +7,8 @@ from OBB import buildOBB
 from PreProcess import PreProcess
 import figure2 as F
 
+E_list = []
+
 #####最適化する関数#################################################
 ###epsilon, alphaは調整が必要
 def func(p, X, Y, Z, normals, fig, epsilon=0.7, alpha=np.pi/12):
@@ -26,9 +28,12 @@ def func(p, X, Y, Z, normals, fig, epsilon=0.7, alpha=np.pi/12):
 	#[nf_1*ni_1, nf_2*ni_2, ...]みたいな感じ
 	theta = np.arccos(np.abs(np.sum(figure.normal(X,Y,Z) * normals, axis=1))) / alpha
 
-	E = np.sum(np.exp(-dist**2) + np.exp(-theta**2))
+	E = np.sum(np.exp(-dist**2)*0 +  np.exp(-theta**2))
 
     #最小化なのでマイナスを返す
+
+	global E_list
+	E_list.append(E)
 	return -E
 
 #####最適化#####################################################
@@ -58,10 +63,13 @@ def figOptimize2(X, Y, Z, normals, length, fig):
 		p_0 = [1/np.sqrt(3), 1/np.sqrt(3), 1/np.sqrt(3), 0.1]
 
 	#定数(pをのぞく引数)
-	arg = (X, Y, Z, normals, fig, 0.7*length, np.pi/12)
+	arg = (X, Y, Z, normals, fig, 0.07*length, np.pi/12)
 
     #最適化
 	result = minimize(func, p_0, args=arg, constraints=cons, method='SLSQP')
+
+	global E_list
+	print(E_list)
 
 	return result
 

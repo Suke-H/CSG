@@ -4,7 +4,7 @@ from scipy.optimize import minimize
 import open3d
 from loadOBJ import loadOBJ
 from OBB import buildOBB
-from f_rep2 import MakePoints, cube, p_z0
+from f_rep2 import MakePoints, cube, p_z0, norm_sphere
 
 def PreProcess2():
 	#自作した点群を読み込み

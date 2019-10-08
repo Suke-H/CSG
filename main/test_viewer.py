@@ -138,10 +138,10 @@ def OptiViewer(path, fig_type):
     ax.set_zlabel("Z")
 
     #点群,法線,OBBの対角線の長さ  取得
-    points, X, Y, Z, normals, length = PreProcess(path)
+    #points, X, Y, Z, normals, length = PreProcess(path)
     
     #自作の点群を扱いたいときはこちら
-    #points, X, Y, Z, normals, length = PreProcess2()
+    points, X, Y, Z, normals, length = PreProcess2()
 
     print("points:{}".format(points.shape[0]))
 
@@ -173,4 +173,4 @@ def OptiViewer(path, fig_type):
     #最後に.show()を書いてグラフ表示
     plt.show()
 
-OptiViewer("../data/pumpkin.obj", 0)
+OptiViewer("../data/pumpkin.obj", 1)

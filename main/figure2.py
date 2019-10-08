@@ -63,7 +63,7 @@ class plane:
         #xが一次元のとき
         if type(x) is np.ndarray:
             #[[x,y,z],[x,y,z],...]のかたちにする
-            normal = np.array([normal for i in range(X.shape[0])])
+            normal = np.array([normal for i in range(x.shape[0])])
 
         return norm(normal)
       
