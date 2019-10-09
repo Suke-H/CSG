@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 
+import figure2 as F
+
 def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
     ''' 陰関数のグラフ描画
     fn  ...fn(x, y, z) = 0の左辺
@@ -112,22 +114,30 @@ def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
 
     plt.show()
 
+
 def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
     xmin, xmax, ymin, ymax, zmin, zmax = bbox*3
+
+    #点群X, Y, Z, pointsを作成
     x = np.linspace(xmin, xmax, grid_step)
     y = np.linspace(ymin, ymax, grid_step)
     z = np.linspace(zmin, zmax, grid_step)
 
-    #格子点X, Y, Zをすべてfnにぶち込んでみる
     X, Y, Z = np.meshgrid(x, y, z)
+    
+    
+
+    #格子点X, Y, Zをすべてfnにぶち込んでみる
     W = fn(X, Y, Z)
 
     #Ｗが0に近いインデックスを取り出す
     index = np.where(np.abs(W)<=epsilon)
     index = [(index[0][i], index[1][i], index[2][i]) for i in range(len(index[0]))]
+    #print(index)
 
     #ランダムにダウンサンプリング
     index = random.sample(index, int(len(index)*down_rate//1))
+
 
     #格子点から境界面(fn(x,y,z)=0)に近い要素のインデックスを取り出す
     pointX = np.array([X[i] for i in index])
@@ -140,6 +150,41 @@ def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05)
 
     return points, pointX, pointY, pointZ
 
+def CountPoints(figure, X, Y, Z, normals, epsilon=0.03, alpha=np.pi):
+
+    """
+    if fig==0:
+        figure = F.sphere([0,0,0,1])
+    elif fig==1:
+        figure = F.plane([0,0,1,0])
+    """
+
+    #|f(x,y,z)|<εを満たす点群だけにする
+    D = figure.f_rep(X, Y, Z)
+    index_1 = np.where(np.abs(D)<epsilon)
+    print(len(index_1[0]))
+
+    #次にcos-1(|nf*ni|)<αを満たす点群だけにする
+    T = np.arccos(np.abs(np.sum(figure.normal(X,Y,Z) * normals, axis=1)))
+    # (0<T<pi/2のはずだが念のため絶対値をつけてる)
+    index_2 = np.where(np.abs(T)<alpha)
+    print(len(index_2[0]))
+
+    #どちらも満たすindexを残す
+    index = list(filter(lambda x: x in index_2[0], index_1[0]))
+    print(index)
+
+    X = X[index]
+    Y = Y[index]
+    Z = Z[index]
+
+    print(X.shape, Y.shape, Z.shape)
+
+    #points生成
+    points = np.stack([X, Y, Z])
+    points = points.T
+
+    return len(X), X, Y, Z, points
 
 def norm_sphere(x, y, z):
     return 1-np.sqrt(x**2+y**2+z**2)
@@ -176,7 +221,9 @@ ax = fig.add_subplot(111, projection='3d')
 ax.set_xlabel("X")
 ax.set_ylabel("Y")
 ax.set_zlabel("Z")
+
 ax.plot([0], [0], [0], marker="o",linestyle="None",color="blue")
 ax.plot(X, Y, Z, marker=".",linestyle="None",color="orange")
 plt.show()
 """
+

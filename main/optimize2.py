@@ -28,7 +28,7 @@ def func(p, X, Y, Z, normals, fig, epsilon=0.7, alpha=np.pi/12):
 	#[nf_1*ni_1, nf_2*ni_2, ...]みたいな感じ
 	theta = np.arccos(np.abs(np.sum(figure.normal(X,Y,Z) * normals, axis=1))) / alpha
 
-	E = np.sum(np.exp(-dist**2)*0 +  np.exp(-theta**2))
+	E = np.sum(np.exp(-dist**2) * np.exp(-theta**2) +   np.exp(-theta**2))
 
     #最小化なのでマイナスを返す
 
@@ -69,7 +69,7 @@ def figOptimize2(X, Y, Z, normals, length, fig):
 	result = minimize(func, p_0, args=arg, constraints=cons, method='SLSQP')
 
 	global E_list
-	print(E_list)
+	#print(E_list)
 
 	return result
 

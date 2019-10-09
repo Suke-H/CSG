@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from f_rep2 import plot_implicit
+#from f_rep2 import plot_implicit
 
 def norm(normal):
      #ベクトルが一次元のとき
