@@ -117,7 +117,6 @@ class AST:
 
         return node_num_list, node_key_list, leaf_list, edge_list
     
-
     #####スコアメソッド#########################################
 
     #逆ポーランド記法でASTを表記

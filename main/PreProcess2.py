@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 from loadOBJ import loadOBJ
 from OBB import buildOBB
-from f_rep2 import MakePoints, CountPoints, cube, p_z0, norm_sphere
+from f_rep2 import MakePoints, cube, p_z0, norm_sphere
 import figure2 as F
 #from test_viewer import plot_implicit
 
@@ -42,7 +42,7 @@ def PreProcess2():
     
     return points, X, Y, Z, normals, length
 
-
+"""
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
@@ -66,3 +66,4 @@ ax.plot(X, Y, Z, marker=".",linestyle="None",color="orange")
 #plot_implicit(ax, figure.f_rep, points)
 
 plt.show()
+"""
