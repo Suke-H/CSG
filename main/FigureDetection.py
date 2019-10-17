@@ -9,6 +9,8 @@ from PreProcess2 import PreProcess2
 from test_viewer import Disassemble
 from method import *
 
+
+
 def CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03, alpha=np.pi/12):
 
     #条件を満たす点群を取り出す
@@ -82,7 +84,7 @@ def LabelPoints(points, marked_index, k=5):
 
 figure = F.plane([0,0,1,0])
 points, X, Y, Z, normals, length = PreProcess2()
-label_list , MX, MY, MZ = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.04*length, alpha=np.pi/12)
+label_list , MX, MY, MZ = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.04*length, alpha=np.pi)
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
@@ -97,7 +99,7 @@ ax.plot(X, Y, Z, marker="o",linestyle="None",color="green")
 ax.plot(MX, MY, MZ, marker=".",linestyle="None",color="orange")
 
 #図形plot
-plot_implicit(ax, figure.f_rep, points)
+plot_implicit(ax, figure.f_rep, points, 1, 100)
 
 ###ラベル化###
 max_label = np.max(label_list)

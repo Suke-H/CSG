@@ -1,5 +1,6 @@
 import numpy as np
-from OBB import buildAABB
+import numpy.linalg as LA
+import itertools
 
 #pointsからpのk近傍点のindexのリストを返す
 def K_neighbor(points, p, k):
@@ -10,6 +11,123 @@ def K_neighbor(points, p, k):
     sorted_index = np.argsort(distances)
 
     return sorted_index[:k]
+
+#点群データなどをx, y, zに分解する
+
+#[x1, y1, z1]         [x1, x2, ..., xn]
+#      :        ->    [y1, y2, ..., yn]
+#[xn, yn, zn]         [z1, z2, ..., zn]
+def Disassemble(XYZ):
+    XYZ = XYZ.T[:]
+    X = XYZ[0, :]
+    Y = XYZ[1, :]
+    Z = XYZ[2, :]
+
+    return X, Y, Z
+
+def line(a, b):
+    t = np.arange(0, 1, 0.01)
+
+    x = a[0]*t + b[0]*(1-t)
+    y = a[1]*t + b[1]*(1-t)
+    z = a[2]*t + b[2]*(1-t)
+
+    return x, y, z
+
+###OBB生成####
+def buildOBB(points):
+    #分散共分散行列Sを生成
+    S = np.cov(points, rowvar=0, bias=1)
+
+    #固有ベクトルを算出
+    w,svd_vector = LA.eig(S)
+    #sorted_svd_index = np.argsort(w)
+    #svd_vector = v[sorted_svd_index]
+
+    #print(S)
+    #print(svd_vector)
+    #print("="*50)
+
+    #正規直交座標にする(=直行行列にする)
+    #############################################
+    u = np.asarray([svd_vector[i] / np.linalg.norm(svd_vector[i]) for i in range(3)])
+
+    #print(u)
+    #print("="*50)
+
+    #点群の各点と各固有ベクトルとの内積を取る
+    #P V^T = [[p1*v1, p1*v2, p1*v3], ... ,[pN*v1, pN*v2, pN*v3]]
+    inner_product = np.dot(points, u.T)
+    
+    #各固有値の内積最大、最小を抽出(max_stu_point = [s座標max, tmax, umax])
+    max_stu_point = np.amax(inner_product, axis=0)
+    min_stu_point = np.amin(inner_product, axis=0)
+
+    #xyz座標に変換・・・単位ベクトル*座標
+    #max_xyz_point = [[xs, ys, zs], [xt, yt, zt], [xu, yu, zu]]
+    max_xyz_point = np.asarray([u[i]*max_stu_point[i] for i in range(3)])
+    min_xyz_point = np.asarray([u[i]*min_stu_point[i] for i in range(3)])
+
+    """
+    max_index = 
+    print(max_index)
+    max_point = np.asarray([points[max_index[i]] for i in range(3)])
+
+    min_index = np.argmin(inner_product, axis=0)
+    min_point = np.asarray([points[min_index[i]] for i in range(3)])
+    """
+    #対角線の長さ
+    vert_max = min_xyz_point[0] + min_xyz_point[1] + max_xyz_point[2]
+    vert_min = max_xyz_point[0] + max_xyz_point[1] + min_xyz_point[2]
+    l = np.linalg.norm(vert_max-vert_min)
+
+    return max_xyz_point, min_xyz_point, l
+
+###AABB生成####
+def buildAABB(points):
+    #なんとこれで終わり
+    max_p = np.amax(points, axis=0)
+    min_p = np.amin(points, axis=0)
+
+    return max_p, min_p
+
+#点群を入力としてOBBを描画する
+def OBBViewer(ax, points):
+    #OBB生成
+    max_p, min_p, _ = buildOBB(points)
+
+    #直積：[smax, smin]*[tmax, tmin]*[umax, umin] <=> 頂点
+    s_axis = np.vstack((max_p[0], min_p[0]))
+    t_axis = np.vstack((max_p[1], min_p[1]))
+    u_axis = np.vstack((max_p[2], min_p[2]))
+
+    products = np.asarray(list(itertools.product(s_axis, t_axis, u_axis)))
+    vertices = np.sum(products, axis=1)
+
+    #各頂点に対応するビットの列を作成
+    bit = np.asarray([1, -1])
+    vertices_bit = np.asarray(list(itertools.product(bit, bit, bit)))
+
+
+    #頂点同士のハミング距離が1なら辺を引く
+    for i, v1 in enumerate(vertices_bit):
+        for j, v2 in enumerate(vertices_bit):
+            if np.count_nonzero(v1-v2) == 1:
+                x, y, z = line(vertices[i], vertices[j])
+                ax.plot(x,y,z,marker=".",color="orange")
+
+    #OBBの頂点の1つ
+    vert_max = min_p[0] + min_p[1] + max_p[2]
+    vert_min = max_p[0] + max_p[1] + min_p[2]
+
+    #xyzに分解
+    Xmax, Ymax, Zmax = Disassemble(max_p)
+    Xmin, Ymin, Zmin = Disassemble(min_p)
+
+    #頂点なども描画
+    ax.plot(Xmax,Ymax,Zmax,marker="X",linestyle="None",color="red")
+    ax.plot(Xmin,Ymin,Zmin,marker="X",linestyle="None",color="blue")
+    ax.plot([vert_max[0], vert_min[0]],[vert_max[1], vert_min[1]],[vert_max[2], vert_min[2]],marker="o",linestyle="None",color="black")
 
 #陰関数のグラフ描画
 #fn  ...fn(x, y, z) = 0の左辺

@@ -116,68 +116,11 @@ def plot_implicit(fn, bbox=(-2.5,2.5), AABB_size=2):
     plt.show()
 
 
-def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
-    xmin, xmax, ymin, ymax, zmin, zmax = bbox*3
-
-    #点群X, Y, Z, pointsを作成
-    x = np.linspace(xmin, xmax, grid_step)
-    y = np.linspace(ymin, ymax, grid_step)
-    z = np.linspace(zmin, zmax, grid_step)
-
-    X, Y, Z = np.meshgrid(x, y, z)
-    
-    
-
-    #格子点X, Y, Zをすべてfnにぶち込んでみる
-    W = fn(X, Y, Z)
-
-    #Ｗが0に近いインデックスを取り出す
-    index = np.where(np.abs(W)<=epsilon)
-    index = [(index[0][i], index[1][i], index[2][i]) for i in range(len(index[0]))]
-    #print(index)
-
-    #ランダムにダウンサンプリング
-    index = random.sample(index, int(len(index)*down_rate//1))
-
-
-    #格子点から境界面(fn(x,y,z)=0)に近い要素のインデックスを取り出す
-    pointX = np.array([X[i] for i in index])
-    pointY = np.array([Y[i] for i in index])
-    pointZ = np.array([Z[i] for i in index])
-
-    #points作成([[x1,y1,z1],[x2,y2,z2],...])    
-    points = np.stack([pointX, pointY, pointZ])
-    points = points.T
-
-    return points, pointX, pointY, pointZ
-
 
                 
                 
 
-def norm_sphere(x, y, z):
-    return 1-np.sqrt(x**2+y**2+z**2)
 
-def sh(x, y, z):
-        return 37.29042182 - np.sqrt((x+3.10735045)**2 + (y-1.81359686)**2 + (z+110.75950196)**2)
-
-def p_z0(x, y, z):
-    return z
-def p_z1(x, y, z):
-    return 1.5-z
-def p_x0(x, y, z):
-    return x
-def p_x1(x, y, z):
-    return 1.5-x
-def p_y0(x, y, z):
-    return y
-def p_y1(x, y, z):
-    return 1.5-y
-
-def AND(f1, f2):
-    return lambda x,y,z: f1(x,y,z) + f2(x,y,z) - np.sqrt(f1(x,y,z)**2 + f2(x,y,z)**2)
-
-cube = AND(AND(AND(AND(AND(p_z0, p_z1), p_x0), p_x1), p_y0), p_y1)
 
 """
 #plot_implicit(cube)

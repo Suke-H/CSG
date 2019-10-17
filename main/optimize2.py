@@ -3,7 +3,7 @@ from scipy.optimize import minimize
 
 import open3d
 from loadOBJ import loadOBJ
-from OBB import buildOBB
+from method import *
 from PreProcess import PreProcess
 import figure2 as F
 
