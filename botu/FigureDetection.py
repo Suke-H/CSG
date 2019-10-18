@@ -7,52 +7,29 @@ import collections
 
 import figure2 as F
 from PreProcess2 import PreProcess2
+from test_viewer import Disassemble
 from method import *
+
+
 
 def CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03, alpha=np.pi/12):
 
     #条件を満たす点群を取り出す
-    marked_index, _, _, _, _ = MarkPoints(figure, X, Y, Z, normals, epsilon, alpha)
-
-    #マークされてないときの処理
-    if marked_index == []:
-        return [0], [0], [0], 0, np.array([0])
-
-    #ラベル化をする(label_list[i]にはi番目の点のラベル情報が入っている。0は無し)
+    marked_index, MX, MY, MZ, _ = MarkPoints(figure, X, Y, Z, normals, epsilon, alpha)
     label_list = LabelPoints(points, marked_index, k=5)
-
-    #ラベルの種類の数
-    label_num = np.max(label_list)
-
-    #各ラベルの数を辞書型で保存
-    label_dict = collections.Counter(label_list)
-    val = list(label_dict.values())[1:]
-
-    #一番多いラベルを見つける
-    max_label = list(label_dict.keys())[val.index(max(val))+1]
-
-    #最大ラベルのインデックス、点群、その数
-    max_label_index = np.where(label_list == max_label)
-    max_label_points = points[max_label_index]
-    max_label_num = val[val.index(max(val))] 
-
-    X, Y, Z = Disassemble(max_label_points)
-
-    print("label_num:{}\nval:{}\nmax_label:{}".format(label_num, val, max_label_num))
-
-    return X, Y, Z, max_label_num, max_label_index[0]
+    return label_list, MX, MY, MZ
     
 def MarkPoints(figure, X, Y, Z, normals, epsilon, alpha):
     #|f(x,y,z)|<εを満たす点群だけにする
     D = figure.f_rep(X, Y, Z)
     index_1 = np.where(np.abs(D)<epsilon)
-    #print("f<ε：{}".format(len(index_1[0])))
+    print("f<ε：{}".format(len(index_1[0])))
 
     #次にcos-1(|nf*ni|)<αを満たす点群だけにする
     T = np.arccos(np.abs(np.sum(figure.normal(X,Y,Z) * normals, axis=1)))
     # (0<T<pi/2のはずだが念のため絶対値をつけてる)
     index_2 = np.where(np.abs(T)<alpha)
-    #print("θ<α：{}".format(len(index_2[0])))
+    print("θ<α：{}".format(len(index_2[0])))
 
     #どちらも満たすindexを残す
     index = list(filter(lambda x: x in index_2[0], index_1[0]))
@@ -105,8 +82,10 @@ def LabelPoints(points, marked_index, k=5):
 
     return np.array(label_list)
 
-"""
-#グラフ作成
+
+figure = F.sphere([0.75, 0.75, 0.75, 0.75])
+points, X, Y, Z, normals, length = PreProcess2()
+label_list , MX, MY, MZ = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.04*length, alpha=np.pi/10)
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
@@ -115,22 +94,36 @@ ax.set_xlabel("X")
 ax.set_ylabel("Y")
 ax.set_zlabel("Z")
 
-#事前準備
-#figure = F.plane([0,0,1,0])
-figure = F.sphere([0.75, 0.75, 0.75, 0.75])
-points, X, Y, Z, normals, length = PreProcess2()
-
 #points
 ax.plot(X, Y, Z, marker="o",linestyle="None",color="white")
+#マーク
+ax.plot(MX, MY, MZ, marker=".",linestyle="None",color="orange")
 
 #図形plot
 plot_implicit(ax, figure.f_rep, points, 1, 100)
 
-########
-X, Y, Z, num = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.04*length, alpha=np.pi/12)
+###ラベル化###
+label_num = np.max(label_list)
+print(label_num)
 
-print("num{}".format(num))
-ax.plot(X, Y, Z, marker=".",linestyle="None",color="red")
+colorlist = ["r", "y", "b", "c", "m", "g", "k"]
+
+label_dict = collections.Counter(label_list)
+val = list(label_dict.values())[1:]
+print(val, type(val))
+max_label = list(label_dict.keys())[val.index(max(val))+1]
+print(max_label)
+
+for i in range(1, label_num):
+    #同じラベルの点群のみにする
+    same_label_points = points[np.where(label_list == i)]
+
+    #plot
+    X, Y, Z = Disassemble(same_label_points)
+    if i == max_label:       
+        ax.plot(X, Y, Z, marker="o",linestyle="None",color=colorlist[i%len(colorlist)])
+    else:
+        ax.plot(X, Y, Z, marker=".",linestyle="None",color=colorlist[i%len(colorlist)])
+
 
 plt.show()
-"""

@@ -9,6 +9,15 @@ import figure2 as F
 
 E_list = []
 
+def RandomInit(fig):
+	if fig in [0, 1]:
+		p = np.random.rand(4) * 1.5
+
+	return p
+
+
+
+
 #####最適化する関数#################################################
 ###epsilon, alphaは調整が必要
 def func(p, X, Y, Z, normals, fig, epsilon=0.7, alpha=np.pi/12):
@@ -50,7 +59,9 @@ def figOptimize2(X, Y, Z, normals, length, fig):
          'fun' : lambda p: np.array([p[3]])}
         )
 
-		p_0 = [0.1, 0.1, 0.1, 0.1]
+		#定数(pをのぞく引数)
+		arg = (X, Y, Z, normals, fig, 0.01*length, np.pi/12)
+
 
 	#平面の条件
 	if fig == 1:
@@ -60,10 +71,12 @@ def figOptimize2(X, Y, Z, normals, length, fig):
          'fun' : lambda p: np.array([p[0]**2 + p[1]**2 + p[2]**2 - 1])}
         )
 
-		p_0 = [1/np.sqrt(3), 1/np.sqrt(3), 1/np.sqrt(3), 0.1]
+		#定数(pをのぞく引数)
+		arg = (X, Y, Z, normals, fig, 0.07*length, np.pi/12)
 
-	#定数(pをのぞく引数)
-	arg = (X, Y, Z, normals, fig, 0.07*length, np.pi/12)
+	p_0 = RandomInit(fig)
+
+	
 
     #最適化
 	result = minimize(func, p_0, args=arg, constraints=cons, method='SLSQP')
