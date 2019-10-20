@@ -12,11 +12,12 @@ from method import *
 def CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03, alpha=np.pi/12):
 
     #条件を満たす点群を取り出す
-    marked_index, _, _, _, _ = MarkPoints(figure, X, Y, Z, normals, epsilon, alpha)
+    marked_index = MarkPoints(figure, X, Y, Z, normals, epsilon, alpha)
+    #print(marked_index)
 
     #マークされてないときの処理
     if marked_index == []:
-        return [0], [0], [0], 0, np.array([0])
+        return [0], [0], [0], 0, np.array([])
 
     #ラベル化をする(label_list[i]にはi番目の点のラベル情報が入っている。0は無し)
     label_list = LabelPoints(points, marked_index, k=5)
@@ -26,12 +27,13 @@ def CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03, alpha=np.pi/12):
 
     #各ラベルの数を辞書型で保存
     label_dict = collections.Counter(label_list)
+    print(label_dict)
     val = list(label_dict.values())[1:]
 
     #一番多いラベルを見つける
     max_label = list(label_dict.keys())[val.index(max(val))+1]
 
-    #最大ラベルのインデックス、点群、その数
+    #最大ラベルのインデックス、点群、その数 
     max_label_index = np.where(label_list == max_label)
     max_label_points = points[max_label_index]
     max_label_num = val[val.index(max(val))] 
@@ -58,6 +60,8 @@ def MarkPoints(figure, X, Y, Z, normals, epsilon, alpha):
     index = list(filter(lambda x: x in index_2[0], index_1[0]))
     print("f<ε and θ<α：{}".format(len(index)))
 
+    """
+
     X = X[index]
     Y = Y[index]
     Z = Z[index]
@@ -65,8 +69,9 @@ def MarkPoints(figure, X, Y, Z, normals, epsilon, alpha):
     #points生成
     points = np.stack([X, Y, Z])
     points = points.T
+    """
 
-    return list(index), X, Y, Z, points
+    return list(index)
 
 def LabelPoints(points, marked_index, k=5):
     #pointsの各点に対応するラベルを格納するリスト

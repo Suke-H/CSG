@@ -9,9 +9,46 @@ import figure2 as F
 
 E_list = []
 
+
+
 def RandomInit(fig):
-	if fig in [0, 1]:
-		p = np.random.rand(4) * 1.5
+	###最適化の条件に必要な道具###
+
+	#単位ベクトルn
+	n = np.array([0, 0, 0])
+	while np.linalg.norm(n)==0:
+		print("!!")
+		n = np.random.rand(3)
+	
+	n = n / np.linalg.norm(n)
+
+	#正数r
+	r = np.abs(np.random.rand())
+
+	#5°<θ<80°
+	a, b = np.pi/36, np.pi/(180/80)
+	t = (b - a) * np.random.rand() + a
+	############################
+
+	#球：r > 0
+	if fig == 0:
+		p = np.random.rand(3)
+		p = np.append(p, r)
+
+	#平面：|n| = 1
+	elif fig == 1:
+		p = np.append(n, np.random.rand())
+
+	#円柱：|v| = 1, r
+	elif fig == 2:
+		p = np.random.rand(3)
+		p = np.append(p, n)
+		p = np.append(p, r)
+
+	else:
+		p = np.random.rand(3)
+		p = np.append(p, n)
+		p = np.append(p, t)
 
 	return p
 
@@ -28,6 +65,10 @@ def func(p, X, Y, Z, normals, fig, epsilon=0.7, alpha=np.pi/12):
 		figure = F.sphere(p)
 	elif fig == 1:
 		figure = F.plane(p)
+	elif fig==2:
+		figure = F.cylinder(p)
+	else:
+		figure = F.cone(p)
 
     #dist[i] = i番目の点からの垂直距離
 	dist = figure.f_rep(X,Y,Z) / epsilon
@@ -54,6 +95,8 @@ def figOptimize2(X, Y, Z, normals, length, fig):
 	#球の条件
 	if fig == 0:
 		print("球")
+
+		#r > 0
 		cons = (
         {'type': 'ineq',
          'fun' : lambda p: np.array([p[3]])}
@@ -66,6 +109,8 @@ def figOptimize2(X, Y, Z, normals, length, fig):
 	#平面の条件
 	if fig == 1:
 		print("平面")
+
+		#|n| = 1
 		cons = (
         {'type': 'eq',
          'fun' : lambda p: np.array([p[0]**2 + p[1]**2 + p[2]**2 - 1])}
@@ -74,9 +119,42 @@ def figOptimize2(X, Y, Z, normals, length, fig):
 		#定数(pをのぞく引数)
 		arg = (X, Y, Z, normals, fig, 0.07*length, np.pi/12)
 
-	p_0 = RandomInit(fig)
+	#円柱の条件
+	if fig == 2:
+		print("円柱")
 
-	
+		#|v| = 1
+		#0 < r
+		cons = (
+        {'type': 'eq',
+         'fun' : lambda p: np.array([p[3]**2 + p[4]**2 + p[5]**2 - 1])}, 
+		{'type': 'ineq',
+         'fun' : lambda p: np.array([p[6]])}
+        )
+
+		#定数(pをのぞく引数)
+		arg = (X, Y, Z, normals, fig, 0.01*length, np.pi/12)
+
+
+	#円柱の条件
+	if fig == 3:
+		print("円錐")
+
+		#|v| = 1
+		#0 < θ < π/2
+		cons = (
+        {'type': 'eq',
+         'fun' : lambda p: np.array([p[3]**2 + p[4]**2 + p[5]**2 - 1])}, 
+		{'type': 'ineq',
+         'fun' : lambda p: np.array([p[6]-np.pi/36])},
+		{'type': 'ineq',
+         'fun' : lambda p: np.array([-p[6]+np.pi/(180/80)])}
+        )
+
+		#定数(pをのぞく引数)
+		arg = (X, Y, Z, normals, fig, 0.08*length, np.pi/10)
+
+	p_0 = RandomInit(fig)
 
     #最適化
 	result = minimize(func, p_0, args=arg, constraints=cons, method='SLSQP')

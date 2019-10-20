@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-#from f_rep2 import plot_implicit
+from method import *
 
 def norm(normal):
      #ベクトルが一次元のとき
@@ -61,12 +61,74 @@ class plane:
         normal = np.array([self.p[0], self.p[1], self.p[2]])
         
         #xが一次元のとき
-        if type(x) is np.ndarray:
+        if type(x) is np.ndarray or type(x) is list:
             #[[x,y,z],[x,y,z],...]のかたちにする
             normal = np.array([normal for i in range(x.shape[0])])
 
         return norm(normal)
-      
+
+class cylinder:
+    def __init__(self, p):
+        #|(p-p0) × v| = r
+        # (p0 = [x0, y0, z0], v = [a, b, c])
+        # para = [x0, y0, z0, a, b, c, r]
+        self.x0 = p[0]
+        self.y0 = p[1]
+        self.z0 = p[2]
+        self.a = p[3]
+        self.b = p[4]
+        self.c = p[5]
+        self.r = p[6]
+
+	#円柱の関数
+    def f_rep(self, x, y, z):
+        return self.r - np.sqrt(( self.b*(z-self.z0)-self.c*(y-self.y0))**2 + \
+            (self.c*(x-self.x0)-self.a*(z-self.z0))**2  + (self.a*(y-self.y0)-self.b*(x-self.x0))**2 )
+
+	#円柱の法線
+    def normal(self, x, y, z):
+        normal = np.array([self.c*(self.c*(x-self.x0)-self.a*(z-self.z0)) - self.b*(self.a*(y-self.y0)-self.b*(x-self.x0)), \
+            -self.c*(self.b*(z-self.z0)-self.c*(y-self.y0)) + self.a*(self.a*(y-self.y0)-self.b*(x-self.x0)), \
+            self.b*(self.b*(z-self.z0)-self.c*(y-self.y0)) - self.a*(self.c*(x-self.x0)-self.a*(z-self.z0))])
+
+        #二次元のとき[[x1,...],[y1,...][z1,...]]と入っているため
+        #[[x1,y1,z1],...]の形にする
+        normal = normal.T
+        
+        return norm(normal)
+
+class cone:
+    def __init__(self, p):
+        #(p-p0)・v = |p-p0||v|cosθ
+        # (p0 = [x0, y0, z0], v = [a, b, c])
+        # para = [x0, y0, z0, a, b, c, θ]
+        self.x0 = p[0]
+        self.y0 = p[1]
+        self.z0 = p[2]
+        self.a = p[3]
+        self.b = p[4]
+        self.c = p[5]
+        self.t = p[6]
+
+    #円錐の関数
+    def f_rep(self, x, y, z):
+        return np.cos(self.t) - (self.a*(x-self.x0)+self.b*(y-self.y0)+self.c*(z-self.z0)) / \
+            np.sqrt(((x-self.x0)**2+(y-self.y0)**2+(z-self.z0)**2) * (self.a**2+self.b**2+self.c**2))
+
+    #円錐の法線
+    def normal(self, x, y, z):
+        normal = np.array([self.a*(self.a*(x-self.x0)+self.b*(y-self.y0)+self.c*(z-self.z0)) \
+            -(self.a**2+self.b**2+self.c**2)*np.cos(self.t)**2*(x-self.x0), \
+            self.b*(self.a*(x-self.x0)+self.b*(y-self.y0)+self.c*(z-self.z0)) \
+            -(self.a**2+self.b**2+self.c**2)*np.cos(self.t)**2*(y-self.y0), \
+            self.c*(self.a*(x-self.x0)+self.b*(y-self.y0)+self.c*(z-self.z0)) \
+            -(self.a**2+self.b**2+self.c**2)*np.cos(self.t)**2*(z-self.z0)])
+
+        #二次元のとき[[x1,...],[y1,...][z1,...]]と入っているため
+        #[[x1,y1,z1],...]の形にする
+        normal = normal.T
+        
+        return norm(normal)
 
 class AND:
     def __init__(self, p1, p2):
@@ -82,37 +144,3 @@ class AND:
         
         return norm(normal)
 
-"""
-#f = z
-p1 = plane([0, 0, 1, 0])
-#f = 1.5 - z
-p2 = plane([0, np.sqrt(2), np.sqrt(2), 1.5])
-
-p3 = AND(p1, p2)
-
-p4 = sphere([0, 0, 0, 1])
-p5 = plane([-1,-1,-1,-1])
-
-#plot_implicit(p3.f_rep)
-
-X = np.array([1,0,0,0])
-Y = np.array([0,1,0,0])
-Z = np.array([0,0,1,0])
-
-print(p3.f_rep(X,Y,Z))
-print(p3.normal(X,Y,Z))
-
-epsilon=0.7
-alpha=np.pi/12
-normals = np.array([[1,0,0],[1,0,0],[0,1,0],[0,0,1]])
-
-#dist[i] = i番目の点からの垂直距離
-dist = p3.f_rep(X,Y,Z) / epsilon
-#theta[i] = i番目の点の法線とnormalとの偏差(角度の差)
-theta = np.arccos(np.abs(np.sum(p3.normal(X,Y,Z) * normals, axis=1))) / alpha
-print("distance: {}".format(dist))
-print("theta: {}".format(theta))
-
-E = np.sum(np.exp(-dist**2) + np.exp(-theta**2))
-print(E)
-"""

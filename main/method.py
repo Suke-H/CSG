@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.linalg as LA
 import itertools
+import random
 
 #pointsからpのk近傍点のindexのリストを返す
 def K_neighbor(points, p, k):
@@ -91,6 +92,39 @@ def buildAABB(points):
 
     return max_p, min_p
 
+def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
+    xmin, xmax, ymin, ymax, zmin, zmax = bbox*3
+
+    #点群X, Y, Z, pointsを作成
+    x = np.linspace(xmin, xmax, grid_step)
+    y = np.linspace(ymin, ymax, grid_step)
+    z = np.linspace(zmin, zmax, grid_step)
+
+    X, Y, Z = np.meshgrid(x, y, z)
+
+    #格子点X, Y, Zをすべてfnにぶち込んでみる
+    W = fn(X, Y, Z)
+
+    #Ｗが0に近いインデックスを取り出す
+    index = np.where(np.abs(W)<=epsilon)
+    index = [(index[0][i], index[1][i], index[2][i]) for i in range(len(index[0]))]
+    #print(index)
+
+    #ランダムにダウンサンプリング
+    index = random.sample(index, int(len(index)*down_rate//1))
+
+
+    #格子点から境界面(fn(x,y,z)=0)に近い要素のインデックスを取り出す
+    pointX = np.array([X[i] for i in index])
+    pointY = np.array([Y[i] for i in index])
+    pointZ = np.array([Z[i] for i in index])
+
+    #points作成([[x1,y1,z1],[x2,y2,z2],...])    
+    points = np.stack([pointX, pointY, pointZ])
+    points = points.T
+
+    return points, pointX, pointY, pointZ
+
 #点群を入力としてOBBを描画する
 def OBBViewer(ax, points):
     #OBB生成
@@ -132,20 +166,25 @@ def OBBViewer(ax, points):
 #陰関数のグラフ描画
 #fn  ...fn(x, y, z) = 0の左辺
 #AABB_size ...AABBの各辺をAABB_size倍する
-def plot_implicit(ax, fn, points, AABB_size=2, contourNum=30):
-    #AABB生成
-    max_p, min_p = buildAABB(points)
+def plot_implicit(ax, fn, points=None, AABB_size=2, bbox=(-2.5,2.5), contourNum=30):
 
-    xmax, ymax, zmax = max_p[0], max_p[1], max_p[2]
-    xmin, ymin, zmin = min_p[0], min_p[1], min_p[2]
+    if points is not None:
+        #AABB生成
+        max_p, min_p = buildAABB(points)
 
-    #AABBの各辺がAABB_size倍されるように頂点を変更
-    xmax = xmax + (xmax - xmin)/2 * AABB_size
-    xmin = xmin - (xmax - xmin)/2 * AABB_size
-    ymax = ymax + (ymax - ymin)/2 * AABB_size
-    ymin = ymin - (ymax - ymin)/2 * AABB_size
-    zmax = zmax + (zmax - zmin)/2 * AABB_size
-    zmin = zmin - (zmax - zmin)/2 * AABB_size
+        xmax, ymax, zmax = max_p[0], max_p[1], max_p[2]
+        xmin, ymin, zmin = min_p[0], min_p[1], min_p[2]
+
+        #AABBの各辺がAABB_size倍されるように頂点を変更
+        xmax = xmax + (xmax - xmin)/2 * AABB_size
+        xmin = xmin - (xmax - xmin)/2 * AABB_size
+        ymax = ymax + (ymax - ymin)/2 * AABB_size
+        ymin = ymin - (ymax - ymin)/2 * AABB_size
+        zmax = zmax + (zmax - zmin)/2 * AABB_size
+        zmin = zmin - (zmax - zmin)/2 * AABB_size
+
+    else:
+        xmin, xmax, ymin, ymax, zmin, zmax = bbox*3
 
     A_X = np.linspace(xmin, xmax, 100) # resolution of the contour
     A_Y = np.linspace(ymin, ymax, 100)
@@ -175,3 +214,15 @@ def plot_implicit(ax, fn, points, AABB_size=2, contourNum=30):
     ax.set_zlim3d(zmin,zmax)
     ax.set_xlim3d(xmin,xmax)
     ax.set_ylim3d(ymin,ymax)
+
+def plot_normal(ax, figure):
+    #図形の方程式から点群を作る
+    points, X, Y, Z = MakePoints(figure.f_rep, epsilon=0.01)
+
+    #法線
+    normals = figure.normal(X, Y, Z)
+    print(normals)
+    U, V, W = Disassemble(normals)
+
+    #法線を描画
+    ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)

@@ -10,6 +10,7 @@ from optimize2 import figOptimize2
 from PreProcess import PreProcess
 from PreProcess2 import PreProcess2
 from method import *
+from figure_sample import *
 from FigureDetection import CountPoints, MarkPoints, LabelPoints
 
 #seabornはimportしておくだけでもmatplotlibのグラフがきれいになる
@@ -63,7 +64,7 @@ def OptiViewer(path, fig_type):
     U, V, W = Disassemble(normals)
 
     #法線を描画
-    #ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
+    ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
 
     #OBBを描画
     OBBViewer(ax, points)
@@ -78,6 +79,10 @@ def OptiViewer(path, fig_type):
         figure = F.sphere(result.x)
     elif fig_type==1:
         figure = F.plane(result.x)
+    elif fig_type==2:
+        figure = F.cylinder(result.x)
+    else:
+        figure = F.cone(result.x)
 
     #最適化された図形を描画
     plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=15)
@@ -95,10 +100,6 @@ def DetectViewer(path):
     #元の点群データを保存しておく
     ori_points = points[:, :]
 
-    scores = []
-    paras = []
-    indices = []
-
     fitting_figures = []
     
     print("points:{}".format(points.shape[0]))
@@ -107,8 +108,15 @@ def DetectViewer(path):
     ax = ViewerInit(points, X, Y, Z, normals)
 
     while points.shape[0] >= ori_points.shape[0] * 0.1:
+        print("points:{}".format(points.shape[0]))
+
+        scores = []
+        paras = []
+        indices = []
+
         ###最適化###
         for fig_type in [0, 1]:
+            a = input()
 
             ###グラフ初期化##
             #ax = ViewerInit(points, X, Y, Z, normals)
@@ -147,7 +155,7 @@ def DetectViewer(path):
             continue
 
         ###グラフ初期化###
-        ax = ViewerInit(points, X, Y, Z, normals)
+        #ax = ViewerInit(points, X, Y, Z, normals)
 
         #スコアが最大の図形を描画
         best_fig = scores.index(max(scores))
@@ -168,11 +176,10 @@ def DetectViewer(path):
         normals = np.delete(normals, indices[best_fig], axis=0)
         X, Y, Z = Disassemble(points)
         
-
         ###グラフ初期化###
-        ax = ViewerInit(points, X, Y, Z, normals)
+        #ax = ViewerInit(points, X, Y, Z, normals)
 
-        plt.show()
+        #plt.show()
         ##################
         print("points:{}".format(points.shape[0]))
         
@@ -181,9 +188,17 @@ def DetectViewer(path):
     plt.show()
 
 
+OptiViewer("../data/pumpkin.obj", 3)
+#DetectViewer("")
 
-
-
-
-#OptiViewer("../data/pumpkin.obj", 0)
-DetectViewer("")
+"""
+points, X, Y, Z, normals, length = PreProcess2()
+ax = ViewerInit(points, X, Y, Z, normals)
+#figure = F.plane([0,2,1,0])
+#figure = F.sphere([0.75, 0.75, 0.75, 0.75])
+#figure = F.cylinder([0, 1, 0, 0, 1, 1, 1])
+#figure = F.cone([0, 0, 1, 0, -1, -1, np.pi/12])
+plot_implicit(ax, co)
+#plot_normal(ax, figure)
+plt.show()
+"""
