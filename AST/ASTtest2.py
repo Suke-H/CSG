@@ -10,7 +10,7 @@ class AST:
         #最大要素数(深さ"depth"での完全二分木の要素数)
         self.max_size = 2**self.depth-1
         #ASTの配列
-        self.ast = np.asarray([None for i in range(self.max_size)])
+        self.ast = np.array([None for i in range(self.max_size)])
 
         ###この2つはできれば使わないようにするプログラムにしたい##
         #要素数
@@ -23,16 +23,24 @@ class AST:
 
     #####AST生成用メソッド#########################################
 
-    def InitializeRandomPerson(self, num, leaf_list):
+    def InitializeRandomPerson(self, leaf_list):
         #key_list作成...ランダムにand,or,notを入れたもの
         key_list = np.asarray([])
+        #葉の数をランダムで決める(葉の最大数は2**(depth-1))
+        #num = np.random.randint(1, 2**(self.depth-1))
+        num = 5
+        #print("num:{}".format(num))
+
         for i in range(num):
             key = np.random.choice(["and", "or", "not"], p=[0.35, 0.35, 0.3])
             key_list = np.append(key_list, key)
 
+        c = 1
         #key_listをASTにランダム挿入
         for key in key_list:
             self.RandomInsert(key)
+            #print("{} is OK".format(c))
+            c = c + 1
 
         #leaf_listをAStに挿入
         self.LeafRandomInsert(leaf_list)
@@ -86,12 +94,12 @@ class AST:
     #############################################################
 
     def Scan(self):
-        i = int(0)
         node_num_list = np.asarray([])
         node_key_list = np.asarray([])
         leaf_list = np.asarray([])
 
-        #iをノードと葉がなくなるまで走査して、すべてのノードと葉をピック
+        i = 0
+        #iで木の全要素を走査して、すべてのノードと葉をピック
         while len(node_num_list) < self.size or len(leaf_list) < self.leaf_num:
             #ast[i]があったらノード
             if self.ast[i]:
@@ -212,18 +220,19 @@ class AST:
 
         return score
 
-"""
+
 count = score = 0
 
-while(score != 8):
+#while(score != 8):
 
-    test = AST(15)
-    leaf_list = np.asarray(["X1", "X2", "X3"])
-    node_num_list, node_key_list, L, edge_list = test.InitializeRandomPerson(5 , leaf_list)
-    #print(node_num_list, node_key_list, L, edge_list)
-    score = test.Score()
-    print(count, score)
-    count = count + 1
+test = AST(6)
+leaf_list = np.asarray(["X1", "X2", "X3"])
+node_num_list, node_key_list, L, edge_list = test.InitializeRandomPerson(leaf_list)
+print(list(test.ast))
+#print(node_num_list, node_key_list, L, edge_list)
+#score = test.Score()
+#print(count, score)
+#count = count + 1
     
 
 # formatはpngを指定(他にはPDF, PNG, SVGなどが指定可)
@@ -237,12 +246,12 @@ for num, key in zip(node_num_list, node_key_list):
 for i, j in edge_list:
     G.edge(str(i), str(j))
 
-G.render("img/ASTtest2")
+G.render("img/ASTtest3")
 
-
+"""
 print(test.size, test.leaf_num)
 node_num_list, node_key_list, leaf_list, edge_list = test.scan()
 print(node_num_list, node_key_list, leaf_list, edge_list)
 print(test.ast[0:30])
-
 """
+

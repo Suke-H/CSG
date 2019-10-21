@@ -15,7 +15,7 @@ def InitializeRandomPeople(n):
         #leafの種類
         leaf_list = np.asarray(["X1", "X2", "X3"])
         #一人生成
-        _, _, _, _ = p.InitializeRandomPerson(5 , leaf_list)
+        _, _, _, _ = p.InitializeRandomPerson(leaf_list)
         #リストにクラスごと登録
         People_list.append(p)
 
@@ -64,7 +64,7 @@ def DrawTree(tree, path):
 
     G.render(path)
 
-"""
+
 #10人作ってみる
 People = InitializeRandomPeople(10)
 #Score_list
@@ -82,4 +82,3 @@ print(new_list)
 
 #一位を描画
 DrawTree(sorted_People[0], "img/GAtest")
-"""
