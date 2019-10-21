@@ -1,4 +1,4 @@
-AST/*.png
+AST/img/*
 data
 TestData
 __pycache__

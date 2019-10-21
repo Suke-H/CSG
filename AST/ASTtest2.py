@@ -10,7 +10,7 @@ class AST:
         #最大要素数(深さ"depth"での完全二分木の要素数)
         self.max_size = 2**self.depth-1
         #ASTの配列
-        self.ast = np.array([None for i in range(self.max_size)])
+        self.ast = np.asarray([None for i in range(self.max_size)])
 
         ###この2つはできれば使わないようにするプログラムにしたい##
         #要素数
@@ -23,23 +23,16 @@ class AST:
 
     #####AST生成用メソッド#########################################
 
-    def InitializeRandomPerson(self, leaf_list):
+    def InitializeRandomPerson(self, num, leaf_list):
         #key_list作成...ランダムにand,or,notを入れたもの
         key_list = np.asarray([])
-        #葉の数をランダムで決める(葉の最大数は2**(depth-1))
-        num = np.random.randint(1, 2**(self.depth-1))
-        print("num:{}".format(num))
-
         for i in range(num):
             key = np.random.choice(["and", "or", "not"], p=[0.35, 0.35, 0.3])
             key_list = np.append(key_list, key)
 
-        c = 1
         #key_listをASTにランダム挿入
         for key in key_list:
             self.RandomInsert(key)
-            print("{} is OK".format(c))
-            c = c + 1
 
         #leaf_listをAStに挿入
         self.LeafRandomInsert(leaf_list)

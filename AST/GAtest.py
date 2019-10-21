@@ -35,7 +35,19 @@ def Rank(People_list):
     #index_listの順にPeople_listを並べる
     return np.array(People_list)[index_list]
 
-def DrawTree(tree):
+#突然変異
+def Mutate(tree, rate=0.2):
+    #rateの確率で突然変異
+    if np.random.rand() <= rate:
+        #木をスキャン
+        node_num_list, node_key_list, L, edge_list = tree.Scan()
+        
+        #突然変異させる木の要素をランダム選択
+        mutate_point = np.random.choice(node_num_list)
+
+
+
+def DrawTree(tree, path):
     #木をスキャン
     node_num_list, node_key_list, L, edge_list = tree.Scan()
 
@@ -50,9 +62,9 @@ def DrawTree(tree):
     for i, j in edge_list:
         G.edge(str(i), str(j))
 
-    G.render("GAtest")
+    G.render(path)
 
-
+"""
 #10人作ってみる
 People = InitializeRandomPeople(10)
 #Score_list
@@ -69,4 +81,5 @@ for p in sorted_People:
 print(new_list)
 
 #一位を描画
-DrawTree(sorted_People[0])
+DrawTree(sorted_People[0], "img/GAtest")
+"""

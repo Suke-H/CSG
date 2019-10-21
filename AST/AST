@@ -1,6 +1,0 @@
-digraph {
-	node [shape=circle]
-	0 [label=and]
-	1 [label=and]
-	0 -> 1
-}
