@@ -23,11 +23,11 @@ def CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03, alpha=np.pi/12):
     label_list = LabelPoints(points, marked_index, k=5)
 
     #ラベルの種類の数(0は除く)
-    label_num = np.max(label_list) - 1
+    label_num = np.max(label_list)
 
     #valにラベル1以降の要素数を記録
     val = []
-    for i in range(1, label_num):
+    for i in range(1, label_num+1):
         val.append(list(label_list).count(i))
 
     #一番多いラベルを見つける
