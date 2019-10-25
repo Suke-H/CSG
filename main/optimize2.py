@@ -133,10 +133,10 @@ def figOptimize2(X, Y, Z, normals, length, fig):
         )
 
 		#定数(pをのぞく引数)
-		arg = (X, Y, Z, normals, fig, 0.01*length, np.pi/12)
+		arg = (X, Y, Z, normals, fig, 0.05*length, np.pi/12)
 
 
-	#円柱の条件
+	#円錐の条件
 	if fig == 3:
 		print("円錐")
 
@@ -146,13 +146,13 @@ def figOptimize2(X, Y, Z, normals, length, fig):
         {'type': 'eq',
          'fun' : lambda p: np.array([p[3]**2 + p[4]**2 + p[5]**2 - 1])}, 
 		{'type': 'ineq',
-         'fun' : lambda p: np.array([p[6]-np.pi/36])},
+         'fun' : lambda p: np.array([p[6]-np.pi/(180/10)])},
 		{'type': 'ineq',
-         'fun' : lambda p: np.array([-p[6]+np.pi/(180/80)])}
+         'fun' : lambda p: np.array([-p[6]+np.pi/(180/60)])}
         )
 
 		#定数(pをのぞく引数)
-		arg = (X, Y, Z, normals, fig, 0.08*length, np.pi/10)
+		arg = (X, Y, Z, normals, fig, 0.08*length, np.pi/9)
 
 	p_0 = RandomInit(fig)
 

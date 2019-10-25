@@ -18,7 +18,7 @@ def mutate(tree, rate=1.0):
             #突然変異させる木の要素をランダム選択
             mutate_point = np.random.choice(node_num_list)
             #つけ木の深さ　= 木の最大の深さ - mutate_pointの深さ
-            branch_depth = tree.depth - int(np.log2(mutate_point)//1)
+            branch_depth = tree.depth - int(np.log2(mutate_point+1)//1 + 1)
 
         #つけ木作成
         branch = AST(branch_depth)

@@ -22,16 +22,16 @@ def CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03, alpha=np.pi/12):
     #ラベル化をする(label_list[i]にはi番目の点のラベル情報が入っている。0は無し)
     label_list = LabelPoints(points, marked_index, k=5)
 
-    #ラベルの種類の数
-    label_num = np.max(label_list)
+    #ラベルの種類の数(0は除く)
+    label_num = np.max(label_list) - 1
 
-    #各ラベルの数を辞書型で保存
-    label_dict = collections.Counter(label_list)
-    print(label_dict)
-    val = list(label_dict.values())[1:]
+    #valにラベル1以降の要素数を記録
+    val = []
+    for i in range(1, label_num):
+        val.append(list(label_list).count(i))
 
     #一番多いラベルを見つける
-    max_label = list(label_dict.keys())[val.index(max(val))+1]
+    max_label = val.index(max(val)) + 1
 
     #最大ラベルのインデックス、点群、その数 
     max_label_index = np.where(label_list == max_label)
@@ -41,6 +41,7 @@ def CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03, alpha=np.pi/12):
     X, Y, Z = Disassemble(max_label_points)
 
     print("label_num:{}\nval:{}\nmax_label:{}".format(label_num, val, max_label_num))
+    print(max_label_points.shape)
 
     return X, Y, Z, max_label_num, max_label_index[0]
     

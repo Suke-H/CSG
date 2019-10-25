@@ -27,9 +27,8 @@ class AST:
         #key_list作成...ランダムにand,or,notを入れたもの
         key_list = np.asarray([])
         #葉の数をランダムで決める(葉の最大数は2**(depth-1))
-        #num = np.random.randint(1, 2**(self.depth-1))
-        num = 5
-        #print("num:{}".format(num))
+        num = np.random.randint(1, 2**(self.depth-1))
+        print("num:{}".format(num))
 
         for i in range(num):
             key = np.random.choice(["and", "or", "not"], p=[0.35, 0.35, 0.3])
@@ -50,29 +49,33 @@ class AST:
 
         return node_num_list, node_key_list, L, edge_list
         
+    #非終端記号keyを挿入
+    #この後,葉を挿入するので、最大の深さ(self.depth)を超えないようにする
     def RandomInsert(self, key):
+        #木が空のとき
+        if self.size == 0:
+            index = 0
+
+        else:
+            #leaf_listを取得
+            _, _, leaf_list, _ = self.Scan()
+            #最大の深さにある場所を選択しないようにする
+            leaf_list = leaf_list[np.where(np.log2(leaf_list+1)//1 + 1 < self.depth)]
+            print(leaf_list)
+            
+            #leaf_listからランダムで場所を選択
+            index = int(np.random.choice(leaf_list))
+
+        self.ast[index] = key
+
         #randomInsertをするたびにsizeとleaf_numを増やす
         #Javaのprivateみたいにメンバ変数をいじらないようにする必要性あり？
         self.size = self.size + 1
         if key != "not":
             self.leaf_num = self.leaf_num + 1
 
-        i = 0
-        #rootに何もなければ挿入して終わり
-        if self.ast[i] is None:
-            self.ast[i] = key
-            return        
 
-        #Noneになるまで行く
-        while self.ast[i]:
-            #50%で左か右に行く(notなら左)
-            if np.random.rand() >= 0.5 or self.ast[i] == "not":
-                i = 2*i+1
-            else:
-                i = 2*i+2
-
-        self.ast[i] = key
-
+    #終端記号を挿入
     def LeafRandomInsert(self, leaf_list):
         #葉の場所をスキャンで調べる
         _, _, leaf_num_list, _ = self.Scan()
@@ -97,6 +100,14 @@ class AST:
         node_num_list = np.asarray([])
         node_key_list = np.asarray([])
         leaf_list = np.asarray([])
+        #np.appendのときのおまじない
+        edge_list = np.empty((0,2), int)
+
+        #print(self.size, self.leaf_num)
+
+        #空のとき
+        if self.size==0:
+            return node_num_list, node_key_list, leaf_list, edge_list
 
         i = 0
         #iで木の全要素を走査して、すべてのノードと葉をピック
@@ -112,9 +123,6 @@ class AST:
                     leaf_list = np.append(leaf_list, i)
 
             i = i + 1
-
-        #np.appendのときのおまじない
-        edge_list = np.empty((0,2), int)
 
         if len(node_num_list) >= 2:
             #子の親(=(num-1)//2)は確実に存在するのを利用し、辺を結ぶ
@@ -254,4 +262,3 @@ node_num_list, node_key_list, leaf_list, edge_list = test.scan()
 print(node_num_list, node_key_list, leaf_list, edge_list)
 print(test.ast[0:30])
 """
-

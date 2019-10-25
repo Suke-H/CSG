@@ -59,12 +59,12 @@ def OptiViewer(path, fig_type):
     print("points:{}".format(points.shape[0]))
 
     #点群を描画
-    ax.plot(X,Y,Z,marker=".",linestyle='None',color="green")
+    ax.plot(X,Y,Z,marker="o",linestyle='None',color="white")
 
     U, V, W = Disassemble(normals)
 
     #法線を描画
-    ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
+    #ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
 
     #OBBを描画
     OBBViewer(ax, points)
@@ -86,6 +86,12 @@ def OptiViewer(path, fig_type):
 
     #最適化された図形を描画
     plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=15)
+
+    #S_optを検出
+    MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
+
+    print("num:{}".format(num))
+    ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="red")
 
     #最後に.show()を書いてグラフ表示
     plt.show()
@@ -136,7 +142,7 @@ def DetectViewer(path):
             #plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=50)
 
             #図形に対して"条件"を満たす点群を数える、これをスコアとする
-            MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.04*length, alpha=np.pi/10)
+            MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
             print("num:{}".format(num))
 
             #条件を満たす点群, 最適化された図形描画
@@ -188,17 +194,27 @@ def DetectViewer(path):
     plt.show()
 
 
-OptiViewer("../data/pumpkin.obj", 3)
+#OptiViewer("../data/pumpkin.obj", 3)
 #DetectViewer("")
 
-"""
+
 points, X, Y, Z, normals, length = PreProcess2()
+print(points.shape[0])
 ax = ViewerInit(points, X, Y, Z, normals)
 #figure = F.plane([0,2,1,0])
 #figure = F.sphere([0.75, 0.75, 0.75, 0.75])
 #figure = F.cylinder([0, 1, 0, 0, 1, 1, 1])
-#figure = F.cone([0, 0, 1, 0, -1, -1, np.pi/12])
-plot_implicit(ax, co)
-#plot_normal(ax, figure)
+figure = F.cone([0,0,1.5,0,0,-1, np.pi/12])
+#figure = F.cone([ 0.17158955,  0.57584945, -3.95574439, -0.09093477, -0.29898945,\
+        #0.94991377,  0.17453293])
+plot_implicit(ax, figure.f_rep)
+#U, V, W = Disassemble(normals)
+#ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
+#plot_normal(ax, figure, X, Y, Z)
+#S_optを検出
+MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
+
+print("num:{}".format(num))
+ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="red")
 plt.show()
-"""
+

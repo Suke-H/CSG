@@ -215,9 +215,9 @@ def plot_implicit(ax, fn, points=None, AABB_size=2, bbox=(-2.5,2.5), contourNum=
     ax.set_xlim3d(xmin,xmax)
     ax.set_ylim3d(ymin,ymax)
 
-def plot_normal(ax, figure):
+def plot_normal(ax, figure, X, Y, Z):
     #図形の方程式から点群を作る
-    points, X, Y, Z = MakePoints(figure.f_rep, epsilon=0.01)
+    #points, X, Y, Z = MakePoints(figure.f_rep, epsilon=0.01)
 
     #法線
     normals = figure.normal(X, Y, Z)
@@ -225,4 +225,4 @@ def plot_normal(ax, figure):
     U, V, W = Disassemble(normals)
 
     #法線を描画
-    ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
+    ax.quiver(X, Y, Z, U, V, W,  length=0.1,color='red', normalize=True)
