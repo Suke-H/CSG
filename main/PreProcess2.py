@@ -14,7 +14,7 @@ import figure2 as F
 
 def PreProcess2():
 	#自作した点群を読み込み
-    points, X, Y, Z = MakePoints(co, grid_step=50, epsilon=0.005)
+    points, X, Y, Z = MakePoints(cylinder, grid_step=50, epsilon=0.05)
 
     #点群をnp配列⇒open3d形式に
     pointcloud = open3d.PointCloud()

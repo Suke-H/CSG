@@ -28,6 +28,7 @@ cube = AND(AND(AND(AND(AND(p_z0, p_z1), p_x0), p_x1), p_y0), p_y1)
 
 cy = F.cylinder([0,0,0,0,0,1,1]).f_rep
 cylin = AND(cy, p_z0)
+cylinder = AND(cylin, p_z1)
 
 co = F.cone([0,0,1.5,0,0,-1, np.pi/12]).f_rep
 con = AND(co, p_z0)

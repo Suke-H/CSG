@@ -40,8 +40,7 @@ def CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03, alpha=np.pi/12):
 
     X, Y, Z = Disassemble(max_label_points)
 
-    print("label_num:{}\nval:{}\nmax_label:{}".format(label_num, val, max_label_num))
-    print(max_label_points.shape)
+    #print("label_num:{}\nval:{}\nmax_label:{}".format(label_num, val, max_label_num))
 
     return X, Y, Z, max_label_num, max_label_index[0]
     
@@ -59,7 +58,7 @@ def MarkPoints(figure, X, Y, Z, normals, epsilon, alpha):
 
     #どちらも満たすindexを残す
     index = list(filter(lambda x: x in index_2[0], index_1[0]))
-    print("f<ε and θ<α：{}".format(len(index)))
+    #print("f<ε and θ<α：{}".format(len(index)))
 
     """
 

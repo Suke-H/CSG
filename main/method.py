@@ -3,6 +3,29 @@ import numpy.linalg as LA
 import itertools
 import random
 
+def norm(normal):
+     #ベクトルが一次元のとき
+    if len(normal.shape)==1:
+        if np.linalg.norm(normal) == 0:
+			#print("Warning: 法線ベクトルがゼロです！")
+            return normal
+            
+        else:
+            return normal / np.linalg.norm(normal)
+
+    #ベクトルが二次元
+    else:
+        #各法線のノルムをnormに格納
+        norm = np.linalg.norm(normal, ord=2, axis=1)
+
+        #normが0の要素は1にする(normalをnormで割る際に0除算を回避するため)
+        norm = np.where(norm==0, 1, norm)
+
+        #normalの各成分をノルムで割る
+        norm = np.array([np.full(3, norm[i]) for i in range(len(norm))])
+        return normal / norm
+
+
 #pointsからpのk近傍点のindexのリストを返す
 def K_neighbor(points, p, k):
     #points[i]とpointsの各点とのユークリッド距離を格納
