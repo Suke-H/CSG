@@ -65,8 +65,9 @@ def buildOBB(points):
 
     #固有ベクトルを算出
     w,svd_vector = LA.eig(S)
-    #sorted_svd_index = np.argsort(w)
-    #svd_vector = v[sorted_svd_index]
+
+    # 固有値が小さい順に固有ベクトルを並べる
+    svd_vector = svd_vector[np.argsort(w)]
 
     #print(S)
     #print(svd_vector)
@@ -76,8 +77,6 @@ def buildOBB(points):
     #############################################
     u = np.asarray([svd_vector[i] / np.linalg.norm(svd_vector[i]) for i in range(3)])
 
-    #print(u)
-    #print("="*50)
 
     #点群の各点と各固有ベクトルとの内積を取る
     #P V^T = [[p1*v1, p1*v2, p1*v3], ... ,[pN*v1, pN*v2, pN*v3]]

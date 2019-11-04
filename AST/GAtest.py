@@ -3,7 +3,7 @@ import random
 from graphviz import Digraph
 import itertools
 
-from ASTtest import AST
+from ASTtest2 import AST
 
 #ランダムにn人クリーチャー作成
 def InitializeRandomPeople(n):
@@ -26,7 +26,7 @@ def Rank(People_list):
     score_list = []
 
     #リストにスコアを記録していく
-    for p in People:
+    for p in People_list:
         score_list.append(p.Score())
 
     #Scoreの大きい順からインデックスを読み上げ、リストに記録
@@ -64,7 +64,7 @@ def DrawTree(tree, path):
 
     G.render(path)
 
-
+"""
 #10人作ってみる
 People = InitializeRandomPeople(10)
 #Score_list
@@ -82,3 +82,4 @@ print(new_list)
 
 #一位を描画
 DrawTree(sorted_People[0], "img/GAtest")
+"""

@@ -14,7 +14,9 @@ import figure2 as F
 
 def PreProcess2():
 	#自作した点群を読み込み
-    points, X, Y, Z = MakePoints(cylinder, grid_step=50, epsilon=0.05)
+    points, X, Y, Z = MakePoints(sample_plane, grid_step=50, epsilon=0.5)
+
+    print(len(X))
 
     #点群をnp配列⇒open3d形式に
     pointcloud = open3d.PointCloud()
@@ -44,7 +46,7 @@ def PreProcess2():
     
     return points, X, Y, Z, normals, length
 
-"""
+
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
@@ -57,15 +59,16 @@ ax.set_zlabel("Z")
 points, X, Y, Z, normals, length = PreProcess2()
 ax.plot(X, Y, Z, marker="o",linestyle="None",color="blue")
 #figure = F.plane([0,0,1,0])
-figure = F.sphere([0.75, 0.75, 0.75, 0.75])
+#figure = F.sphere([0.75, 0.75, 0.75, 0.75])
 
-count, X, Y, Z, _ = CountPoints(figure, X, Y, Z, normals)
-print(count)
+#count, X, Y, Z, _ = CountPoints(figure, X, Y, Z, normals)
+#print(count)
 
-#ax.plot([0], [0], [0], marker="o",linestyle="None",color="blue")
-ax.plot(X, Y, Z, marker=".",linestyle="None",color="orange")
+OBBViewer(ax, points)
 
 #plot_implicit(ax, figure.f_rep, points)
 
 plt.show()
-"""
+
+
+

@@ -21,6 +21,9 @@ def p_y0(x, y, z):
 def p_y1(x, y, z):
     return 1.5-y
 
+def sample_plane(x, y, z):
+    return x + 4*y + 5*z + 6
+
 def AND(f1, f2):
     return lambda x,y,z: f1(x,y,z) + f2(x,y,z) - np.sqrt(f1(x,y,z)**2 + f2(x,y,z)**2)
 

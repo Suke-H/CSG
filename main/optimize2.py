@@ -152,7 +152,7 @@ def figOptimize2(X, Y, Z, normals, length, fig):
         )
 
 		#定数(pをのぞく引数)
-		arg = (X, Y, Z, normals, fig, 0.08*length, np.pi/9)
+		arg = (X, Y, Z, normals, fig, 0.03*length, np.pi/9)
 
 	p_0 = RandomInit(fig)
 

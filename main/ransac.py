@@ -69,20 +69,22 @@ def SphereDict(points, normals, X, Y, Z, length):
     r = np.reshape(r, (num,1))
     p = np.concatenate([c, r], axis=1)
 
-    # 平面生成
+    # 球面生成
     Spheres = [F.sphere(p[i]) for i in range(num)]
 
     # フィットしている点の数を数える
     Scores = [CountPoints(Spheres[i], points, X, Y, Z, normals, epsilon=0.01*length, alpha=np.pi/12)[3] for i in range(num)]
 
-    print(Scores, p[Scores.index(max(Scores))])
+    print(Scores, max(Scores))
+    print(p[Scores.index(max(Scores))])
 
     return Spheres[Scores.index(max(Scores))]
     
 
 points, X, Y, Z, normals, length = PreProcess2()
 
-figure = PlaneDict(points, normals, X, Y, Z, length)
+#figure = PlaneDict(points, normals, X, Y, Z, length)
+figure = SphereDict(points, normals, X, Y, Z, length)
 
 #グラフ作成
 fig = plt.figure()

@@ -24,22 +24,17 @@ class AST:
     #####AST生成用メソッド#########################################
 
     def InitializeRandomPerson(self, leaf_list):
-        #key_list作成...ランダムにand,or,notを入れたもの
-        key_list = np.asarray([])
-        #葉の数をランダムで決める(葉の最大数は2**(depth-1))
-        num = np.random.randint(1, 2**(self.depth-1))
+        #葉以外の要素数をランダムで決める(最大は2**(depth-1)-1)
+        #num = np.random.randint(1, 2**(self.depth-1))
+        num = 2**(self.depth-1)-1
         print("num:{}".format(num))
 
-        for i in range(num):
-            key = np.random.choice(["and", "or", "not"], p=[0.35, 0.35, 0.3])
-            key_list = np.append(key_list, key)
+        #key_list作成...ランダムにand,or,notを入れたもの
+        key_list = [np.random.choice(["and", "or", "not"], p=[0.35, 0.35, 0.3]) for i in range(num)]
 
-        c = 1
         #key_listをASTにランダム挿入
         for key in key_list:
             self.RandomInsert(key)
-            #print("{} is OK".format(c))
-            c = c + 1
 
         #leaf_listをAStに挿入
         self.LeafRandomInsert(leaf_list)
@@ -57,15 +52,21 @@ class AST:
             index = 0
 
         else:
-            #leaf_listを取得
+            # leaf_listを取得
             _, _, leaf_list, _ = self.Scan()
-            #最大の深さにある場所を選択しないようにする
+            # 最大の深さにある場所を選択しないようにする
             leaf_list = leaf_list[np.where(np.log2(leaf_list+1)//1 + 1 < self.depth)]
-            print(leaf_list)
+            #print(leaf_list)
+
+            # 置くとこないなら終わり(notが上に配置された時に起こりやすい)
+            if len(leaf_list) == 0:
+                print(self.size, -1, key)
+                return
             
             #leaf_listからランダムで場所を選択
             index = int(np.random.choice(leaf_list))
-
+            
+        print(self.size, index, key)
         self.ast[index] = key
 
         #randomInsertをするたびにsizeとleaf_numを増やす
@@ -228,20 +229,12 @@ class AST:
 
         return score
 
-
-count = score = 0
-
-#while(score != 8):
-
-test = AST(6)
+"""
+test = AST(5)
 leaf_list = np.asarray(["X1", "X2", "X3"])
-node_num_list, node_key_list, L, edge_list = test.InitializeRandomPerson(leaf_list)
-print(list(test.ast))
-#print(node_num_list, node_key_list, L, edge_list)
-#score = test.Score()
-#print(count, score)
-#count = count + 1
-    
+test.InitializeRandomPerson(leaf_list)
+
+node_num_list, node_key_list, leaf_list, edge_list = test.Scan()
 
 # formatはpngを指定(他にはPDF, PNG, SVGなどが指定可)
 G = Digraph(format='png')
@@ -255,10 +248,4 @@ for i, j in edge_list:
     G.edge(str(i), str(j))
 
 G.render("img/ASTtest3")
-
-"""
-print(test.size, test.leaf_num)
-node_num_list, node_key_list, leaf_list, edge_list = test.scan()
-print(node_num_list, node_key_list, leaf_list, edge_list)
-print(test.ast[0:30])
 """
