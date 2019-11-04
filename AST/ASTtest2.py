@@ -25,8 +25,7 @@ class AST:
 
     def InitializeRandomPerson(self, leaf_list):
         #葉以外の要素数をランダムで決める(最大は2**(depth-1)-1)
-        #num = np.random.randint(1, 2**(self.depth-1))
-        num=0
+        num = np.random.randint(0, 2**(self.depth-1))
         print("num:{}".format(num))
 
         #key_list作成...ランダムにand,or,notを入れたもの
@@ -129,7 +128,7 @@ class AST:
                 # なぜか(1-1)//2=-0となり,0と別物になるのでabsを利用している
                 edge_list = np.append(edge_list, np.asarray([[abs((num-1)//2), num]]), axis=0)
 
-        return node_num_list, node_key_list, leaf_list, edge_list
+        return  node_num_list, node_key_list, leaf_list, edge_list
     
     #####スコアメソッド#########################################
 
@@ -226,7 +225,7 @@ class AST:
 
         return score
 
-
+"""
 test = AST(5)
 leaf_list = np.asarray(["X1", "X2", "X3"])
 test.InitializeRandomPerson(leaf_list)
@@ -245,3 +244,4 @@ for i, j in edge_list:
     G.edge(str(i), str(j))
 
 G.render("img/ASTtest4")
+"""
