@@ -26,23 +26,20 @@ class AST:
     def InitializeRandomPerson(self, leaf_list):
         #葉以外の要素数をランダムで決める(最大は2**(depth-1)-1)
         #num = np.random.randint(1, 2**(self.depth-1))
-        num = 2**(self.depth-1)-1
+        num=0
         print("num:{}".format(num))
 
         #key_list作成...ランダムにand,or,notを入れたもの
         key_list = [np.random.choice(["and", "or", "not"], p=[0.35, 0.35, 0.3]) for i in range(num)]
 
-        #key_listをASTにランダム挿入
+        # key_listをASTにランダム挿入
+        # (num=0のときはkey_listが空になり一回もInsertされない)
         for key in key_list:
             self.RandomInsert(key)
 
         #leaf_listをAStに挿入
+        # (num=0のときはroot1つにkeyが挿入される)
         self.LeafRandomInsert(leaf_list)
-
-        #描画用にAST全体をスキャン
-        node_num_list, node_key_list, L, edge_list = self.Scan()
-
-        return node_num_list, node_key_list, L, edge_list
         
     #非終端記号keyを挿入
     #この後,葉を挿入するので、最大の深さ(self.depth)を超えないようにする
@@ -101,23 +98,23 @@ class AST:
         node_num_list = np.asarray([])
         node_key_list = np.asarray([])
         leaf_list = np.asarray([])
-        #np.appendのときのおまじない
+        # np.appendのときのおまじない
         edge_list = np.empty((0,2), int)
 
         #print(self.size, self.leaf_num)
 
-        #空のとき
+        # 空のとき(leaf_listだけ[0])
         if self.size==0:
-            return node_num_list, node_key_list, leaf_list, edge_list
+            return node_num_list, node_key_list, np.append(leaf_list, 0), edge_list
 
         i = 0
-        #iで木の全要素を走査して、すべてのノードと葉をピック
+        # iで木の全要素を走査して、すべてのノードと葉をピック
         while len(node_num_list) < self.size or len(leaf_list) < self.leaf_num:
-            #ast[i]があったらノード
+            # ast[i]があったらノード
             if self.ast[i]:
                 node_num_list = np.append(node_num_list, i)
                 node_key_list = np.append(node_key_list, self.ast[i])
-            #ast[i]はない場合
+            # ast[i]はない場合
             elif self.ast[(i-1)//2]:
                 #iがnotの右の子でないなら葉
                 if i % 2 == 1 or self.ast[abs((i-1)//2)] != "not":
@@ -126,10 +123,10 @@ class AST:
             i = i + 1
 
         if len(node_num_list) >= 2:
-            #子の親(=(num-1)//2)は確実に存在するのを利用し、辺を結ぶ
+            # 子の親(=(num-1)//2)は確実に存在するのを利用し、辺を結ぶ
             #print(node_num_list[1:])
             for num in node_num_list[1:]:
-                #なぜか(1-1)//2=-0となり,0と別物になるのでabsを利用している
+                # なぜか(1-1)//2=-0となり,0と別物になるのでabsを利用している
                 edge_list = np.append(edge_list, np.asarray([[abs((num-1)//2), num]]), axis=0)
 
         return node_num_list, node_key_list, leaf_list, edge_list
@@ -229,7 +226,7 @@ class AST:
 
         return score
 
-"""
+
 test = AST(5)
 leaf_list = np.asarray(["X1", "X2", "X3"])
 test.InitializeRandomPerson(leaf_list)
@@ -247,5 +244,4 @@ for num, key in zip(node_num_list, node_key_list):
 for i, j in edge_list:
     G.edge(str(i), str(j))
 
-G.render("img/ASTtest3")
-"""
+G.render("img/ASTtest4")
