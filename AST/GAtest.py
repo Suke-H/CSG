@@ -15,7 +15,7 @@ def InitializeRandomPeople(n):
         #leafの種類
         leaf_list = np.asarray(["X1", "X2", "X3"])
         #一人生成
-        _, _, _, _ = p.InitializeRandomPerson(leaf_list)
+        p.InitializeRandomPerson(leaf_list)
         #リストにクラスごと登録
         People_list.append(p)
 
@@ -34,7 +34,7 @@ def Rank(People_list):
 
     #index_listの順にPeople_listを並べる
     return np.array(People_list)[index_list]
-
+"""
 #突然変異
 def Mutate(tree, rate=0.2):
     #rateの確率で突然変異
@@ -44,7 +44,7 @@ def Mutate(tree, rate=0.2):
         
         #突然変異させる木の要素をランダム選択
         mutate_point = np.random.choice(node_num_list)
-
+"""
 
 
 def DrawTree(tree, path):

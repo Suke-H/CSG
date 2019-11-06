@@ -26,7 +26,6 @@ class AST:
     def InitializeRandomPerson(self, leaf_list):
         #葉以外の要素数をランダムで決める(最大は2**(depth-1)-1)
         num = np.random.randint(0, 2**(self.depth-1))
-        print("num:{}".format(num))
 
         #key_list作成...ランダムにand,or,notを入れたもの
         key_list = [np.random.choice(["and", "or", "not"], p=[0.35, 0.35, 0.3]) for i in range(num)]
@@ -56,13 +55,14 @@ class AST:
 
             # 置くとこないなら終わり(notが上に配置された時に起こりやすい)
             if len(leaf_list) == 0:
-                print(self.size, -1, key)
+                ###テスト###
+                #print(self.size, -1, key)
                 return
             
             #leaf_listからランダムで場所を選択
             index = int(np.random.choice(leaf_list))
-            
-        print(self.size, index, key)
+        ###テスト###   
+        #print(self.size, index, key)
         self.ast[index] = key
 
         #randomInsertをするたびにsizeとleaf_numを増やす
