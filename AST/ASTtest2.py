@@ -132,18 +132,24 @@ class AST:
     
     #####スコアメソッド#########################################
 
-    #逆ポーランド記法でASTを表記
+    # 逆ポーランド記法でASTを表記
     def Postorder(self, i):
-        if self.ast[i] is None:
+        # 今の場所が None または 配列のサイズを超してたら 終了
+        if i >= self.max_size:
             return
-
+        elif self.ast[i] is None:
+            return
+        
+        # 左へ
         self.Postorder(2*i+1)
+        # 右へ
         self.Postorder(2*i+2)
-
+        # 代入
         self.postorder_list = np.append(self.postorder_list,self.ast[i])
 
     def Score(self):
         #postorder_listに逆ポーランド記法を書き込む
+        self.postorder_list = []
         self.Postorder(0)
 
         #print(self.postorder_list)
@@ -155,7 +161,7 @@ class AST:
         }
 
         #各割当て(2^3通り)に対する真理値が、目標のブール関数と一致した数がスコア
-        goal_truth = [False, False, False, True, False, True, True, True]
+        goal_truth = [False, False,  False, True, False, True, True, True]
         bit = [False, True]
         #goal_truth = np.asarray([0,0,0,1,0,1,1,1])
         #bit = np.asarray([0,1])
@@ -169,11 +175,12 @@ class AST:
             X1 = assign[0]
             X2 = assign[1]
             X3 = assign[2]
+
             bool_list = []
 
-            #逆ポーランド記法計算の下準備
+            # 逆ポーランド記法計算の下準備
             for key in self.postorder_list:
-                #X1, X2, X3があったら割り当てを代入
+                # X1, X2, X3があったら割り当てを代入
                 if key == "X1":
                     bool_list.append(X1)
 
@@ -187,9 +194,6 @@ class AST:
                     bool_list.append(key)
 
             #print("bool_list:{}".format(bool_list))
-            #print(bool_list)
-            #print('RPN: {}'.format(bool_list))
-
             #逆ポーランド記法の計算にスタックを利用
             #演算子が出るまでスタックし続け、演算子が出たらpop(and,orなら2つ、notなら1つ)
             #して計算結果をスタックする
@@ -219,6 +223,7 @@ class AST:
 
             #print("="*50)
             #print("{}, {}, {} -> {} == {}".format(X1, X2, X3, stack[0], goal))
+            #print(len(stack))
 
             if stack[0] == goal:
                 score = score + 1
@@ -243,5 +248,8 @@ for num, key in zip(node_num_list, node_key_list):
 for i, j in edge_list:
     G.edge(str(i), str(j))
 
-G.render("img/ASTtest4")
+G.render("img/ASTtest5")
+
+test.Postorder(0)
+print(test.postorder_list)
 """

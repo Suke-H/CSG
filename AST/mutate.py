@@ -126,11 +126,13 @@ def Crossover(tree1, tree2, rate=1.0):
             cross_depth1 = Depth(point1) + branch2_depth - 1
             cross_depth2 = Depth(point2) + branch1_depth - 1
 
+        """
         print("tree1:{}, tree2:{}".format(tree1.depth, tree2.depth))
         print("point1:{}, depth{}, point2:{}, depth{}".format(point1, Depth(point1), point2, Depth(point2)))
         print("b1depth:{}, b2depth:{}".format(branch1_depth, branch2_depth))
         print("cross1:{}, cross2:{}".format(cross_depth1, cross_depth2))
         print(branch1_node_list, branch2_node_list)
+        """
 
         # つけ木作成
         branch1 = AST(branch1_depth)
@@ -143,8 +145,6 @@ def Crossover(tree1, tree2, rate=1.0):
         for i, key in zip(branch2_node_list, branch2_key_list):
             branch2.ast[i] = key
             branch2.size = branch2.size + 1
-
-        print(branch1.size, branch2.size)
 
         # つけ木をくっつける
         cross_tree1 = LinkTree(tree1, branch2, point1)
