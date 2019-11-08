@@ -14,9 +14,9 @@ import figure2 as F
 
 def PreProcess2():
 	#自作した点群を読み込み
-    points, X, Y, Z = MakePoints(sample_plane, grid_step=50, epsilon=0.5)
+    points, X, Y, Z = MakePoints(cube, grid_step=100, epsilon=0.05, down_rate = 0.3)
 
-    print(len(X))
+    #print(len(X))
 
     #点群をnp配列⇒open3d形式に
     pointcloud = open3d.PointCloud()
@@ -42,11 +42,11 @@ def PreProcess2():
 	#OBB生成
 	#(最適化の条件にも使いたい)
     _, _, length = buildOBB(points)
-    print("OBB_length: {}".format(length))
+    #print("OBB_length: {}".format(length))
     
     return points, X, Y, Z, normals, length
 
-
+"""
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
@@ -69,6 +69,7 @@ OBBViewer(ax, points)
 #plot_implicit(ax, figure.f_rep, points)
 
 plt.show()
+"""
 
 
 

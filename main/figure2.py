@@ -116,8 +116,42 @@ class AND:
     def f_rep(self, x, y, z):
         return self.p1.f_rep(x,y,z) + self.p2.f_rep(x,y,z) - np.sqrt(self.p1.f_rep(x,y,z)**2 + self.p2.f_rep(x,y,z)**2)
 
+    #∇AND = ∇f1 + ∇f2 - (f1∇f1+f2∇f2)/√f1^2+f2^2
     def normal(self, x, y, z):
-        normal = self.p1.normal(x,y,z) + self.p2.normal(x,y,z)
+        normal = self.p1.normal(x,y,z) + self.p2.normal(x,y,z) # - \
+            #(self.p1.f_rep(x,y,z)*self.p1.normal(x,y,z) + self.p2.f_rep(x,y,z)*self.p2.normal(x,y,z)) / \
+            #np.sqrt(self.p1.f_rep(x,y,z)**2 + self.p2.f_rep(x,y,z)**2)
+        
+        return norm(normal)
+
+class OR:
+    def __init__(self, p1, p2):
+        self.p1 = p1
+        self.p2 = p2
+
+    #OR(f1,f2) = f1 + f2 + √f1^2 + f2^2
+    def f_rep(self, x, y, z):
+        return self.p1.f_rep(x,y,z) + self.p2.f_rep(x,y,z) + np.sqrt(self.p1.f_rep(x,y,z)**2 + self.p2.f_rep(x,y,z)**2)
+
+    #∇OR = ∇f1 + ∇f2 + (f1∇f1+f2∇f2)/√f1^2+f2^2
+    def normal(self, x, y, z):
+        normal = self.p1.normal(x,y,z) + self.p2.normal(x,y,z) #+ \
+            #(self.p1.f_rep(x,y,z)*self.p1.normal(x,y,z) + self.p2.f_rep(x,y,z)*self.p2.normal(x,y,z)) / \
+            #np.sqrt(self.p1.f_rep(x,y,z)**2 + self.p2.f_rep(x,y,z)**2)
+        
+        return norm(normal)
+
+class NOT:
+    def __init__(self, p):
+        self.p = p
+
+    #NOT(f) = -f
+    def f_rep(self, x, y, z):
+        return -self.p.f_rep(x,y,z)
+
+    #∇NOT = -∇f
+    def normal(self, x, y, z):
+        normal = -self.p.normal(x,y,z)
         
         return norm(normal)
 

@@ -79,6 +79,8 @@ def SphereDict(points, normals, X, Y, Z, length):
     print(p[Scores.index(max(Scores))])
 
     return Spheres[Scores.index(max(Scores))]
+
+def CylinderDict(points, normals, X, Y, Z, length):
     
 
 points, X, Y, Z, normals, length = PreProcess2()

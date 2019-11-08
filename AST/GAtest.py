@@ -6,14 +6,19 @@ import copy
 
 from ASTtest2 import AST
 
-def GA(epoch=50, N=30, n=5, depth=4, tournament_size=5, cross_rate=0.75, mutate_rate=0.1):
+#他ディレクトリからのインポート
+import sys
+sys.path.append('../main/')
+from figure_sample import *
+
+def GA(leaf_list, epoch=50, N=30, n=5, depth=4, tournament_size=5, cross_rate=0.75, mutate_rate=0.1):
     # N人クリーチャー作成
-    people = InitializeRandomPeople(N, depth=4)
+    people = InitializeRandomPeople(N, leaf_list, depth=4)
 
     for i in range(epoch):
         print("epoch:{}".format(i))
         # スコア順に並び替え
-        people = Rank(people)
+        people, _ = Rank(people)
         # 上位n人は保存
         next_people = people[:n]
 
@@ -26,11 +31,11 @@ def GA(epoch=50, N=30, n=5, depth=4, tournament_size=5, cross_rate=0.75, mutate_
             # トーナメントサイズの人数出場
             entry = np.random.choice(people, tournament_size, replace=False)
             # 上位3人選択
-            entry = Rank(entry)[:3]
+            entry, _ = Rank(entry)[:3]
             # 1位と2位を交叉
             c1, c2 = Crossover(entry[0], entry[1], rate=cross_rate)
             # 3位を突然変異
-            c3 = Mutate(entry[2], rate=mutate_rate)
+            c3 = Mutate(entry[2], leaf_list, rate=mutate_rate)
             
             next_people = np.append(next_people, c1)
             next_people = np.append(next_people, c2)
@@ -42,21 +47,17 @@ def GA(epoch=50, N=30, n=5, depth=4, tournament_size=5, cross_rate=0.75, mutate_
 
         if i % 10 == 0:
             #Rank
-            sorted_People = Rank(people)
-            new_list = []
-            for p in sorted_People:
-                new_list.append(p.Score())
-            print(new_list)
+            sorted_People, score_list = Rank(people)
+            sorted_People[0].Score(drawfig=True)
+            print(score_list)
 
             #一位を描画
             DrawTree(sorted_People[0], "img/GA"+str(int(i/10)))
 
     #Rank
-    sorted_People = Rank(people)
-    new_list = []
-    for p in sorted_People:
-        new_list.append(p.Score())
-    print(new_list)
+    sorted_People, score_list = Rank(people)
+    sorted_People[0].Score(drawfig=True)
+    print(score_list)
 
     #一位を描画
     DrawTree(sorted_People[0], "img/GAlast")
@@ -68,14 +69,12 @@ def Adapt(i, k0):
     return int(2**(Depth(i)-1)*k0 + i)
 
 #ランダムにn人クリーチャー作成
-def InitializeRandomPeople(n, depth=4):
+def InitializeRandomPeople(n, leaf_list, depth=4):
     People_list = []
 
     for i in range(n):
         #初期化
         p = AST(depth)
-        #leafの種類
-        leaf_list = np.asarray(["X1", "X2", "X3"])
         #一人生成
         p.InitializeRandomPerson(leaf_list)
         #リストにクラスごと登録
@@ -92,8 +91,7 @@ def Rank(People_list):
     index_list = sorted(range(len(score_list)), reverse=True, key=lambda k: score_list[k])
 
     #index_listの順にPeople_listを並べる
-    return np.array(People_list)[index_list]
-
+    return np.array(People_list)[index_list], np.array(score_list)[index_list]
 
 def DrawTree(tree, path):
     #木をスキャン
@@ -105,6 +103,18 @@ def DrawTree(tree, path):
 
     #二分木作成
     for num, key in zip(node_num_list, node_key_list):
+        if key == P_Z0:
+            key = "P1"
+        elif key == P_Z1:
+            key = "P2"
+        elif key == P_X0:
+            key = "P3"
+        elif key == P_X1:
+            key = "P4"
+        elif key == P_Y0:
+            key = "P5"
+        elif key == P_Y1:
+            key = "P6"
         G.node(str(num), key)
 
     for i, j in edge_list:
@@ -141,7 +151,7 @@ def LinkTree(tree1, tree2, link_point):
 
     return tree
 
-def Mutate(tree, rate=1.0):
+def Mutate(tree, leaf_list, rate=1.0):
     # rateの確率で突然変異
     if np.random.rand() <= rate:
         # 木をスキャン
@@ -160,7 +170,8 @@ def Mutate(tree, rate=1.0):
 
         # つけ木作成
         branch = AST(branch_depth)
-        branch.InitializeRandomPerson(["X1", "X2", "X3"])
+        #branch.InitializeRandomPerson(np.array(["X1", "X2", "X3"]))
+        branch.InitializeRandomPerson(leaf_list)
 
         # つけ木ををっつける
         mutate_tree = LinkTree(tree, branch, mutate_point)
@@ -262,7 +273,7 @@ def Crossover(tree1, tree2, rate=1.0):
 
 """
 #10人作ってみる
-People = InitializeRandomPeople(5, depth=2)
+#People = InitializeRandomPeople(5, np.array(["X1", "X2", "X3"])depth=2)
 print(People)
 #Score_list
 Score_list = []
@@ -280,5 +291,5 @@ print(new_list)
 #一位を描画
 DrawTree(sorted_People[0], "img/GAtest")
 """
-
-GA(epoch=50, N=30, n=5, depth=4, tournament_size=10, cross_rate=0.75, mutate_rate=0.1)
+leaf_list = np.array([P_Z0, P_Z1, P_X0, P_X1, P_Y0, P_Y1])
+GA(leaf_list, epoch=50, N=30, n=5, depth=6, tournament_size=10, cross_rate=0.75, mutate_rate=0.1)

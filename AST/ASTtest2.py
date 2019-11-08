@@ -3,6 +3,18 @@ import random
 from graphviz import Digraph
 import itertools
 
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+#他ディレクトリからのインポート
+import sys
+sys.path.append('../main/')
+from PreProcess2 import PreProcess2
+from FigureDetection import CountPoints
+import figure2 as F
+from figure_sample import *
+from method import *
+
 class AST:
     def __init__(self, depth):
         #木の深さ
@@ -147,27 +159,22 @@ class AST:
         # 代入
         self.postorder_list = np.append(self.postorder_list,self.ast[i])
 
-    def Score(self):
-        #postorder_listに逆ポーランド記法を書き込む
+    def BoolScore(self):
+        # postorder_listに逆ポーランド記法を書き込む
         self.postorder_list = []
         self.Postorder(0)
 
-        #print(self.postorder_list)
-
+        # 演算の定義
         operator = {
         'and': (lambda x, y: x and y),
         'or': (lambda x, y: x or y),
         'not': (lambda x: not x),
         }
 
-        #各割当て(2^3通り)に対する真理値が、目標のブール関数と一致した数がスコア
+        # 各割当て(2^3通り)に対する真理値が、目標のブール関数と一致した数がスコア
         goal_truth = [False, False,  False, True, False, True, True, True]
         bit = [False, True]
-        #goal_truth = np.asarray([0,0,0,1,0,1,1,1])
-        #bit = np.asarray([0,1])
         truth_assignment = list(itertools.product(bit, bit, bit))
-        #print(truth_assignment)
-
         score = 0
 
         #各割当てでの真理値の一致チェック
@@ -230,9 +237,78 @@ class AST:
 
         return score
 
+    def Score(self, drawfig=False):
+        # postorder_listに逆ポーランド記法を書き込む
+        self.postorder_list = []
+        self.Postorder(0)
+
+        # 演算の定義
+        operator = {
+        'and': (lambda p1, p2: F.AND(p1, p2)),
+        'or': (lambda p1, p2: F.OR(p1, p2)),
+        'not': (lambda p: F.NOT(p))
+        }
+
+        stack = []
+
+        for z in self.postorder_list:
+            #演算子じゃなかったらスタック
+            if z not in operator.keys():
+                stack.append(z)
+                continue
+
+            #not
+            elif z == "not":
+                x = stack.pop()
+                #print("not {} = {}".format(x, operator[z](x)))
+                stack.append(operator[z](x))
+
+            #and, or
+            else:
+                y = stack.pop()
+                x = stack.pop()
+                stack.append(operator[z](x, y))
+                #print('{} {} {} = {}'.format(x, z, y, operator[z](x, y)))
+
+        # 構文木によって演算された図形がstackに残る
+        figure = stack[0]
+
+        # フィットした点の数がスコア
+        points, X, Y, Z, normals, length = PreProcess2()
+        MX, MY, MZ, score, _ = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi)
+
+        # グラフ作成したいとき
+        if drawfig:
+            DrawFig(figure, X, Y, Z, MX, MY, MZ)
+
+        return score
+
+        #print("="*50)
+        #print("{}, {}, {} -> {} == {}".format(X1, X2, X3, stack[0], goal))
+
+def DrawFig(figure, X, Y, Z, MX, MY, MZ):
+        # グラフの枠を作っていく
+        fig = plt.figure()
+        ax = Axes3D(fig)
+
+        # 軸にラベルを付けたいときは書く
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("Z")
+
+        # 点群を描画
+        ax.plot(X,Y,Z,marker="o",linestyle='None',color="white")
+        ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="red")
+
+        # 図形を描画
+        plot_implicit(ax, figure.f_rep)
+
+        plt.show()
+
 """
 test = AST(5)
-leaf_list = np.asarray(["X1", "X2", "X3"])
+#leaf_list = np.asarray(["X1", "X2", "X3"])
+leaf_list = np.array([P_Z0, P_Z1, P_X0, P_X1, P_Y0, P_Y1])
 test.InitializeRandomPerson(leaf_list)
 
 node_num_list, node_key_list, leaf_list, edge_list = test.Scan()
@@ -243,13 +319,24 @@ G.attr('node', shape='circle')
 
 #二分木作成
 for num, key in zip(node_num_list, node_key_list):
+    if key == P_Z0:
+        key = "P1"
+    elif key == P_Z1:
+        key = "P2"
+    elif key == P_X0:
+        key = "P3"
+    elif key == P_X1:
+        key = "P4"
+    elif key == P_Y0:
+        key = "P5"
+    elif key == P_Y1:
+        key = "P6"
     G.node(str(num), key)
 
 for i, j in edge_list:
     G.edge(str(i), str(j))
 
-G.render("img/ASTtest5")
+G.render("img/score")
 
-test.Postorder(0)
-print(test.postorder_list)
+print("Score:{}".format(test.Score()))
 """

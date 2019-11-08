@@ -11,7 +11,7 @@ from PreProcess import PreProcess
 from PreProcess2 import PreProcess2
 from method import *
 from figure_sample import *
-from FigureDetection import CountPoints, MarkPoints, LabelPoints
+from FigureDetection import CountPoints
 
 #seabornはimportしておくだけでもmatplotlibのグラフがきれいになる
 import seaborn as sns
@@ -194,25 +194,26 @@ def DetectViewer(path):
     plt.show()
 
 
-OptiViewer("../data/pumpkin.obj", 3)
+#OptiViewer("../data/pumpkin.obj", 1)
 #DetectViewer("")
 
 """
 points, X, Y, Z, normals, length = PreProcess2()
 print(points.shape[0])
 ax = ViewerInit(points, X, Y, Z, normals)
-#figure = F.plane([0,2,1,0])
+figure = F.plane([0,0,1,1.5])
 #figure = F.sphere([0.75, 0.75, 0.75, 0.75])
 #figure = F.cylinder([0, 1, 0, 0, 1, 1, 1])
 #figure = F.cone([0,0,1.5,0,0,-1, np.pi/12])
-figure = F.cone([ 0.17158955,  0.57584945, -3.95574439, -0.09093477, -0.29898945,\
-        0.94991377,  0.17453293])
+#figure = F.cone([ 0.17158955,  0.57584945, -3.95574439, -0.09093477, -0.29898945,\
+        #0.94991377,  0.17453293])
+#figure = CUBE
 plot_implicit(ax, figure.f_rep)
 #U, V, W = Disassemble(normals)
 #ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
 #plot_normal(ax, figure, X, Y, Z)
 #S_optを検出
-MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
+MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi)
 
 print("num:{}".format(num))
 ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="red")

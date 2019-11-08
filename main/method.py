@@ -3,6 +3,17 @@ import numpy.linalg as LA
 import itertools
 import random
 
+"""
+def AND(f1, f2):
+    return lambda x,y,z: f1(x,y,z) + f2(x,y,z) - np.sqrt(f1(x,y,z)**2 + f2(x,y,z)**2)
+
+def OR(f1, f2):
+    return lambda x,y,z: f1(x,y,z) + f2(x,y,z) + np.sqrt(f1(x,y,z)**2 + f2(x,y,z)**2)
+
+def NOT(f):
+    return lambda x,y,z: -f(x,y,z)
+"""
+
 def norm(normal):
      #ベクトルが一次元のとき
     if len(normal.shape)==1:

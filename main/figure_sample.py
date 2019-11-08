@@ -21,11 +21,26 @@ def p_y0(x, y, z):
 def p_y1(x, y, z):
     return 1.5-y
 
+# f = d - (ax+by+cz)
+
+P_Z0 = F.plane([0,0,-1,0])
+P_Z1 = F.plane([0,0,1,1.5])
+P_X0 = F.plane([-1,0,0,0])
+P_X1 = F.plane([1,0,0,1.5])
+P_Y0 = F.plane([0,-1,0,0])
+P_Y1 = F.plane([0,1,0,1.5])
+
+CUBE = F.AND(F.AND(F.AND(F.AND(F.AND(P_Z0, P_Z1), P_X0), P_X1), P_Y0), P_Y1)
+
 def sample_plane(x, y, z):
     return x + 4*y + 5*z + 6
 
+"""
 def AND(f1, f2):
     return lambda x,y,z: f1(x,y,z) + f2(x,y,z) - np.sqrt(f1(x,y,z)**2 + f2(x,y,z)**2)
+"""
+
+AND = lambda f1, f2: lambda x,y,z: f1(x,y,z) + f2(x,y,z) - np.sqrt(f1(x,y,z)**2 + f2(x,y,z)**2)
 
 cube = AND(AND(AND(AND(AND(p_z0, p_z1), p_x0), p_x1), p_y0), p_y1)
 
