@@ -14,7 +14,7 @@ import figure2 as F
 
 def PreProcess2():
 	#自作した点群を読み込み
-    points, X, Y, Z = MakePoints(cube, grid_step=100, epsilon=0.05, down_rate = 0.3)
+    points, X, Y, Z = MakePoints(cube, grid_step=50, epsilon=0.1, down_rate = 0.5)
 
     #print(len(X))
 

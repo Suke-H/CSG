@@ -13,31 +13,7 @@ from method import *
 from figure_sample import *
 from FigureDetection import CountPoints
 
-#seabornはimportしておくだけでもmatplotlibのグラフがきれいになる
-import seaborn as sns
-sns.set_style("darkgrid")
 
-def ViewerInit(points, X, Y, Z, normals):
-    #グラフの枠を作っていく
-    fig = plt.figure()
-    ax = Axes3D(fig)
-
-    #軸にラベルを付けたいときは書く
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
-
-    #点群を描画
-    ax.plot(X,Y,Z,marker="o",linestyle='None',color="white")
-
-    #法線を描画
-    #U, V, W = Disassemble(normals)
-    #ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
-
-    #OBBを描画
-    OBBViewer(ax, points)
-
-    return ax
 
 #mainの部分
 def OptiViewer(path, fig_type):

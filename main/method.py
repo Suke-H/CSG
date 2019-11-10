@@ -3,6 +3,13 @@ import numpy.linalg as LA
 import itertools
 import random
 
+#seabornはimportしておくだけでもmatplotlibのグラフがきれいになる
+import seaborn as sns
+sns.set_style("darkgrid")
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+
 """
 def AND(f1, f2):
     return lambda x,y,z: f1(x,y,z) + f2(x,y,z) - np.sqrt(f1(x,y,z)**2 + f2(x,y,z)**2)
@@ -157,6 +164,29 @@ def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05)
     points = points.T
 
     return points, pointX, pointY, pointZ
+
+
+def ViewerInit(points, X, Y, Z, normals=[]):
+    #グラフの枠を作っていく
+    fig = plt.figure()
+    ax = Axes3D(fig)
+
+    #軸にラベルを付けたいときは書く
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+
+    #点群を描画
+    ax.plot(X,Y,Z,marker="o",linestyle='None',color="white")
+
+    #法線を描画
+    #U, V, W = Disassemble(normals)
+    #ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
+
+    #OBBを描画
+    OBBViewer(ax, points)
+
+    return ax
 
 #点群を入力としてOBBを描画する
 def OBBViewer(ax, points):

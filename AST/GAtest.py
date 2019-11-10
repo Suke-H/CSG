@@ -27,7 +27,7 @@ def GA(leaf_list, epoch=50, N=30, n=5, depth=4, tournament_size=5, cross_rate=0.
         # を繰り返す
         c = 0
         while len(next_people) <= N:
-            #print("{} 回目".format(c))
+            print("{} 回目".format(c))
             # トーナメントサイズの人数出場
             entry = np.random.choice(people, tournament_size, replace=False)
             # 上位3人選択
@@ -48,11 +48,12 @@ def GA(leaf_list, epoch=50, N=30, n=5, depth=4, tournament_size=5, cross_rate=0.
         if i % 10 == 0:
             #Rank
             sorted_People, score_list = Rank(people)
+            print("{}回目成果".format(int(i/10)))
             sorted_People[0].Score(drawfig=True)
             print(score_list)
 
             #一位を描画
-            DrawTree(sorted_People[0], "img/GA"+str(int(i/10)))
+            #DrawTree(sorted_People[0], "img/GA"+str(int(i/10)))
 
     #Rank
     sorted_People, score_list = Rank(people)
@@ -60,7 +61,7 @@ def GA(leaf_list, epoch=50, N=30, n=5, depth=4, tournament_size=5, cross_rate=0.
     print(score_list)
 
     #一位を描画
-    DrawTree(sorted_People[0], "img/GAlast")
+    #DrawTree(sorted_People[0], "img/GAlast")
 
 def Depth(i):
     return int(np.log2(i+1)+1)
@@ -100,6 +101,7 @@ def DrawTree(tree, path):
     # formatはpngを指定(他にはPDF, PNG, SVGなどが指定可)
     G = Digraph(format='png')
     G.attr('node', shape='circle')
+    print(node_key_list)
 
     #二分木作成
     for num, key in zip(node_num_list, node_key_list):
