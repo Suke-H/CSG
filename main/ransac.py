@@ -6,13 +6,20 @@ from PreProcess2 import PreProcess2
 from method import *
 import figure2 as F
 from FigureDetection import CountPoints
+from fitting import Fitting
 
 def PlaneDict(points, normals, X, Y, Z, length):
+    #print("10000個抽出")
     n = points.shape[0]
-    # ランダムに3点ずつ抽出
-    # 今のままだとチョイスされた点はどの組にもかぶらないようにされてるため、nC3となるようにチョイスしたい
+    #print(n)
+    N = 5000
+    # ランダムに3点ずつN組抽出
+    #points_set = points[np.array([np.random.choice(n, 3, replace=False) for i in range(N)]), :]
     points_set = points[np.random.choice(n, size=(int((n-n%3)/3), 3), replace=False), :]
+    
+    #print("points:{}".format(points_set.shape))
 
+    #print("計算")
     # 分割
     # [a1, b1, c1] -> [a1] [b1, c1]
     a0, a1 = np.split(points_set, [1], axis=1)
@@ -36,15 +43,19 @@ def PlaneDict(points, normals, X, Y, Z, length):
     d = np.reshape(d, (d.shape[0],1))
     p = np.concatenate([n, d], axis=1)
 
+    #print("平面生成")
+
     # 平面生成
     Planes = [F.plane(p[i]) for i in range(p.shape[0])]
 
+    #print("点の数を数える")
+
     # フィットしている点の数を数える
-    Scores = [CountPoints(Planes[i], points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/12)[3] for i in range(p.shape[0])]
+    Scores = [CountPoints(Planes[i], points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)[3] for i in range(p.shape[0])]
 
-    print(Scores, p[Scores.index(max(Scores))])
+    print(p[Scores.index(max(Scores))])
 
-    return Planes[Scores.index(max(Scores))]
+    return p[Scores.index(max(Scores))], Planes[Scores.index(max(Scores))]
 
 def SphereDict(points, normals, X, Y, Z, length):
     n = points.shape[0]
@@ -62,7 +73,7 @@ def SphereDict(points, normals, X, Y, Z, length):
     r = [radius(points_set[i][0], points_set[i][1], normals_set[i][0], normals_set[i][1]) for i in range(num)]
     c = [center(points_set[i][0], normals_set[i][0], r[i]) for i in  range(num)]
 
-    print(np.array(r).shape, np.array(c).shape)
+    #print(np.array(r).shape, np.array(c).shape)
 
     # パラメータ
     # p = [x0, y0, z0, r]
@@ -73,34 +84,82 @@ def SphereDict(points, normals, X, Y, Z, length):
     Spheres = [F.sphere(p[i]) for i in range(num)]
 
     # フィットしている点の数を数える
-    Scores = [CountPoints(Spheres[i], points, X, Y, Z, normals, epsilon=0.01*length, alpha=np.pi/12)[3] for i in range(num)]
+    Scores = [CountPoints(Spheres[i], points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)[3] for i in range(num)]
 
-    print(Scores, max(Scores))
     print(p[Scores.index(max(Scores))])
 
-    return Spheres[Scores.index(max(Scores))]
+    return p[Scores.index(max(Scores))], Spheres[Scores.index(max(Scores))]
 
-def CylinderDict(points, normals, X, Y, Z, length):
-    
+#def CylinderDict(points, normals, X, Y, Z, length):
 
+def RANSAC(fig, points, normals, X, Y, Z, length):
+    # 図形に応じてRANSAC
+    if fig==0:
+        res, figure = SphereDict(points, normals, X, Y, Z, length)
+
+    elif fig==1:
+        res, figure = PlaneDict(points, normals, X, Y, Z, length)
+
+    # フィット点を抽出
+    MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi/9)
+
+    if num!=0:
+        # フィット点を入力にフィッティング処理
+        res = Fitting(MX, MY, MZ, normals[index], length, fig, figure.p).x
+
+    return res
+
+"""
+print("点群生成")
 points, X, Y, Z, normals, length = PreProcess2()
 
-#figure = PlaneDict(points, normals, X, Y, Z, length)
-figure = SphereDict(points, normals, X, Y, Z, length)
+###
+figure = PlaneDict(points, normals, X, Y, Z, length)
+#figure = SphereDict(points, normals, X, Y, Z, length)
 
 #グラフ作成
 fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+ax1 = fig.add_subplot(121, projection='3d')
+ax2 = fig.add_subplot(122, projection='3d')
 
 #軸にラベルを付けたいときは書く
-ax.set_xlabel("X")
-ax.set_ylabel("Y")
-ax.set_zlabel("Z")
+ax1.set_xlabel("X")
+ax1.set_ylabel("Y")
+ax1.set_zlabel("Z")
+ax2.set_xlabel("X")
+ax2.set_ylabel("Y")
+ax2.set_zlabel("Z")
 
 #points
-ax.plot(X, Y, Z, marker="o",linestyle="None",color="white")
+ax1.plot(X, Y, Z, marker="o",linestyle="None",color="white")
+ax2.plot(X, Y, Z, marker="o",linestyle="None",color="white")
+
+MX, MY, MZ, max_label_num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi/12)
+print("num1:{}".format(max_label_num))
+
+# フィット点群のplot
+ax1.plot(MX, MY, MZ, marker=".",linestyle="None",color="red")
 
 #図形plot
-plot_implicit(ax, figure.f_rep, points, 1, 100)
+plot_implicit(ax1, figure.f_rep, points, 1, 100)
+
+### フィット関数を最適化
+#res = Fitting(MX, MY, MZ, normals[index], length, 0, figure.p)
+res = Fitting(MX, MY, MZ, normals[index], length, 1, figure.p)
+print(res)
+
+### 
+#figure = F.sphere(res.x)
+figure = F.plane(res.x)
+
+MX2, MY2, MZ2, max_label_num, _ = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi/12)
+print("num2:{}".format(max_label_num))
+
+# フィット点群のplot
+ax2.plot(MX2, MY2, MZ2, marker=".",linestyle="None",color="red")
+
+#図形plot
+plot_implicit(ax2, figure.f_rep, points, 1, 100)
 
 plt.show()
+"""

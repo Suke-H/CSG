@@ -12,7 +12,8 @@ from PreProcess2 import PreProcess2
 from method import *
 from figure_sample import *
 from FigureDetection import CountPoints
-
+from ransac import RANSAC
+from fitting import Fitting
 
 
 #mainの部分
@@ -89,7 +90,7 @@ def DetectViewer(path):
     ###グラフ初期化###
     ax = ViewerInit(points, X, Y, Z, normals)
 
-    while points.shape[0] >= ori_points.shape[0] * 0.1:
+    while points.shape[0] >= ori_points.shape[0] * 0.01:
         print("points:{}".format(points.shape[0]))
 
         scores = []
@@ -98,7 +99,7 @@ def DetectViewer(path):
 
         ###最適化###
         for fig_type in [0, 1]:
-            a = input()
+            #a = input()
 
             ###グラフ初期化##
             #ax = ViewerInit(points, X, Y, Z, normals)
@@ -169,9 +170,116 @@ def DetectViewer(path):
     print(len(fitting_figures), fitting_figures)
     plt.show()
 
+def DetectViewer2(path):
+    #点群,法線,OBBの対角線の長さ  取得
+    #points, X, Y, Z, normals, length = PreProcess(path)
+    
+    #自作の点群を扱いたいときはこちら
+    points, X, Y, Z, normals, length = PreProcess2()
+
+    #元の点群データを保存しておく
+    ori_points = points[:, :]
+    #ori_normals = normals[:, :]
+
+    fitting_figures = []
+    
+    print("points:{}".format(points.shape[0]))
+
+    ###グラフ初期化###
+    ax = ViewerInit(points, X, Y, Z, normals)
+
+    while points.shape[0] >= ori_points.shape[0] * 0.1:
+        print("points:{}".format(points.shape[0]))
+
+        scores = []
+        paras = []
+        indices = []
+
+        ###最適化###
+        for fig_type in [0, 1]:
+
+            ###グラフ初期化##
+            #ax = ViewerInit(points, X, Y, Z, normals)
+
+            #図形フィッティング
+            #result = figOptimize(points, normals, length, fig_type)
+            #result = figOptimize2(X, Y, Z, normals, length, fig_type)
+            result = RANSAC(fig_type, points, normals, X, Y, Z, length)
+            print(result)
+
+            #fig_typeに応じた図形を選択
+            if fig_type==0:
+                figure = F.sphere(result)
+            elif fig_type==1:
+                figure = F.plane(result)
+
+            #図形描画
+            #plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=50)
+
+            #図形に対して"条件"を満たす点群を数える、これをスコアとする
+            MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
+            print("num:{}".format(num))
+
+            #条件を満たす点群, 最適化された図形描画
+            #ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="orange")
+            
+            #最後に.show()を書いてグラフ表示
+            #plt.show()
+
+            #スコアとパラメータ,インデックスを保存
+            scores.append(num)
+            paras.append(result)
+            indices.append(index)
+
+        if max(scores) <= 50:
+            print("おわり！")
+            break
+
+        ###グラフ初期化###
+        ax = ViewerInit(points, X, Y, Z, normals)
+
+        #スコアが最大の図形を描画
+        best_fig = scores.index(max(scores))
+
+        if best_fig==0:
+            figure = F.sphere(paras[best_fig])
+            print("球の勝ち")
+            fitting_figures.append("球：[" + ','.join(map(str, list(paras[best_fig]))) + "]")
+        elif best_fig==1:
+            figure = F.plane(paras[best_fig])
+            print("平面の勝ち")
+            fitting_figures.append("平面：[" + ','.join(map(str, list(paras[best_fig]))) + "]")
+
+        # フィット点描画
+        ax.plot(X[indices[best_fig]],Y[indices[best_fig]],Z[indices[best_fig]],\
+                marker=".",linestyle='None',color="orange")
+
+        # 図形描画
+        plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=15)
+
+        plt.show()
+
+        #フィットした点群を削除
+        points = np.delete(points, indices[best_fig], axis=0)
+        normals = np.delete(normals, indices[best_fig], axis=0)
+        X, Y, Z = Disassemble(points)
+        
+        ###グラフ初期化###
+        #ax = ViewerInit(points, X, Y, Z, normals)
+
+        #plt.show()
+        ##################
+
+        print("="*100)
+        
+
+    print(len(fitting_figures), np.array(fitting_figures))
+    plt.show()
+
 
 #OptiViewer("../data/pumpkin.obj", 1)
 #DetectViewer("")
+DetectViewer2("")
 
 """
 points, X, Y, Z, normals, length = PreProcess2()

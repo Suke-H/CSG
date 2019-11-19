@@ -70,9 +70,11 @@ ax.set_zlabel("Z")
 
 
 points, X, Y, Z, normals, length = PreProcess2()
+print(length)
 figure = P_Z0
+#figure = SAMPLE_PLANE
 MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi)
-(UX, UY, UZ), (HX, HY, HZ), hull = MakeContour(points, P_Z0)
+(UX, UY, UZ), (HX, HY, HZ), hull = MakeContour(points, figure)
 
 
 # [0,1,2,..n] -> [1,2,...,n,0]
@@ -83,7 +85,7 @@ hull2 = np.array(hull2)
 
 #点群を描画
 ax.plot(X,Y,Z,marker="o",linestyle='None',color="white")
-#ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="green")
+ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="green")
 ax.plot(UX,UY,UZ, marker=".",linestyle='None',color="blue")
 ax.plot(HX,HY,HZ, marker="o",linestyle='None',color="red")
 for a, b in zip(hull, hull2):
@@ -97,7 +99,7 @@ for a, b in zip(hull, hull2):
 #ax.quiver([TX[0]], [TY[0]], [TZ[0]], [n[0]], [n[1]], [n[2]],  length=1,color='green', normalize=True)
 
 #図形
-plot_implicit(ax, P_Z0.f_rep)
+plot_implicit(ax, figure.f_rep, bbox=(-3, 3))
 
 plt.show()
 """
