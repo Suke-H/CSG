@@ -12,7 +12,7 @@ def PlaneDict(points, normals, X, Y, Z, length):
     #print("10000個抽出")
     n = points.shape[0]
     #print(n)
-    N = 5000
+    #N = 5000
     # ランダムに3点ずつN組抽出
     #points_set = points[np.array([np.random.choice(n, 3, replace=False) for i in range(N)]), :]
     points_set = points[np.random.choice(n, size=(int((n-n%3)/3), 3), replace=False), :]
@@ -59,16 +59,58 @@ def PlaneDict(points, normals, X, Y, Z, length):
 
 def SphereDict(points, normals, X, Y, Z, length):
     n = points.shape[0]
-    # ランダムに3点ずつ抽出
-    # 今のままだとチョイスされた点はどの組にもかぶらないようにされてるため、nC3となるようにチョイスしたい
+    #N = 5000
+    # ランダムに2点ずつN組抽出
+    #index = np.array([np.random.choice(n, 2, replace=False) for i in range(N)])
     index = np.random.choice(n, size=(int((n-n%2)/2), 2), replace=False)
     points_set = points[index, :]
     normals_set = normals[index, :]
 
     num = points_set.shape[0]
 
+    # c = p1 - r*n1
+    # c = p2 - r*n2 より
+    # r = (p1-p2)*(n1-n2)/|n1-n2|^2, c = p1 - r*n1となる
     radius = lambda p1, p2, n1, n2 : np.dot(p1-p2, n1-n2) / np.linalg.norm(n1-n2)**2
     center = lambda p1, n1, r : p1 - r * n1
+
+    # 二点の組[p1, p2], [n1, n2]をradius, centerに代入
+    r = [radius(points_set[i][0], points_set[i][1], normals_set[i][0], normals_set[i][1]) for i in range(num)]
+    c = [center(points_set[i][0], normals_set[i][0], r[i]) for i in  range(num)]
+
+    # rはあとで絶対値をつける
+    r = list(map(abs, r))
+
+    #print(np.array(r).shape, np.array(c).shape)
+
+    # パラメータ
+    # p = [x0, y0, z0, r]
+    r = np.reshape(r, (num,1))
+    p = np.concatenate([c, r], axis=1)
+
+    # 球面生成
+    Spheres = [F.sphere(p[i]) for i in range(num)]
+
+    # フィットしている点の数を数える
+    Scores = [CountPoints(Spheres[i], points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi/9)[3] for i in range(num)]
+
+    print(p[Scores.index(max(Scores))])
+
+    return p[Scores.index(max(Scores))], Spheres[Scores.index(max(Scores))]
+
+"""
+def CylinderDict(points, normals, X, Y, Z, length):
+    n = points.shape[0]
+    N = 5000
+    # ランダムに2点ずつN組抽出
+    index = np.array([np.random.choice(n, 2, replace=False) for i in range(N)])
+    #index = np.random.choice(n, size=(int((n-n%2)/2), 2), replace=False)
+    points_set = points[index, :]
+    normals_set = normals[index, :]
+
+    num = points_set.shape[0]
+
+    radius1 = lambda p1, p2, n1, n2 : np.dot(p1-p2, n1-n2) / np.linalg.norm(n1-n2)**2
 
     r = [radius(points_set[i][0], points_set[i][1], normals_set[i][0], normals_set[i][1]) for i in range(num)]
     c = [center(points_set[i][0], normals_set[i][0], r[i]) for i in  range(num)]
@@ -84,33 +126,33 @@ def SphereDict(points, normals, X, Y, Z, length):
     Spheres = [F.sphere(p[i]) for i in range(num)]
 
     # フィットしている点の数を数える
-    Scores = [CountPoints(Spheres[i], points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)[3] for i in range(num)]
+    Scores = [CountPoints(Spheres[i], points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi/9)[3] for i in range(num)]
 
     print(p[Scores.index(max(Scores))])
 
     return p[Scores.index(max(Scores))], Spheres[Scores.index(max(Scores))]
-
-#def CylinderDict(points, normals, X, Y, Z, length):
+"""
 
 def RANSAC(fig, points, normals, X, Y, Z, length):
     # 図形に応じてRANSAC
     if fig==0:
         res, figure = SphereDict(points, normals, X, Y, Z, length)
+        epsilon, alpha = 0.03*length, np.pi/9
 
     elif fig==1:
         res, figure = PlaneDict(points, normals, X, Y, Z, length)
+        epsilon, alpha = 0.08*length, np.pi/9
 
     # フィット点を抽出
-    MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi/9)
+    MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
 
     if num!=0:
         # フィット点を入力にフィッティング処理
-        res = Fitting(MX, MY, MZ, normals[index], length, fig, figure.p).x
+        res = Fitting(MX, MY, MZ, normals[index], length, fig, figure.p, epsilon=epsilon, alpha=alpha)
 
-    return res
+    return res.x
 
 """
-print("点群生成")
 points, X, Y, Z, normals, length = PreProcess2()
 
 ###

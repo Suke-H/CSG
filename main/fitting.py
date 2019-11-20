@@ -34,12 +34,12 @@ def func(p, X, Y, Z, normals, fig, epsilon=0.7, alpha=np.pi/12):
 	return E
 
 #####最適化#####################################################
-def Fitting(X, Y, Z, normals, length, fig, p_0):
+def Fitting(X, Y, Z, normals, length, fig, p_0, epsilon=0.07, alpha=np.pi/12):
 
 	####条件###################
 	# eqは=, ineqは>=
 
-	#球の条件
+	# 球の条件
 	if fig == 0:
 		print("球")
 
@@ -52,10 +52,10 @@ def Fitting(X, Y, Z, normals, length, fig, p_0):
         )
 
 		#定数(pをのぞく引数)
-		arg = (X, Y, Z, normals, fig, 0.01*length, np.pi/12)
+		#arg = (X, Y, Z, normals, fig, 0.01*length, np.pi/12)
 
 
-	#平面の条件
+	# 平面の条件
 	if fig == 1:
 		print("平面")
 
@@ -66,9 +66,9 @@ def Fitting(X, Y, Z, normals, length, fig, p_0):
         )
 
 		#定数(pをのぞく引数)
-		arg = (X, Y, Z, normals, fig, 0.07*length, np.pi/12)
+		#arg = (X, Y, Z, normals, fig, 0.07*length, np.pi/12)
 
-	#円柱の条件
+	# 円柱の条件
 	if fig == 2:
 		print("円柱")
 
@@ -82,10 +82,10 @@ def Fitting(X, Y, Z, normals, length, fig, p_0):
         )
 
 		#定数(pをのぞく引数)
-		arg = (X, Y, Z, normals, fig, 0.05*length, np.pi/12)
+		#arg = (X, Y, Z, normals, fig, 0.05*length, np.pi/12)
 
 
-	#円錐の条件
+	# 円錐の条件
 	if fig == 3:
 		print("円錐")
 
@@ -101,9 +101,12 @@ def Fitting(X, Y, Z, normals, length, fig, p_0):
         )
 
 		#定数(pをのぞく引数)
-		arg = (X, Y, Z, normals, fig, 0.03*length, np.pi/9)
+		#arg = (X, Y, Z, normals, fig, 0.03*length, np.pi/9)
 
-    #最適化
+	# 定数(pをのぞく引数)
+	arg = (X, Y, Z, normals, fig, epsilon, alpha)
+
+    # 最適化
 	result = minimize(func, p_0, args=arg, constraints=cons, method='SLSQP')
 
 	return result

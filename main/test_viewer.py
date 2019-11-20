@@ -181,6 +181,7 @@ def DetectViewer2(path):
     ori_points = points[:, :]
     #ori_normals = normals[:, :]
 
+    # 検知した図形のリスト
     fitting_figures = []
     
     print("points:{}".format(points.shape[0]))
@@ -238,17 +239,19 @@ def DetectViewer2(path):
         ###グラフ初期化###
         ax = ViewerInit(points, X, Y, Z, normals)
 
-        #スコアが最大の図形を描画
+        # スコアが最大の図形を描画
         best_fig = scores.index(max(scores))
+
+        # スコアが最大の図形を保存
+        fitting_figures.append([best_fig, paras[best_fig]])
 
         if best_fig==0:
             figure = F.sphere(paras[best_fig])
             print("球の勝ち")
-            fitting_figures.append("球：[" + ','.join(map(str, list(paras[best_fig]))) + "]")
+            
         elif best_fig==1:
             figure = F.plane(paras[best_fig])
             print("平面の勝ち")
-            fitting_figures.append("平面：[" + ','.join(map(str, list(paras[best_fig]))) + "]")
 
         # フィット点描画
         ax.plot(X[indices[best_fig]],Y[indices[best_fig]],Z[indices[best_fig]],\
@@ -273,7 +276,7 @@ def DetectViewer2(path):
         print("="*100)
         
 
-    print(len(fitting_figures), np.array(fitting_figures))
+    print(len(fitting_figures), fitting_figures)
     plt.show()
 
 

@@ -179,9 +179,12 @@ def ViewerInit(points, X, Y, Z, normals=[]):
     #点群を描画
     ax.plot(X,Y,Z,marker="o",linestyle='None',color="white")
 
-    #法線を描画
-    #U, V, W = Disassemble(normals)
-    #ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
+    """
+    if len(normals) != 0:
+        #法線を描画
+        U, V, W = Disassemble(normals)
+        ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True, color="blue")
+    """
 
     #OBBを描画
     OBBViewer(ax, points)
@@ -284,7 +287,6 @@ def plot_normal(ax, figure, X, Y, Z):
 
     #法線
     normals = figure.normal(X, Y, Z)
-    print(normals)
     U, V, W = Disassemble(normals)
 
     #法線を描画

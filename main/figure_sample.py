@@ -20,12 +20,22 @@ AND_BEN = F.AND(S1, F.AND(S4, S5))
 
 P_Z0 = F.plane([0,0,-1,0])
 P_Z1 = F.plane([0,0,1,1])
+P_Z_1 = F.plane([0,0,-1,1])
 P_X0 = F.plane([-1,0,0,0])
 P_X1 = F.plane([1,0,0,1])
+P_X_1 = F.plane([-1,0,0,1])
 P_Y0 = F.plane([0,-1,0,0])
 P_Y1 = F.plane([0,1,0,1])
+P_Y_1 = F.plane([0,-1,0,1])
 
 HALF_S = F.AND(S1, P_Z0)
+
+CUBE = F.AND(F.AND(F.AND(F.AND(F.AND(P_Z0, P_Z1), P_X0), P_X1), P_Y0), P_Y1)
+CUBE2 = F.AND(F.AND(F.AND(F.AND(F.AND(P_Z_1, P_Z1), P_X_1), P_X1), P_Y_1), P_Y1)
+S6 = F.sphere([0,0,0,1.2])
+
+QUARTER = F.AND(CUBE, F.NOT(S1))
+VERTEX = F.AND(CUBE2, F.NOT(S6))
 
 def sh(x, y, z):
         return 37.29042182 - np.sqrt((x+3.10735045)**2 + (y-1.81359686)**2 + (z+110.75950196)**2)
@@ -47,7 +57,7 @@ def p_y1(x, y, z):
 
 
 
-CUBE = F.AND(F.AND(F.AND(F.AND(F.AND(P_Z0, P_Z1), P_X0), P_X1), P_Y0), P_Y1)
+
 
 def sample_plane(x, y, z):
     return x + 4*y + 5*z + 6

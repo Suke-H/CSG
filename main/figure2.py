@@ -37,10 +37,8 @@ class plane:
     def normal(self, x, y, z):
         normal = np.array([self.p[0], self.p[1], self.p[2]])
         
-        #xが一次元のとき
-        if type(x) is np.ndarray or type(x) is list:
-            #[[x,y,z],[x,y,z],...]のかたちにする
-            normal = np.array([normal for i in range(x.shape[0])])
+        #[[x,y,z],[x,y,z],...]のかたちにする
+        normal = np.array([normal for i in range(x.shape[0])])
 
         return norm(normal)
 
@@ -49,24 +47,20 @@ class cylinder:
         #|(p-p0) × v| = r
         # (p0 = [x0, y0, z0], v = [a, b, c])
         # para = [x0, y0, z0, a, b, c, r]
-        self.x0 = p[0]
-        self.y0 = p[1]
-        self.z0 = p[2]
-        self.a = p[3]
-        self.b = p[4]
-        self.c = p[5]
-        self.r = p[6]
+        self.p = p
 
 	#円柱の関数
     def f_rep(self, x, y, z):
-        return self.r - np.sqrt(( self.b*(z-self.z0)-self.c*(y-self.y0))**2 + \
-            (self.c*(x-self.x0)-self.a*(z-self.z0))**2  + (self.a*(y-self.y0)-self.b*(x-self.x0))**2 )
+        (x0, y0, z0, a, b, c, r) = self.p
+        return r - np.sqrt(( b*(z-z0)-c*(y-y0))**2 + \
+            (c*(x-x0)-a*(z-z0))**2  + (a*(y-y0)-b*(x-x0))**2 )
 
 	#円柱の法線
     def normal(self, x, y, z):
-        normal = np.array([self.c*(self.c*(x-self.x0)-self.a*(z-self.z0)) - self.b*(self.a*(y-self.y0)-self.b*(x-self.x0)), \
-            -self.c*(self.b*(z-self.z0)-self.c*(y-self.y0)) + self.a*(self.a*(y-self.y0)-self.b*(x-self.x0)), \
-            self.b*(self.b*(z-self.z0)-self.c*(y-self.y0)) - self.a*(self.c*(x-self.x0)-self.a*(z-self.z0))])
+        (x0, y0, z0, a, b, c, r) = self.p
+        normal = np.array([c*(c*(x-x0)-a*(z-z0)) - b*(a*(y-y0)-b*(x-x0)), \
+            -c*(b*(z-z0)-c*(y-y0)) + a*(a*(y-y0)-b*(x-x0)), \
+            b*(b*(z-z0)-c*(y-y0)) - a*(c*(x-x0)-a*(z-z0))])
 
         #二次元のとき[[x1,...],[y1,...][z1,...]]と入っているため
         #[[x1,y1,z1],...]の形にする
@@ -79,27 +73,20 @@ class cone:
         #(p-p0)・v = |p-p0||v|cosθ
         # (p0 = [x0, y0, z0], v = [a, b, c])
         # para = [x0, y0, z0, a, b, c, θ]
-        self.x0 = p[0]
-        self.y0 = p[1]
-        self.z0 = p[2]
-        self.a = p[3]
-        self.b = p[4]
-        self.c = p[5]
-        self.t = p[6]
+        self.p = p
 
     #円錐の関数
     def f_rep(self, x, y, z):
-        return np.cos(self.t) - (self.a*(x-self.x0)+self.b*(y-self.y0)+self.c*(z-self.z0)) / \
-            np.sqrt(((x-self.x0)**2+(y-self.y0)**2+(z-self.z0)**2) * (self.a**2+self.b**2+self.c**2))
+        (x0, y0, z0, a, b, c, t) = self.p
+        return np.cos(t) - (a*(x-x0)+b*(y-y0)+c*(z-z0)) / \
+            np.sqrt(((x-x0)**2+(y-y0)**2+(z-z0)**2) * (a**2+b**2+c**2))
 
     #円錐の法線
     def normal(self, x, y, z):
-        normal = np.array([self.a*(self.a*(x-self.x0)+self.b*(y-self.y0)+self.c*(z-self.z0)) \
-            -(self.a**2+self.b**2+self.c**2)*np.cos(self.t)**2*(x-self.x0), \
-            self.b*(self.a*(x-self.x0)+self.b*(y-self.y0)+self.c*(z-self.z0)) \
-            -(self.a**2+self.b**2+self.c**2)*np.cos(self.t)**2*(y-self.y0), \
-            self.c*(self.a*(x-self.x0)+self.b*(y-self.y0)+self.c*(z-self.z0)) \
-            -(self.a**2+self.b**2+self.c**2)*np.cos(self.t)**2*(z-self.z0)])
+        (x0, y0, z0, a, b, c, t) = self.p
+        normal = np.array([a*(a*(x-x0)+b*(y-y0)+c*(z-z0)) - (a**2+b**2+c**2)*np.cos(t)**2*(x-x0), \
+            b*(a*(x-x0)+b*(y-y0)+c*(z-z0)) - (a**2+b**2+c**2)*np.cos(t)**2*(y-y0), \
+            c*(a*(x-x0)+b*(y-y0)+c*(z-z0)) - (a**2+b**2+c**2)*np.cos(t)**2*(z-z0)])
 
         #二次元のとき[[x1,...],[y1,...][z1,...]]と入っているため
         #[[x1,y1,z1],...]の形にする
@@ -112,15 +99,15 @@ class AND:
         self.p1 = p1
         self.p2 = p2
 
-    #AND(f1,f2) = f1 + f2 - √f1^2 + f2^2
+    # AND(f1,f2) = f1 + f2 - √f1^2 + f2^2
     def f_rep(self, x, y, z):
         return self.p1.f_rep(x,y,z) + self.p2.f_rep(x,y,z) - np.sqrt(self.p1.f_rep(x,y,z)**2 + self.p2.f_rep(x,y,z)**2)
 
-    #∇AND = ∇f1 + ∇f2 - (f1∇f1+f2∇f2)/√f1^2+f2^2
+    # ∇AND = ∇f1 + ∇f2 - (f1∇f1+f2∇f2)/√f1^2+f2^2
     def normal(self, x, y, z):
-        normal = self.p1.normal(x,y,z) + self.p2.normal(x,y,z) # - \
-            #(self.p1.f_rep(x,y,z)*self.p1.normal(x,y,z) + self.p2.f_rep(x,y,z)*self.p2.normal(x,y,z)) / \
-            #np.sqrt(self.p1.f_rep(x,y,z)**2 + self.p2.f_rep(x,y,z)**2)
+        f1, f2, n1, n2 = self.p1.f_rep(x,y,z), self.p2.f_rep(x,y,z), self.p1.normal(x,y,z), self.p2.normal(x,y,z)
+        #normal = n1+n2
+        normal = np.array([n1[i] + n2[i] - (f1[i]*n1[i] + f2[i]*n2[i]) / np.sqrt(f1[i]**2 + f2[i]**2) for i in range(len(f1))])
         
         return norm(normal)
 
@@ -135,9 +122,9 @@ class OR:
 
     #∇OR = ∇f1 + ∇f2 + (f1∇f1+f2∇f2)/√f1^2+f2^2
     def normal(self, x, y, z):
-        normal = self.p1.normal(x,y,z) + self.p2.normal(x,y,z) #+ \
-            #(self.p1.f_rep(x,y,z)*self.p1.normal(x,y,z) + self.p2.f_rep(x,y,z)*self.p2.normal(x,y,z)) / \
-            #np.sqrt(self.p1.f_rep(x,y,z)**2 + self.p2.f_rep(x,y,z)**2)
+        f1, f2, n1, n2 = self.p1.f_rep(x,y,z), self.p2.f_rep(x,y,z), self.p1.normal(x,y,z), self.p2.normal(x,y,z)
+        #normal = n1+n2
+        normal = np.array([n1[i] + n2[i] + (f1[i]*n1[i] + f2[i]*n2[i]) / np.sqrt(f1[i]**2 + f2[i]**2) for i in range(len(f1))])
         
         return norm(normal)
 

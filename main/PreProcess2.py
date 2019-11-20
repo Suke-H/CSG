@@ -14,7 +14,7 @@ import figure2 as F
 
 def PreProcess2():
 	#自作した点群を読み込み
-    points, X, Y, Z = MakePoints(AND_BEN.f_rep, grid_step=100, epsilon=0.03, down_rate = 0.5)
+    points, X, Y, Z = MakePoints(VERTEX.f_rep, grid_step=50, epsilon=0.03, down_rate = 0.5)
 
     print("points:{}".format(len(X)))
 
