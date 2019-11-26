@@ -16,13 +16,11 @@ class sphere:
 
 	# 球の法線: [2(x-x0), 2(y-y0), 2(z-z0)]※単位ベクトルを返す
     def normal(self, x, y, z):
-        print(x.shape)
         normal = np.array([x-self.p[0], y-self.p[1], z-self.p[2]])
 
         # 二次元のとき[[x1,...],[y1,...][z1,...]]と入っているため
         # [[x1,y1,z1],...]の形にする
         normal = normal.T
-        print(normal.shape)
         
         return norm(normal)
 
@@ -59,7 +57,6 @@ class cylinder:
 
 	#円柱の法線
     def normal(self, x, y, z):
-        print(x.shape)
         (x0, y0, z0, a, b, c, r) = self.p
         normal = np.array([c*(c*(x-x0)-a*(z-z0)) - b*(a*(y-y0)-b*(x-x0)), \
             -c*(b*(z-z0)-c*(y-y0)) + a*(a*(y-y0)-b*(x-x0)), \
@@ -68,7 +65,6 @@ class cylinder:
         #二次元のとき[[x1,...],[y1,...][z1,...]]と入っているため
         #[[x1,y1,z1],...]の形にする
         normal = normal.T
-        print(normal.shape)
         
         return norm(normal)
 
@@ -172,11 +168,9 @@ class SPIN:
         # f(x)に代入
         return self.fig.f_rep(x, y, z)
 
-    # ∇SPIN = ∇f ◎ [Pinv_11, Pinv_22, Pinv_33]
-    # ◎はアダマール積
+    # ∇SPIN = ∇f * Pinv
     def normal(self, x, y, z):
-        P_dia = np.array([self.P_inv[0][0], self.P_inv[1][1], self.P_inv[2][2]])
-        normal = np.array([np.multiply(self.fig.normal(x,y,z)[i], P_dia) for i in range(len(x))])
+        normal = np.dot(self.fig.normal(x,y,z), self.P_inv)
 
         return norm(normal)
 

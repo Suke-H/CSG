@@ -104,7 +104,7 @@ def SphereDict(points, normals, X, Y, Z, length):
 
     return p[Scores.index(max(Scores))], Spheres[Scores.index(max(Scores))]
 
-"""
+
 def CylinderDict(points, normals, X, Y, Z, length):
     n = points.shape[0]
     N = 5000
@@ -116,28 +116,43 @@ def CylinderDict(points, normals, X, Y, Z, length):
 
     num = points_set.shape[0]
 
-    radius1 = lambda p1, p2, n1, n2 : np.dot(p1-p2, n1-n2) / np.linalg.norm(n1-n2)**2
+    # lambda式が長くなりそうなのでnpメソッドの省略
+    N = lambda v: np.linalg.norm(v)
+    D = lambda v1, v2: np.dot(v1, v2)
 
-    r = [radius(points_set[i][0], points_set[i][1], normals_set[i][0], normals_set[i][1]) for i in range(num)]
-    c = [center(points_set[i][0], normals_set[i][0], r[i]) for i in  range(num)]
+    radius1 = lambda p1, p2, n1, n2 : (N(n2)**2*D(p1-p2,n1) - D(n1,n2)*D(p1-p2,n2)) / ((N(n1)*N(n2))**2 - D(n1,n2)**2)
+    radius2 = lambda p1, p2, n1, n2 : (D(n1,n2)*D(p1-p2,n1) - N(n1)**2*D(p1-p2,n2)) / ((N(n1)*N(n2))**2 - D(n1,n2)**2)
+    point1 = lambda p1, n1, r1: p1 - r1*n1
+    point2 = lambda p2, n2, r2: p2 - r2*n2
+    #direction = lambda q1, q2: q2 - q1
+    truth_radius = lambda p1, q1: N(p1 - q1)
+
+
+    r1 = [radius1(points_set[i][0], points_set[i][1], normals_set[i][0], normals_set[i][1]) for i in range(num)]
+    r2 = [radius2(points_set[i][0], points_set[i][1], normals_set[i][0], normals_set[i][1]) for i in range(num)]
+    q1 = [point1(points_set[i][0], normals_set[i][0], r1[i]) for i in range(num)]
+    q2 = [point2(points_set[i][1], normals_set[i][1], r2[i]) for i in range(num)]
+    w = [q2[i]-q1[i] for i in range(num)]
+    R = [truth_radius(points_set[i][0], q1[i]) for i in range(num)]
+    
 
     #print(np.array(r).shape, np.array(c).shape)
 
     # パラメータ
-    # p = [x0, y0, z0, r]
-    r = np.reshape(r, (num,1))
-    p = np.concatenate([c, r], axis=1)
+    # p = [x0, y0, z0, a, b, c, r]
+    R = np.reshape(R, (num,1))
+    p = np.concatenate([q1, w, R], axis=1)
 
     # 球面生成
-    Spheres = [F.sphere(p[i]) for i in range(num)]
+    Cylinders = [F.cylinder(p[i]) for i in range(num)]
 
     # フィットしている点の数を数える
-    Scores = [CountPoints(Spheres[i], points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi/9)[3] for i in range(num)]
+    Scores = [CountPoints(Cylinders[i], points, X, Y, Z, normals, epsilon=0.01*length, alpha=np.pi/10)[3] for i in range(num)]
 
     print(p[Scores.index(max(Scores))])
 
-    return p[Scores.index(max(Scores))], Spheres[Scores.index(max(Scores))]
-"""
+    return p[Scores.index(max(Scores))], Cylinders[Scores.index(max(Scores))]
+
 
 def RANSAC(fig, points, normals, X, Y, Z, length):
     # 図形に応じてRANSAC
@@ -149,6 +164,10 @@ def RANSAC(fig, points, normals, X, Y, Z, length):
         res1, figure = PlaneDict(points, normals, X, Y, Z, length)
         epsilon, alpha = 0.08*length, np.pi/9
 
+    elif fig==2:
+        res1, figure = CylinderDict(points, normals, X, Y, Z, length)
+        epsilon, alpha = 0.01*length, np.pi/10
+
     # フィット点を抽出
     MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
 
@@ -157,13 +176,16 @@ def RANSAC(fig, points, normals, X, Y, Z, length):
     if num!=0:
         # フィット点を入力にフィッティング処理
         res2 = Fitting(MX, MY, MZ, normals[index], length, fig, figure.p, epsilon=epsilon, alpha=alpha)
-        print(res2)
+        #print(res2)
 
         if fig==0:
             figure = F.sphere(res2.x)
 
         elif fig==1:
             figure = F.plane(res2.x)
+
+        elif fig==2:
+            figure = F.sphere(res2.x)
 
         # フィッティング後のスコア出力
         _, _, _, after_num, _ = CountPoints(figure, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
@@ -177,12 +199,13 @@ def RANSAC(fig, points, normals, X, Y, Z, length):
     # res1のスコア0 OR res2よりスコアが多い => res1を出力
     return res1
 
-"""
+
 points, X, Y, Z, normals, length = PreProcess2()
 
 ###
-figure = PlaneDict(points, normals, X, Y, Z, length)
+#figure = PlaneDict(points, normals, X, Y, Z, length)
 #figure = SphereDict(points, normals, X, Y, Z, length)
+_, figure =  CylinderDict(points, normals, X, Y, Z, length)
 
 #グラフ作成
 fig = plt.figure()
@@ -212,12 +235,14 @@ plot_implicit(ax1, figure.f_rep, points, 1, 100)
 
 ### フィット関数を最適化
 #res = Fitting(MX, MY, MZ, normals[index], length, 0, figure.p)
-res = Fitting(MX, MY, MZ, normals[index], length, 1, figure.p)
+#res = Fitting(MX, MY, MZ, normals[index], length, 1, figure.p)
+res = Fitting(MX, MY, MZ, normals[index], length, 2, figure.p)
 print(res)
 
 ### 
 #figure = F.sphere(res.x)
-figure = F.plane(res.x)
+#figure = F.plane(res.x)
+figure = F.cylinder(res.x)
 
 MX2, MY2, MZ2, max_label_num, _ = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi/12)
 print("num2:{}".format(max_label_num))
@@ -229,4 +254,3 @@ ax2.plot(MX2, MY2, MZ2, marker=".",linestyle="None",color="red")
 plot_implicit(ax2, figure.f_rep, points, 1, 100)
 
 plt.show()
-"""
