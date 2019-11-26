@@ -189,7 +189,7 @@ def DetectViewer2(path):
     ###グラフ初期化###
     ax = ViewerInit(points, X, Y, Z, normals)
 
-    while points.shape[0] >= ori_points.shape[0] * 0.1:
+    while points.shape[0] >= ori_points.shape[0] * 0.01:
         print("points:{}".format(points.shape[0]))
 
         scores = []
@@ -219,7 +219,7 @@ def DetectViewer2(path):
 
             #図形に対して"条件"を満たす点群を数える、これをスコアとする
             MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
-            print("num:{}".format(num))
+            print("AFTER_num:{}".format(num))
 
             #条件を満たす点群, 最適化された図形描画
             #ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="orange")
@@ -232,7 +232,7 @@ def DetectViewer2(path):
             paras.append(result)
             indices.append(index)
 
-        if max(scores) <= 50:
+        if max(scores) <= ori_points.shape[0] * 0.01:
             print("おわり！")
             break
 

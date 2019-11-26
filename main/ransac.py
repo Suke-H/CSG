@@ -76,6 +76,11 @@ def SphereDict(points, normals, X, Y, Z, length):
 
     # 二点の組[p1, p2], [n1, n2]をradius, centerに代入
     r = [radius(points_set[i][0], points_set[i][1], normals_set[i][0], normals_set[i][1]) for i in range(num)]
+    ### r < lengthの条件を満たさないものを除去 ###
+    r = [i for i in r if abs(i) <= length]
+    print(num)
+    num = len(r)
+    print(num)
     c = [center(points_set[i][0], normals_set[i][0], r[i]) for i in  range(num)]
 
     # rはあとで絶対値をつける
@@ -88,11 +93,12 @@ def SphereDict(points, normals, X, Y, Z, length):
     r = np.reshape(r, (num,1))
     p = np.concatenate([c, r], axis=1)
 
+
     # 球面生成
     Spheres = [F.sphere(p[i]) for i in range(num)]
 
     # フィットしている点の数を数える
-    Scores = [CountPoints(Spheres[i], points, X, Y, Z, normals, epsilon=0.03*length, alpha=np.pi/9)[3] for i in range(num)]
+    Scores = [CountPoints(Spheres[i], points, X, Y, Z, normals, epsilon=0.01*length, alpha=np.pi/12)[3] for i in range(num)]
 
     print(p[Scores.index(max(Scores))])
 
@@ -136,21 +142,40 @@ def CylinderDict(points, normals, X, Y, Z, length):
 def RANSAC(fig, points, normals, X, Y, Z, length):
     # 図形に応じてRANSAC
     if fig==0:
-        res, figure = SphereDict(points, normals, X, Y, Z, length)
-        epsilon, alpha = 0.03*length, np.pi/9
+        res1, figure = SphereDict(points, normals, X, Y, Z, length)
+        epsilon, alpha = 0.01*length, np.pi/12
 
     elif fig==1:
-        res, figure = PlaneDict(points, normals, X, Y, Z, length)
+        res1, figure = PlaneDict(points, normals, X, Y, Z, length)
         epsilon, alpha = 0.08*length, np.pi/9
 
     # フィット点を抽出
     MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
 
+    print("BEFORE_num:{}".format(num))
+
     if num!=0:
         # フィット点を入力にフィッティング処理
-        res = Fitting(MX, MY, MZ, normals[index], length, fig, figure.p, epsilon=epsilon, alpha=alpha)
+        res2 = Fitting(MX, MY, MZ, normals[index], length, fig, figure.p, epsilon=epsilon, alpha=alpha)
+        print(res2)
 
-    return res.x
+        if fig==0:
+            figure = F.sphere(res2.x)
+
+        elif fig==1:
+            figure = F.plane(res2.x)
+
+        # フィッティング後のスコア出力
+        _, _, _, after_num, _ = CountPoints(figure, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
+
+        print("AFTER_num:{}".format(after_num))
+
+        # フィッティング後の方が良ければres2を出力
+        if after_num >= num:
+            return res2.x
+
+    # res1のスコア0 OR res2よりスコアが多い => res1を出力
+    return res1
 
 """
 points, X, Y, Z, normals, length = PreProcess2()

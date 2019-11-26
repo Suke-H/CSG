@@ -11,6 +11,10 @@ from figure_sample import *
 
 points, X, Y, Z, normals, length = PreProcess2()
 ax = ViewerInit(points, X, Y, Z)
-figure = VERTEX
+#
+figure = F.SPIN(S2, np.pi/4, 0, 0)
+#figure = CYLINDER
+#
 plot_normal(ax, figure, X, Y, Z)
+#plot_implicit(ax, figure.f_rep, bbox=(-1,1))
 plt.show()

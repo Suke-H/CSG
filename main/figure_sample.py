@@ -33,9 +33,17 @@ HALF_S = F.AND(S1, P_Z0)
 CUBE = F.AND(F.AND(F.AND(F.AND(F.AND(P_Z0, P_Z1), P_X0), P_X1), P_Y0), P_Y1)
 CUBE2 = F.AND(F.AND(F.AND(F.AND(F.AND(P_Z_1, P_Z1), P_X_1), P_X1), P_Y_1), P_Y1)
 S6 = F.sphere([0,0,0,1.2])
+S7 = F.sphere([0,0,0,1.5])
 
 QUARTER = F.AND(CUBE, F.NOT(S1))
 VERTEX = F.AND(CUBE2, F.NOT(S6))
+
+SOFT_CUBE = F.AND(CUBE2, S6)
+
+BARREL = F.AND(P_X_1, F.AND(P_X1, S6))
+
+C1 = F.cylinder([0,0,0,0,0,1,1])
+CYLINDER = F.AND(C1, F.AND(P_Z_1, P_Z1))
 
 def sh(x, y, z):
         return 37.29042182 - np.sqrt((x+3.10735045)**2 + (y-1.81359686)**2 + (z+110.75950196)**2)

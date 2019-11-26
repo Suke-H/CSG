@@ -133,6 +133,8 @@ def buildAABB(points):
     return max_p, min_p
 
 def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
+    #import time
+    #start = time.time()
     xmin, xmax, ymin, ymax, zmin, zmax = bbox*3
 
     #点群X, Y, Z, pointsを作成
@@ -142,8 +144,10 @@ def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05)
 
     X, Y, Z = np.meshgrid(x, y, z)
 
-    #格子点X, Y, Zをすべてfnにぶち込んでみる
-    W = fn(X, Y, Z)
+    # 格子点X, Y, Zをすべてfnにぶち込んでみる
+    W = np.array([[fn(X[i][j], Y[i][j], Z[i][j]) for j in range(grid_step)] for i in range(grid_step)])
+    # 変更前
+    #W = fn(X, Y, Z)
 
     #Ｗが0に近いインデックスを取り出す
     index = np.where(np.abs(W)<=epsilon)
@@ -162,6 +166,9 @@ def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05)
     #points作成([[x1,y1,z1],[x2,y2,z2],...])    
     points = np.stack([pointX, pointY, pointZ])
     points = points.T
+
+    #end = time.time()
+    #print("time:{}s".format(end-start))
 
     return points, pointX, pointY, pointZ
 

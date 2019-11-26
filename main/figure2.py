@@ -10,17 +10,19 @@ class sphere:
         #パラメータ
         self.p = p
 
-    #球の方程式: f(x,y,z) = r - √(x-a)^2 + (y-b)^2 + (z-c)^2
+    # 球の方程式: f(x,y,z) = r - √(x-a)^2 + (y-b)^2 + (z-c)^2
     def f_rep(self, x, y, z):
         return self.p[3] - np.sqrt((x-self.p[0])**2 + (y-self.p[1])**2 + (z-self.p[2])**2)
 
-	#球の法線:[2(x-x0), 2(y-y0), 2(z-z0)]※単位ベクトルを返す
+	# 球の法線: [2(x-x0), 2(y-y0), 2(z-z0)]※単位ベクトルを返す
     def normal(self, x, y, z):
+        print(x.shape)
         normal = np.array([x-self.p[0], y-self.p[1], z-self.p[2]])
 
-        #二次元のとき[[x1,...],[y1,...][z1,...]]と入っているため
-        #[[x1,y1,z1],...]の形にする
+        # 二次元のとき[[x1,...],[y1,...][z1,...]]と入っているため
+        # [[x1,y1,z1],...]の形にする
         normal = normal.T
+        print(normal.shape)
         
         return norm(normal)
 
@@ -44,7 +46,7 @@ class plane:
 
 class cylinder:
     def __init__(self, p):
-        #|(p-p0) × v| = r
+        # |(p-p0) × v| = r
         # (p0 = [x0, y0, z0], v = [a, b, c])
         # para = [x0, y0, z0, a, b, c, r]
         self.p = p
@@ -57,6 +59,7 @@ class cylinder:
 
 	#円柱の法線
     def normal(self, x, y, z):
+        print(x.shape)
         (x0, y0, z0, a, b, c, r) = self.p
         normal = np.array([c*(c*(x-x0)-a*(z-z0)) - b*(a*(y-y0)-b*(x-x0)), \
             -c*(b*(z-z0)-c*(y-y0)) + a*(a*(y-y0)-b*(x-x0)), \
@@ -65,12 +68,13 @@ class cylinder:
         #二次元のとき[[x1,...],[y1,...][z1,...]]と入っているため
         #[[x1,y1,z1],...]の形にする
         normal = normal.T
+        print(normal.shape)
         
         return norm(normal)
 
 class cone:
     def __init__(self, p):
-        #(p-p0)・v = |p-p0||v|cosθ
+        # (p-p0)・v = |p-p0||v|cosθ
         # (p0 = [x0, y0, z0], v = [a, b, c])
         # para = [x0, y0, z0, a, b, c, θ]
         self.p = p
@@ -95,50 +99,84 @@ class cone:
         return norm(normal)
 
 class AND:
-    def __init__(self, p1, p2):
-        self.p1 = p1
-        self.p2 = p2
+    def __init__(self, fig1, fig2):
+        self.fig1 = fig1
+        self.fig2 = fig2
 
     # AND(f1,f2) = f1 + f2 - √f1^2 + f2^2
     def f_rep(self, x, y, z):
-        return self.p1.f_rep(x,y,z) + self.p2.f_rep(x,y,z) - np.sqrt(self.p1.f_rep(x,y,z)**2 + self.p2.f_rep(x,y,z)**2)
+        return self.fig1.f_rep(x,y,z) + self.fig2.f_rep(x,y,z) - np.sqrt(self.fig1.f_rep(x,y,z)**2 + self.fig2.f_rep(x,y,z)**2)
 
     # ∇AND = ∇f1 + ∇f2 - (f1∇f1+f2∇f2)/√f1^2+f2^2
     def normal(self, x, y, z):
-        f1, f2, n1, n2 = self.p1.f_rep(x,y,z), self.p2.f_rep(x,y,z), self.p1.normal(x,y,z), self.p2.normal(x,y,z)
+        f1, f2, n1, n2 = self.fig1.f_rep(x,y,z), self.fig2.f_rep(x,y,z), self.fig1.normal(x,y,z), self.fig2.normal(x,y,z)
         #normal = n1+n2
         normal = np.array([n1[i] + n2[i] - (f1[i]*n1[i] + f2[i]*n2[i]) / np.sqrt(f1[i]**2 + f2[i]**2) for i in range(len(f1))])
         
         return norm(normal)
 
 class OR:
-    def __init__(self, p1, p2):
-        self.p1 = p1
-        self.p2 = p2
+    def __init__(self, fig1, fig2):
+        self.fig1 = fig1
+        self.fig2 = fig2
 
-    #OR(f1,f2) = f1 + f2 + √f1^2 + f2^2
+    # OR(f1,f2) = f1 + f2 + √f1^2 + f2^2
     def f_rep(self, x, y, z):
-        return self.p1.f_rep(x,y,z) + self.p2.f_rep(x,y,z) + np.sqrt(self.p1.f_rep(x,y,z)**2 + self.p2.f_rep(x,y,z)**2)
+        return self.fig1.f_rep(x,y,z) + self.fig2.f_rep(x,y,z) + np.sqrt(self.fig1.f_rep(x,y,z)**2 + self.fig2.f_rep(x,y,z)**2)
 
-    #∇OR = ∇f1 + ∇f2 + (f1∇f1+f2∇f2)/√f1^2+f2^2
+    # ∇OR = ∇f1 + ∇f2 + (f1∇f1+f2∇f2)/√f1^2+f2^2
     def normal(self, x, y, z):
-        f1, f2, n1, n2 = self.p1.f_rep(x,y,z), self.p2.f_rep(x,y,z), self.p1.normal(x,y,z), self.p2.normal(x,y,z)
+        f1, f2, n1, n2 = self.fig1.f_rep(x,y,z), self.fig2.f_rep(x,y,z), self.fig1.normal(x,y,z), self.fig2.normal(x,y,z)
         #normal = n1+n2
         normal = np.array([n1[i] + n2[i] + (f1[i]*n1[i] + f2[i]*n2[i]) / np.sqrt(f1[i]**2 + f2[i]**2) for i in range(len(f1))])
-        
+
         return norm(normal)
 
 class NOT:
-    def __init__(self, p):
-        self.p = p
+    def __init__(self, fig):
+        self.fig = fig
 
-    #NOT(f) = -f
+    # NOT(f) = -f
     def f_rep(self, x, y, z):
-        return -self.p.f_rep(x,y,z)
+        return -self.fig.f_rep(x,y,z)
 
-    #∇NOT = -∇f
+    # ∇NOT = -∇f
     def normal(self, x, y, z):
-        normal = -self.p.normal(x,y,z)
+        normal = -self.fig.normal(x,y,z)
         
+        return norm(normal)
+
+class SPIN:
+    def __init__(self, fig, a, b, c):
+        self.fig = fig
+
+        # a, b, c: x, y, zを軸としての回転量(/rad)
+        Px = np.array([[1,0,0],[0,np.cos(a),np.sin(a)],[0,-np.sin(a),np.cos(a)]])
+        Py = np.array([[np.cos(b),0,-np.sin(b)],[0,1,0],[-np.sin(b),0, np.cos(b)]])
+        Pz = np.array([[np.cos(c),np.sin(c),0],[-np.sin(c), np.cos(c), 0],[0,0,1]])
+
+        # P = Px*Py*Pz
+        P = np.dot(Px, Py)
+        self.P = np.dot(P, Pz)
+
+        # Pの逆行列
+        self.P_inv = np.linalg.inv(self.P)
+
+    # x = P-1 * X を f(x) に代入する
+    def f_rep(self, x, y, z):
+        # [[x1,x2,...],[y1,y2,...],[z1,z2,...]]の形にするolxs
+        p0 = np.concatenate([[x],[y],[z]])
+        
+        # x = P^-1 * X
+        x, y, z = np.dot(self.P_inv, p0)
+        # f(x)に代入
+        return self.fig.f_rep(x, y, z)
+
+    # ∇SPIN = ∇f ◎ [Pinv_11, Pinv_22, Pinv_33]
+    # ◎はアダマール積
+    def normal(self, x, y, z):
+        P_dia = np.array([self.P_inv[0][0], self.P_inv[1][1], self.P_inv[2][2]])
+        normal = np.array([np.multiply(self.fig.normal(x,y,z)[i], P_dia) for i in range(len(x))])
+
         return norm(normal)
 

@@ -7,6 +7,8 @@ from method import *
 from PreProcess import PreProcess
 import figure2 as F
 
+E_list = []
+
 #####最適化する関数#################################################
 ###epsilon, alphaは調整が必要
 def func(p, X, Y, Z, normals, fig, epsilon=0.7, alpha=np.pi/12):
@@ -28,8 +30,11 @@ def func(p, X, Y, Z, normals, fig, epsilon=0.7, alpha=np.pi/12):
 	# [nf_1*ni_1, nf_2*ni_2, ...]みたいな感じ
 	theta = np.arccos(np.abs(np.sum(figure.normal(X,Y,Z) * normals, axis=1))) / alpha
 
-    # E = Σ (1-exp(-d^2))^2 + (1-exp(-θ^2))^2)
+    # E = Σ (1-exp(-d^2))^2 + (1-exp(-θ^2))^2
 	E = np.sum((1-np.exp(-dist**2))**2 + (1-np.exp(-theta**2))**2)
+
+	global E_list
+	E_list.append(E)
 
 	return E
 
@@ -43,7 +48,7 @@ def Fitting(X, Y, Z, normals, length, fig, p_0, epsilon=0.07, alpha=np.pi/12):
 	if fig == 0:
 		print("球")
 
-		# 0 < r < length
+		# 0 < r
 		cons = (
         {'type': 'ineq',
          'fun' : lambda p: np.array([p[3]])},
@@ -59,7 +64,7 @@ def Fitting(X, Y, Z, normals, length, fig, p_0, epsilon=0.07, alpha=np.pi/12):
 	if fig == 1:
 		print("平面")
 
-		#|n| = 1
+		# |n| = 1
 		cons = (
         {'type': 'eq',
          'fun' : lambda p: np.array([p[0]**2 + p[1]**2 + p[2]**2 - 1])}
@@ -108,5 +113,8 @@ def Fitting(X, Y, Z, normals, length, fig, p_0, epsilon=0.07, alpha=np.pi/12):
 
     # 最適化
 	result = minimize(func, p_0, args=arg, constraints=cons, method='SLSQP')
+
+	global E_list
+	#print(E_list)
 
 	return result
