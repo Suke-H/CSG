@@ -138,7 +138,6 @@ def figOptimize2(X, Y, Z, normals, length, fig):
 		#定数(pをのぞく引数)
 		arg = (X, Y, Z, normals, fig, 0.05*length, np.pi/12)
 
-
 	#円錐の条件
 	if fig == 3:
 		print("円錐")

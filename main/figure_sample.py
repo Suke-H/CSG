@@ -43,7 +43,16 @@ SOFT_CUBE = F.AND(CUBE2, S6)
 BARREL = F.AND(P_X_1, F.AND(P_X1, S6))
 
 C1 = F.cylinder([0,0,0,0,0,1,1])
+P_Zs = F.plane([0,0,1,0.2]) 
 CYLINDER = F.AND(C1, F.AND(P_Z_1, P_Z1))
+Cs = F.AND(C1, F.AND(P_Z0, P_Zs))
+
+CO1 = F.cone([0,0,1,0,0,-1,np.pi/9])
+CONE = F.AND(CO1, P_Z0)
+
+
+
+
 
 def sh(x, y, z):
         return 37.29042182 - np.sqrt((x+3.10735045)**2 + (y-1.81359686)**2 + (z+110.75950196)**2)

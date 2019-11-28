@@ -189,7 +189,7 @@ def DetectViewer2(path):
     ###グラフ初期化###
     ax = ViewerInit(points, X, Y, Z, normals)
 
-    while points.shape[0] >= ori_points.shape[0] * 0.01:
+    while points.shape[0] >= ori_points.shape[0] * 0.05:
         print("points:{}".format(points.shape[0]))
 
         scores = []
@@ -197,7 +197,7 @@ def DetectViewer2(path):
         indices = []
 
         ###最適化###
-        for fig_type in [0, 1]:
+        for fig_type in [0, 1, 2, 3]:
 
             ###グラフ初期化##
             #ax = ViewerInit(points, X, Y, Z, normals)
@@ -205,7 +205,7 @@ def DetectViewer2(path):
             #図形フィッティング
             #result = figOptimize(points, normals, length, fig_type)
             #result = figOptimize2(X, Y, Z, normals, length, fig_type)
-            result = RANSAC(fig_type, points, normals, X, Y, Z, length)
+            result, MX, MY, MZ, num, index = RANSAC(fig_type, points, normals, X, Y, Z, length)
             print(result)
 
             #fig_typeに応じた図形を選択
@@ -213,13 +213,17 @@ def DetectViewer2(path):
                 figure = F.sphere(result)
             elif fig_type==1:
                 figure = F.plane(result)
+            elif fig_type==2:
+                figure = F.cylinder(result)
+            elif fig_type==3:
+                figure = F.cone(result)
 
             #図形描画
             #plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=50)
 
             #図形に対して"条件"を満たす点群を数える、これをスコアとする
-            MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
-            print("AFTER_num:{}".format(num))
+            #MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
+            #print("AFTER_num:{}".format(num))
 
             #条件を満たす点群, 最適化された図形描画
             #ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="orange")
@@ -232,7 +236,9 @@ def DetectViewer2(path):
             paras.append(result)
             indices.append(index)
 
-        if max(scores) <= ori_points.shape[0] * 0.01:
+            print("="*100)
+
+        if max(scores) <= ori_points.shape[0] * 0.05:
             print("おわり！")
             break
 
@@ -252,6 +258,14 @@ def DetectViewer2(path):
         elif best_fig==1:
             figure = F.plane(paras[best_fig])
             print("平面の勝ち")
+
+        elif best_fig==2:
+            figure = F.cylinder(paras[best_fig])
+            print("円柱の勝ち")
+
+        elif best_fig==3:
+            figure = F.cone(paras[best_fig])
+            print("円錐の勝ち")
 
         # フィット点描画
         ax.plot(X[indices[best_fig]],Y[indices[best_fig]],Z[indices[best_fig]],\

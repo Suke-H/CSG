@@ -12,9 +12,9 @@ from figure_sample import *
 points, X, Y, Z, normals, length = PreProcess2()
 ax = ViewerInit(points, X, Y, Z)
 #
-figure = CYLINDER
-#figure = CYLINDER
+figure = CONE
+#figure = BARREL
 #
 plot_normal(ax, figure, X, Y, Z)
-#plot_implicit(ax, figure.f_rep, bbox=(-1,1))
+plot_implicit(ax, figure.f_rep, bbox=(-2,2))
 plt.show()

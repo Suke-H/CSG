@@ -14,7 +14,7 @@ import figure2 as F
 
 def PreProcess2():
 	#自作した点群を読み込み
-    points, X, Y, Z = MakePoints(CYLINDER.f_rep, grid_step=150, epsilon=0.005, down_rate = 0.5)
+    points, X, Y, Z = MakePoints(CONE.f_rep, grid_step=150, epsilon=0.01, down_rate = 0.1)
 
     print("points:{}".format(len(X)))
 
