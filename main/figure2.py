@@ -78,7 +78,7 @@ class cone:
     #円錐の関数
     def f_rep(self, x, y, z):
         (x0, y0, z0, a, b, c, t) = self.p
-        return np.cos(t) - (a*(x-x0)+b*(y-y0)+c*(z-z0)) / \
+        return -np.cos(t) + (a*(x-x0)+b*(y-y0)+c*(z-z0)) / \
             np.sqrt(((x-x0)**2+(y-y0)**2+(z-z0)**2) * (a**2+b**2+c**2))
 
     #円錐の法線

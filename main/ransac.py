@@ -201,33 +201,42 @@ def ConeDict(points, normals, X, Y, Z, length):
     point = lambda p1, p2, p3, c: np.array([c+norm(p1-c), c+norm(p2-c), c+norm(p2-c)])
     normal = lambda a1, a2, a3: np.cross(a2-a1, a3-a1)
     """
-    direction = lambda p1, p2, p3, a: norm(np.cross(norm(p2-a)-norm(p1-a), norm(p3-a)-norm(p1-a)))
+
+    # 平面の法線(=direction)の向きをaがない半空間の方向にしたいので、
+    # f(a)>0のときnormal, f(a)<0のとき-normalを返す
+    # (f=d-(ax+by+cz)だとf(a)>0のときnはaがない方向、つまりnは内部(領域)から発散する方向に向いている)
+
+    normal = lambda p1, p2, p3, a: norm(np.cross(norm(p2-a)-norm(p1-a), norm(p3-a)-norm(p1-a)))
+    plane_frep = lambda p1, p2, p3, a: lambda x: DOT(normal(p1,p2,p3,a), a+norm(p1-a)) - DOT(normal(p1,p2,p3,a), x)
+    direction = lambda p1, p2, p3, a: normal(p1,p2,p3,a) if plane_frep(p1,p2,p3,a)(a) > 0 else -normal(p1,p2,p3,a)
     
-    theta1 = lambda p1, a, w: np.arccos(np.dot(norm(p1-a), w))
-    theta2 = lambda p2, a, w: np.arccos(np.dot(norm(p2-a), w))
-    theta3 = lambda p3, a, w: np.arccos(np.dot(norm(p3-a), w))
+    theta = lambda p1, a, w: np.arccos(np.dot(norm(p1-a), w))
+    #theta2 = lambda p2, a, w: np.arccos(np.dot(norm(p2-a), w))
+    #theta3 = lambda p3, a, w: np.arccos(np.dot(norm(p3-a), w))
 
     # q1, q2:方向ベクトルの2点
     # w:方向ベクトル
     # R:半径
     a = np.array([apex(points_set[i][0], points_set[i][1], points_set[i][2], normals_set[i][0], normals_set[i][1], normals_set[i][2]) for i in range(num)])
     w = np.array([direction(points_set[i][0], points_set[i][1], points_set[i][2], a[i]) for i in range(num)])
-    t1 = [theta1(points_set[i][0], a[i], w[i]) for i in range(num)]
-    t2 = [theta2(points_set[i][1], a[i], w[i]) for i in range(num)]
-    t3 = [theta3(points_set[i][2], a[i], w[i]) for i in range(num)]
-    t = np.array([(t1[i]+t2[i]+t3[i])/3 for i in range(num)])
-    print(t)
+    t = np.array([theta(points_set[i][0], a[i], w[i]) for i in range(num)])
+    #t2 = [theta2(points_set[i][1], a[i], w[i]) for i in range(num)]
+    #t3 = [theta3(points_set[i][2], a[i], w[i]) for i in range(num)]
+    #t = np.array([(t[i]+t2[i]+t3[i])/3 for i in range(num)])
+
+    print(w[:5])
+    print(t[:5])
 
     print(num)
 
     ### 10 < theta < 60の条件を満たさないものを削除 ###
-    index = np.where((t <= np.pi/(180/10)) | (t >= np.pi/(180/60)))
+    index = np.where((t < np.pi/(180/10)) | (t > np.pi/(180/60)))
     t = np.delete(t, index)
     a = np.delete(a, index, axis=0)
     w = np.delete(w, index, axis=0)
 
     num = len(t)
-    print(num, a.shape, w.shape)
+    print(num)
 
     # パラメータ
     # p = [x0, y0, z0, a, b, c, theta]
