@@ -50,8 +50,8 @@ def CalcIoU(points, figure):
     # IoU = AND(点群数) / OR(面積) とする
     return and_num / or_area
 
-C1 = sphere([0,0,1])
-C2 = sphere([0,1,1])
+C1 = circle([0,0,1])
+C2 = circle([0,1,1])
 P1 = InteriorPoints(C1.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
 print("points:{}".format(P1.shape[0]))
 

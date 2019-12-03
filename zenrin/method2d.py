@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 import cv2
 
-class sphere:
+class circle:
     def __init__(self, p):
         # パラメータ
         # p = [x0, y0, r]
@@ -30,6 +30,29 @@ def line2d(a, b):
     y = a[1]*t + b[1]*(1-t)
 
     return x, y
+    
+def norm(normal):
+     #ベクトルが一次元のとき
+    if len(normal.shape)==1:
+        if np.linalg.norm(normal) == 0:
+			#print("Warning: 法線ベクトルがゼロです！")
+            return normal
+            
+        else:
+            return normal / np.linalg.norm(normal)
+
+    #ベクトルが二次元
+    else:
+        #各法線のノルムをnormに格納
+        norm = np.linalg.norm(normal, ord=2, axis=1)
+
+        #normが0の要素は1にする(normalをnormで割る際に0除算を回避するため)
+        norm = np.where(norm==0, 1, norm)
+
+        #normalの各成分をノルムで割る
+        norm = np.array([np.full(2, norm[i]) for i in range(len(norm))])
+        return normal / norm
+
 
 # 図形の境界線の点群を生成
 def ContourPoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
@@ -142,10 +165,49 @@ def PlotContour(hull, color="red"):
         LX, LY = line2d(a, b)
         plt.plot(LX, LY, color=color)
 
+def buildAABB(points):
+    #なんとこれで終わり
+    max_p = np.amax(points, axis=0)
+    min_p = np.amin(points, axis=0)
+
+    return max_p, min_p
+
+#陰関数のグラフ描画
+#fn  ...fn(x, y) = 0の左辺
+#AABB_size ...AABBの各辺をAABB_size倍する
+def plot_implicit2d(fn, points=None, AABB_size=1, bbox=(2.5,2.5), contourNum=30):
+
+    # pointsの入力があればAABB生成してそれをもとにスケール設定
+    if points is not None:
+        #AABB生成
+        max_p, min_p = buildAABB(points)
+
+        xmax, ymax = max_p
+        xmin, ymin = min_p
+
+        #AABBの各辺がAABB_size倍されるように頂点を変更
+        xmax = xmax + (xmax - xmin)/2 * AABB_size
+        xmin = xmin - (xmax - xmin)/2 * AABB_size
+        ymax = ymax + (ymax - ymin)/2 * AABB_size
+        ymin = ymin - (ymax - ymin)/2 * AABB_size
+
+    # pointsの入力がなければ適当なbboxでスケール設定
+    else:
+        xmin, xmax, ymin, ymax = bbox*2
+
+    # スケールをもとにcontourNum刻みでX, Y作成
+    X = np.linspace(xmin, xmax, contourNum)
+    Y = np.linspace(ymin, ymax, contourNum)
+    X, Y = np.meshgrid(X, Y)
+
+    # fn(X, Y) = 0の等高線を引く
+    #Z = fn(X,Y)
+    Z = np.array([fn(X[i], Y[i]) for i in range(contourNum)])
+    plt.contour(X, Y, Z, [0])
 
 
 """
-C1 = sphere([0,0,1])
+C1 = circle([0,0,1])
 
 points1= ContourPoints(C1.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
 X1, Y1 = Disassemble2d(points1)
