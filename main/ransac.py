@@ -110,8 +110,8 @@ def CylinderDict(points, normals, X, Y, Z, length):
     n = points.shape[0]
     N = 5000
     # ランダムに2点ずつN組抽出
-    index = np.array([np.random.choice(n, 2, replace=False) for i in range(N)])
-    #index = np.random.choice(n, size=(int((n-n%2)/2), 2), replace=False)
+    #index = np.array([np.random.choice(n, 2, replace=False) for i in range(N)])
+    index = np.random.choice(n, size=(int((n-n%2)/2), 2), replace=False)
     points_set = points[index, :]
     normals_set = normals[index, :]
 
@@ -171,7 +171,7 @@ def ConeDict(points, normals, X, Y, Z, length):
     N = 5000
     # ランダムに3点ずつN組抽出
     index = np.array([np.random.choice(n, 3, replace=False) for i in range(N)])
-    #index = np.random.choice(n, size=(int((n-n%2)/2), 2), replace=False)
+    #index = np.random.choice(n, size=(int((n-n%3)/3), 3), replace=False)
     points_set = points[index, :]
     normals_set = normals[index, :]
 
@@ -205,6 +205,8 @@ def ConeDict(points, normals, X, Y, Z, length):
     # 平面の法線(=direction)の向きをaがない半空間の方向にしたいので、
     # f(a)>0のときnormal, f(a)<0のとき-normalを返す
     # (f=d-(ax+by+cz)だとf(a)>0のときnはaがない方向、つまりnは内部(領域)から発散する方向に向いている)
+
+    #direction = lambda p1, p2, p3, a: norm(np.cross(norm(p2-a)-norm(p1-a), norm(p3-a)-norm(p1-a)))
 
     normal = lambda p1, p2, p3, a: norm(np.cross(norm(p2-a)-norm(p1-a), norm(p3-a)-norm(p1-a)))
     plane_frep = lambda p1, p2, p3, a: lambda x: DOT(normal(p1,p2,p3,a), a+norm(p1-a)) - DOT(normal(p1,p2,p3,a), x)
