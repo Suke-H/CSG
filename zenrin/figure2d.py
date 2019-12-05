@@ -24,6 +24,30 @@ class line:
 
         return c - (a*x + b*y)
 
+class triangle:
+    def __init__(self, p):
+        # パラメータ
+        # p = [x0, y0, r, t]
+        # x0, y0: 中心
+        # r: 半径(=中心から辺への垂直距離)
+        # t: 中心から反時計回りへの回転の角度(/rad)
+        self.p = p
+
+    # 長方形: spin(inter(l1,l2,l3), x0, y0, t)
+    def f_rep(self, x, y):
+        x0, y0, r, t = self.p
+        num = np.sqrt(3)/2
+        # 4辺作成
+        l1 = line([0,-1,-y0+r])
+        l2 = line([num,0.5,num*x0+0.5*y0+r])
+        l3 = line([-num,0.5,-num*x0+0.5*y0+r])
+        # intersectionで正三角形作成
+        tri = inter(l1, inter(l2, l3))
+        # 回転
+        tri = spin(tri, x0, y0, t)
+
+        return tri.f_rep(x, y)
+
 class rectangle:
     def __init__(self, p):
         # パラメータ
@@ -47,6 +71,8 @@ class rectangle:
         rect = spin(rect, x0, y0, t)
 
         return rect.f_rep(x, y)
+
+
 
 
 class spin:
