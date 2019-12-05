@@ -60,7 +60,7 @@ def PlaneDict(points, normals, X, Y, Z, length):
 
 def SphereDict(points, normals, X, Y, Z, length):
     n = points.shape[0]
-    #N = 5000
+    N = 5000
     # ランダムに2点ずつN組抽出
     #index = np.array([np.random.choice(n, 2, replace=False) for i in range(N)])
     index = np.random.choice(n, size=(int((n-n%2)/2), 2), replace=False)

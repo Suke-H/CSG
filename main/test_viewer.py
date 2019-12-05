@@ -5,8 +5,8 @@ import itertools
 
 from loadOBJ import loadOBJ
 import figure2 as F
-from optimize import figOptimize
-from optimize2 import figOptimize2
+#from optimize import figOptimize
+#from optimize2 import figOptimize2
 from PreProcess import PreProcess
 from PreProcess2 import PreProcess2
 from method import *
@@ -28,10 +28,10 @@ def OptiViewer(path, fig_type):
     ax.set_zlabel("Z")
 
     #点群,法線,OBBの対角線の長さ  取得
-    #points, X, Y, Z, normals, length = PreProcess(path)
+    points, X, Y, Z, normals, length = PreProcess(path)
     
     #自作の点群を扱いたいときはこちら
-    points, X, Y, Z, normals, length = PreProcess2()
+    #points, X, Y, Z, normals, length = PreProcess2()
 
     print("points:{}".format(points.shape[0]))
 
@@ -48,24 +48,25 @@ def OptiViewer(path, fig_type):
 
     ###最適化###
     #result = figOptimize(points, normals, length, fig_type)
-    result = figOptimize2(X, Y, Z, normals, length, fig_type)
+    #result = figOptimize2(X, Y, Z, normals, length, fig_type)
+    result, MX, MY, MZ, num, index = RANSAC(fig_type, points, normals, X, Y, Z, length)
     print(result)
 
     #fig_typeに応じた図形を選択
     if fig_type==0:
-        figure = F.sphere(result.x)
+        figure = F.sphere(result)
     elif fig_type==1:
-        figure = F.plane(result.x)
+        figure = F.plane(result)
     elif fig_type==2:
-        figure = F.cylinder(result.x)
+        figure = F.cylinder(result)
     else:
-        figure = F.cone(result.x)
+        figure = F.cone(result)
 
     #最適化された図形を描画
     plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=15)
 
     #S_optを検出
-    MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
+    #MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
 
     print("num:{}".format(num))
     ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="red")
@@ -106,7 +107,7 @@ def DetectViewer(path):
 
             #図形フィッティング
             #result = figOptimize(points, normals, length, fig_type)
-            result = figOptimize2(X, Y, Z, normals, length, fig_type)
+            #result = figOptimize2(X, Y, Z, normals, length, fig_type)
             print(result.x)
 
             #fig_typeに応じた図形を選択
@@ -172,10 +173,10 @@ def DetectViewer(path):
 
 def DetectViewer2(path):
     #点群,法線,OBBの対角線の長さ  取得
-    #points, X, Y, Z, normals, length = PreProcess(path)
+    points, X, Y, Z, normals, length = PreProcess(path)
     
     #自作の点群を扱いたいときはこちら
-    points, X, Y, Z, normals, length = PreProcess2()
+    #points, X, Y, Z, normals, length = PreProcess2()
 
     #元の点群データを保存しておく
     ori_points = points[:, :]
@@ -294,9 +295,9 @@ def DetectViewer2(path):
     plt.show()
 
 
-#OptiViewer("../data/pumpkin.obj", 1)
+OptiViewer("../data/points.obj", 1)
 #DetectViewer("")
-DetectViewer2("")
+#DetectViewer2("../data/pum")
 
 """
 points, X, Y, Z, normals, length = PreProcess2()
@@ -318,6 +319,18 @@ MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0
 
 print("num:{}".format(num))
 ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="red")
+plt.show()
+"""
+"""
+points, X, Y, Z, normals, length = PreProcess("../data/points.obj")
+print(points.shape)
+ax = ViewerInit(points, X, Y, Z, normals)
+
+max_p, min_p = buildAABB(points)
+ax.set_xlim(min_p[0], max_p[0])
+ax.set_ylim(min_p[1], max_p[1])
+ax.set_zlim(min_p[2], max_p[2])
+
 plt.show()
 """
 

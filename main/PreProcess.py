@@ -8,6 +8,8 @@ from method import *
 def PreProcess(path):
 	#objファイルから点群取得
     points, X, Y, Z = loadOBJ(path)
+    print("points:{}".format(len(X)))
+
 
     #点群をnp配列⇒open3d形式に
     pointcloud = open3d.PointCloud()
@@ -34,5 +36,7 @@ def PreProcess(path):
 	#(最適化の条件にも使いたい)
     _, _, length = buildOBB(points)
     print("OBB_length: {}".format(length))
+
+    print(points)
     
     return points, X, Y, Z, normals, length

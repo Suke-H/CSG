@@ -3,16 +3,6 @@ import random
 import matplotlib.pyplot as plt
 import cv2
 
-class circle:
-    def __init__(self, p):
-        # パラメータ
-        # p = [x0, y0, r]
-        self.p = p
-
-    # 円の方程式: f(x,y) = r - √(x-a)^2 + (y-b)^2
-    def f_rep(self, x, y):
-        return self.p[2] - np.sqrt((x-self.p[0])**2 + (y-self.p[1])**2)
-
 #点群データをx, yに分解する
 
 #[x1, y1]         [x1, x2, ..., xn]
@@ -74,7 +64,6 @@ def ContourPoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.
     #Ｗが0に近いインデックスを取り出す
     index = np.where(np.abs(W)<=epsilon)
     index = [(index[0][i], index[1][i]) for i in range(len(index[0]))]
-    #print(index)
 
     #ランダムにダウンサンプリング
     index = random.sample(index, int(len(index)*down_rate//1))
@@ -112,7 +101,6 @@ def InteriorPoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0
     #W > 0(=図形の内部)のインデックスを取り出す
     index = np.where(W>0)
     index = [(index[0][i], index[1][i]) for i in range(len(index[0]))]
-    #print(index)
 
     #ランダムにダウンサンプリング
     index = random.sample(index, int(len(index)*down_rate//1))
@@ -205,20 +193,3 @@ def plot_implicit2d(fn, points=None, AABB_size=1, bbox=(2.5,2.5), contourNum=30)
     Z = np.array([fn(X[i], Y[i]) for i in range(contourNum)])
     plt.contour(X, Y, Z, [0])
 
-
-"""
-C1 = circle([0,0,1])
-
-points1= ContourPoints(C1.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
-X1, Y1 = Disassemble2d(points1)
-print("points1:{}".format(len(X1)))
-
-points2= InteriorPoints(C1.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
-X2, Y2 = Disassemble2d(points2)
-print("points1:{}".format(len(X2)))
-
-plt.plot(X1, Y1, marker="o",linestyle="None",color="blue")
-plt.plot(X2, Y2, marker=".",linestyle="None",color="red")
-MakeContour(points2)
-plt.show()
-"""

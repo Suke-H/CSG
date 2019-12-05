@@ -1,6 +1,7 @@
 import numpy as np
 
 from method2d import *
+import figure2d as F
 
 # 標識の点群pointsと図形figureとの一致度を計算する
 def CalcIoU(points, figure):
@@ -50,17 +51,50 @@ def CalcIoU(points, figure):
     # IoU = AND(点群数) / OR(面積) とする
     return and_num / or_area
 
-C1 = circle([0,0,1])
-C2 = circle([0,1,1])
-P1 = InteriorPoints(C1.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
-print("points:{}".format(P1.shape[0]))
+#C1 = F.circle([0,0,1])
+C2 = F.circle([0,1,1])
+C2spin1 = F.spin(C2, 0, 0, np.pi/2)
+#C3 = F.inter(C2, C2spin1)
+#C4 = F.union(C2, C2spin1)
+C5 = F.rectangle([1,2,4,3,np.pi/6])
+C6 = F.rectangle([1,2,4,3,0])
+C2spin2 = F.spin(C2, 1, 1, np.pi/2)
+C2spin3 = F.spin(C2, -1, -1, np.pi/2)
+#P1 = InteriorPoints(C1.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
+#print("points:{}".format(P1.shape[0]))
 
-X1, Y1 = Disassemble2d(P1)
-#points = ContourPoints(C2.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
-#X2, Y2= Disassemble2d(points)
+#X1, Y1 = Disassemble2d(P1)
+points = ContourPoints(C2.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
+X1, Y1= Disassemble2d(points)
+points_spin1 = ContourPoints(C2spin1.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
+X2, Y2= Disassemble2d(points_spin1)
+"""
+points3 = ContourPoints(C3.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
+X3, Y3= Disassemble2d(points3)
+points4 = ContourPoints(C4.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
+X4, Y4= Disassemble2d(points4)
 
-#plt.plot(X1, Y1, marker=".",linestyle="None",color="blue")
-#plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
+points_spin2 = ContourPoints(C2spin2.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
+X3, Y3= Disassemble2d(points_spin2)
+points_spin3 = ContourPoints(C2spin3.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
+X4, Y4= Disassemble2d(points_spin3)
+"""
+points3 = ContourPoints(C5.f_rep, bbox=(-3, 10),grid_step=1000, epsilon=0.01, down_rate = 0.5)
+X3, Y3= Disassemble2d(points3)
+points4 = ContourPoints(C6.f_rep, bbox=(-3, 10),grid_step=1000, epsilon=0.01, down_rate = 0.5)
+X4, Y4= Disassemble2d(points4)
 
-print("IoU:{}".format(CalcIoU(P1, C2)))
+#plt.plot([2], [3], marker="o",linestyle="None",color="green")
+
+plt.plot(X1, Y1, marker="o",linestyle="None",color="blue")
+plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
+plt.plot(X3, Y3, marker="o",linestyle="None",color="green")
+plt.plot(X4, Y4, marker=".",linestyle="None",color="yellow")
+
+plt.xlim(-3, 6)
+plt.ylim(-3, 6)
+#plt.axes().set_aspect('equal', 'datalim')
+
+
+#print("IoU:{}".format(CalcIoU(P1, C2)))
 plt.show()

@@ -231,6 +231,7 @@ def OBBViewer(ax, points):
     Xmax, Ymax, Zmax = Disassemble(max_p)
     Xmin, Ymin, Zmin = Disassemble(min_p)
 
+
     #頂点なども描画
     ax.plot(Xmax,Ymax,Zmax,marker="X",linestyle="None",color="red")
     ax.plot(Xmin,Ymin,Zmin,marker="X",linestyle="None",color="blue")
