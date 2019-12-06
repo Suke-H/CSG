@@ -4,7 +4,7 @@ from method2d import *
 import figure2d as F
 
 # 標識の点群pointsと図形figureとの一致度を計算する
-def CalcIoU(points, figure):
+def CalcIoU(points, figure, flag=False):
 
     ### AND ######################################
 
@@ -20,11 +20,13 @@ def CalcIoU(points, figure):
     and_num = len(index[0])
     #print("and_num:{}".format(and_num))
 
-    # plot
-    #pointX = np.array([X[i] for i in index])
-    #pointY = np.array([Y[i] for i in index])
+    if flag == True:
 
-    #plt.plot(pointX, pointY, marker="o",linestyle="None",color="blue")
+        # plot
+        pointX = np.array([X[i] for i in index])
+        pointY = np.array([Y[i] for i in index])
+
+        plt.plot(pointX, pointY, marker="o",linestyle="None",color="blue")
 
     ### OR ######################################
 

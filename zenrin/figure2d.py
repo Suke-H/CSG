@@ -72,9 +72,6 @@ class rect:
 
         return rect.f_rep(x, y)
 
-
-
-
 class spin:
     def __init__(self, fig, x0, y0, t):
         #fig: 回転させる図形

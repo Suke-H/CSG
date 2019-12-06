@@ -1,4 +1,6 @@
 import numpy as np
+import copy
+import matplotlib.pyplot as plt
 
 from method2d import *
 import figure2d as F
@@ -10,6 +12,59 @@ class person:
         self.figure = figure
         self.score = 0
         self.scoreFlag = False
+
+def GA(points, fig=[0,1,2], epoch=100, N=500, add_num=50, save_num=1, tournament_size=50, cross_rate=0.75, mutate_rate=0.2):
+    # AABB生成
+    max_p, min_p, l = buildAABB(points)
+
+    # N人クリーチャー作成
+    people = CreateRandomPopulation(N, max_p, min_p, l, fig)
+
+    for i in range(epoch):
+        #print("epoch:{}".format(i))
+        # 新しいクリーチャー追加
+        people = np.concatenate([people, CreateRandomPopulation(add_num, max_p, min_p, l, fig)])
+        # スコア順に並び替え
+        people, _ = Rank(people, points)
+        # 上位n人は保存
+        next_people = people[:save_num]
+
+        # 次世代がN人超すまで
+        # トーナメント選択->交叉、突然変異->保存
+        # を繰り返す
+        while len(next_people) <= N:
+            # トーナメントサイズの人数出場
+            entry = np.random.choice(people, tournament_size, replace=False)
+            # 上位3人選択
+            entry, _ = Rank(entry, points)[:3]
+            # 1位と2位を交叉
+            c1, c2 = Crossover(entry[0], entry[1], rate=cross_rate)
+            # 3位を突然変異
+            c3 = Mutate(entry[2], max_p, min_p, l, rate=mutate_rate)
+            
+            next_people = np.append(next_people, c1)
+            next_people = np.append(next_people, c2)
+            next_people = np.append(next_people, c3)
+
+        people = next_people[:]
+
+        # 途中経過表示
+        if i % 10 == 0:
+            sorted_People, score_list = Rank(people, points)
+            print("{}回目成果".format(int(i/10)))
+            print(score_list[:10])
+            #DrawFig(points, people[0])
+            #DrawFig(points, people[1])
+            
+
+    # 最終結果表示
+    sorted_People, score_list = Rank(people, points)
+    print(score_list[:10])
+    DrawFig(points, people[0])
+    DrawFig(points, people[1])
+
+    return people[0]
+
 
 def CreateRandomPerson(fig_type, max_p, min_p, l):
     # 円
@@ -51,13 +106,10 @@ def CreateRandomPerson(fig_type, max_p, min_p, l):
         figure = F.rect([x,y,w,h,t])
 
     return person(fig_type, figure)
-
-def CreateRandomPopulation(points, num, fig=[0,1,2]):
-    # AABB生成
-    max_p, min_p, l = buildAABB(points)
-
+    
+def CreateRandomPopulation(num, max_p, min_p, l, fig=[0,1,2]):
     # ランダムに図形の種類を選択し、遺伝子たちを生成
-    population = [CreateRandomPerson(np.random.choice(fig), max_p, min_p, l) for i in range(num)]
+    population = np.array([CreateRandomPerson(np.random.choice(fig), max_p, min_p, l) for i in range(num)])
 
     return population
 
@@ -78,15 +130,14 @@ def Rank(people, points):
     return np.array(people)[index_list], np.array(score_list)[index_list]
 
 # 図形パラメータのどれかを変更(今のところ図形の種類は変えない)
-def Mutate(person, points, rate=1.0):
+def Mutate(person, max_p, min_p, l, rate=1.0):
     # rateの確率で突然変異
     if np.random.rand() <= rate:
-        # AABB生成
-        max_p, min_p, l = buildAABB(points)
+        #personに直接書き込まないようコピー
+        person = copy.deepcopy(person)
         # 図形パラメータの番号を選択
         index = np.random.choice([i for i in range(len(person.figure.p))])
         # 図形の種類にそって、選択したパラメータをランダムに変更
-        print(index)
 
         # 円
         if person.fig_type == 0:
@@ -133,6 +184,8 @@ def Mutate(person, points, rate=1.0):
             else:
                 person.figure.p[index] = Random(0, np.pi/2)
 
+    return person
+
 # 同じ図形同士なら、場所を選択して交叉
 # [x1,y1,r1][x2,y2,r2] -> 1を選択 -> [x1,y2,r2][x2,y1,r1]
 
@@ -142,6 +195,8 @@ def Mutate(person, points, rate=1.0):
 def Crossover(person1, person2, rate=1.0):
     # rateの確率で突然変異
     if np.random.rand() <= rate:
+        # personに直接書き込まないようコピー
+        person1, person2 = copy.deepcopy(person1), copy.deepcopy(person2)
 
         f1, f2, p1, p2 = person1.fig_type, person2.fig_type, person1.figure.p, person2.figure.p
 
@@ -181,5 +236,14 @@ def Crossover(person1, person2, rate=1.0):
                             p1[4] -= np.pi*2/3
                         p1[4], p2[3] = p2[3], p1[4]
 
+    return person1, person2
 
-        print(index)
+def DrawFig(points, person):
+    X1, Y1= Disassemble2d(points)
+    points2 = ContourPoints(person.figure.f_rep, grid_step=1000, epsilon=0.01, down_rate = 0.5)
+    X2, Y2= Disassemble2d(points2)
+
+    plt.plot(X1, Y1, marker=".",linestyle="None",color="yellow")
+    plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
+
+    plt.show()

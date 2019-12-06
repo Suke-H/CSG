@@ -8,9 +8,15 @@ from GA import *
 
 ###GA######################################################
 # 標識
-C1 = F.circle([0,0,1])
-sign = InteriorPoints(C1.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
+C1 = F.tri([0,0,1,np.pi/3])
+sign = InteriorPoints(C1.f_rep, grid_step=1000, epsilon=0.01, down_rate = 0.5)
 
+print("ans:{}".format(CalcIoU(sign, C1)))
+
+best = GA(sign)
+print(best.fig_type, best.figure.p)
+print("ans:{}".format(CalcIoU(sign, C1)))
+"""
 # ランダム図形生成
 people = CreateRandomPopulation(sign, 3)
 
@@ -22,7 +28,7 @@ Crossover(people[0], people[1])
 print(people[0].figure.p)
 print(people[1].figure.p)
 
-"""
+
 # plot
 signX, signY = Disassemble2d(sign)
 points1 = ContourPoints(people[0].figure.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
@@ -37,9 +43,9 @@ plt.plot(X1, Y1, marker="o",linestyle="None",color="blue")
 plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
 plt.plot(X3, Y3, marker="o",linestyle="None",color="green")
 
-print("IoU1:{}".format(CalcIoU(sign, people[0].figure)))
-print("IoU2:{}".format(CalcIoU(sign, people[1].figure)))
-print("IoU3:{}".format(CalcIoU(sign, people[2].figure)))
+print("IoU1:{}".format(CalcIoU(sign, people[0].figure, flag=True)))
+print("IoU2:{}".format(CalcIoU(sign, people[1].figure, flag=True)))
+print("IoU3:{}".format(CalcIoU(sign, people[2].figure, flag=True)))
 plt.show()
 
 sorted_people, scores = Rank(people, sign)
