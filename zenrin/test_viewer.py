@@ -14,6 +14,15 @@ sign = InteriorPoints(C1.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
 # ランダム図形生成
 people = CreateRandomPopulation(sign, 3)
 
+print(people[0].fig_type, people[0].figure.p)
+print(people[1].fig_type, people[1].figure.p)
+
+Crossover(people[0], people[1])
+
+print(people[0].figure.p)
+print(people[1].figure.p)
+
+"""
 # plot
 signX, signY = Disassemble2d(sign)
 points1 = ContourPoints(people[0].figure.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
@@ -35,3 +44,4 @@ plt.show()
 
 sorted_people, scores = Rank(people, sign)
 print(scores)
+"""
