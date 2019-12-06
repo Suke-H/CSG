@@ -173,8 +173,12 @@ def Crossover(person1, person2, rate=1.0):
                 # indexが2(=t)だったらまあ頑張って交換
                 else:
                     if f1 == 1:
+                        if p2[4] > np.pi*2/3:
+                            p2[4] -= np.pi*2/3
                         p1[3], p2[4] = p2[4], p1[3]
                     else:
+                        if p1[4] > np.pi*2/3:
+                            p1[4] -= np.pi*2/3
                         p1[4], p2[3] = p2[3], p1[4]
 
 
