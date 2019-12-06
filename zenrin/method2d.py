@@ -1,7 +1,12 @@
+from numpy import linalg as LA
 import numpy as np
 import random
 import matplotlib.pyplot as plt
 import cv2
+
+# aからbまでのランダムな実数値を返す
+def Random(a, b):
+    return (b - a) * np.random.rand() + a
 
 #点群データをx, yに分解する
 
@@ -24,7 +29,7 @@ def line2d(a, b):
 def norm(normal):
      #ベクトルが一次元のとき
     if len(normal.shape)==1:
-        if np.linalg.norm(normal) == 0:
+        if LA.norm(normal) == 0:
 			#print("Warning: 法線ベクトルがゼロです！")
             return normal
             
@@ -34,7 +39,7 @@ def norm(normal):
     #ベクトルが二次元
     else:
         #各法線のノルムをnormに格納
-        norm = np.linalg.norm(normal, ord=2, axis=1)
+        norm = LA.norm(normal, ord=2, axis=1)
 
         #normが0の要素は1にする(normalをnormで割る際に0除算を回避するため)
         norm = np.where(norm==0, 1, norm)
@@ -154,11 +159,11 @@ def PlotContour(hull, color="red"):
         plt.plot(LX, LY, color=color)
 
 def buildAABB(points):
-    #なんとこれで終わり
+    # (x,y)の最大と最小をとる
     max_p = np.amax(points, axis=0)
     min_p = np.amin(points, axis=0)
 
-    return max_p, min_p
+    return max_p, min_p, LA.norm(max_p - min_p)
 
 #陰関数のグラフ描画
 #fn  ...fn(x, y) = 0の左辺

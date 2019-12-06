@@ -1,6 +1,7 @@
 import numpy as np
 
 from method2d import *
+import figure2d as F
 
 def MarkPoints(figure, points, epsilon):
 
@@ -41,7 +42,7 @@ def CircleDict(points):
     p = np.concatenate([c, r], axis=1)
 
     # 円生成
-    Circles = [circle(p[i]) for i in range(num)]
+    Circles = [F.circle(p[i]) for i in range(num)]
 
     # フィットしている点の数を数える
     Scores = [MarkPoints(Circles[i], points, epsilon=0.01)[0] for i in range(num)]
@@ -50,7 +51,7 @@ def CircleDict(points):
 
     return p[Scores.index(max(Scores))], Circles[Scores.index(max(Scores))]
 
-C1 = circle([0,0,1])
+C1 = F.circle([0,0,1])
 points1= ContourPoints(C1.f_rep, grid_step=450, epsilon=0.01, down_rate = 0.5)
 print("points:{}".format(points1.shape[0]))
 
