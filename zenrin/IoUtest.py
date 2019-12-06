@@ -21,10 +21,10 @@ def CalcIoU(points, figure):
     #print("and_num:{}".format(and_num))
 
     # plot
-    pointX = np.array([X[i] for i in index])
-    pointY = np.array([Y[i] for i in index])
+    #pointX = np.array([X[i] for i in index])
+    #pointY = np.array([Y[i] for i in index])
 
-    plt.plot(pointX, pointY, marker="o",linestyle="None",color="blue")
+    #plt.plot(pointX, pointY, marker="o",linestyle="None",color="blue")
 
     ### OR ######################################
 

@@ -2,6 +2,13 @@ import numpy as np
 
 from method2d import *
 import figure2d as F
+from IoUtest import CalcIoU
+
+class person:
+    def __init__(self, figure):
+        self.figure = figure
+        self.score = 0
+        self.scoreFlag = False
 
 def CreateRandomPerson(fig, max_p, min_p, l):
     # 円
@@ -42,14 +49,35 @@ def CreateRandomPerson(fig, max_p, min_p, l):
 
         figure = F.rect([x,y,w,h,t])
 
-    return figure
-
+    return person(figure)
 
 def CreateRandomPopulation(points, num, fig=[0,1,2]):
     # AABB生成
     max_p, min_p, l = buildAABB(points)
 
-    # ランダムに図形の種類を選択し、図形生成
-    figure_list = [CreateRandomPerson(np.random.choice(fig), max_p, min_p, l) for i in range(num)]
+    # ランダムに図形の種類を選択し、遺伝子たちを生成
+    population = [CreateRandomPerson(np.random.choice(fig), max_p, min_p, l) for i in range(num)]
 
-    return figure_list
+    return population
+
+def Score(person, points):
+    # scoreFlagが立ってなかったらIoUを計算
+    if person.scoreFlag == False:
+        person.score = CalcIoU(points, person.figure)
+        person.scoreFlag = True
+
+    return person.score
+
+def Rank(people, points):
+    # リストにスコアを記録していく
+    score_list = [Score(people[i], points) for i in range(len(people))]
+    # Scoreの大きい順からインデックスを読み上げ、リストに記録
+    index_list = sorted(range(len(score_list)), reverse=True, key=lambda k: score_list[k])
+    # index_listの順にPeopleを並べる
+    return np.array(people)[index_list], np.array(score_list)[index_list]
+
+
+
+
+    
+
