@@ -13,6 +13,76 @@ class person:
         self.score = 0
         self.scoreFlag = False
 
+def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=5, tournament_size=10, cross_rate=0.75, mutate_rate=0.2):
+    # AABB生成
+    max_p, min_p, l = buildAABB(points)
+
+    # 図形の種類ごとにN人クリーチャー作成
+    group = np.array([CreateRandomPopulation(N, max_p, min_p, l, fig[i]) for i in range(len(fig))])
+    print(group.shape)
+
+    for epoch in range(n_epoch):
+        #print("epoch:{}".format(epoch))
+        # 新しいクリーチャー追加
+        #group = [np.concatenate([group[i], CreateRandomPopulation(add_num, max_p, min_p, l, fig[i])]) for i in range(len(fig))]
+        # スコア順に並び替え
+        group = np.array([Rank(group[i], points)[0] for i in range(len(fig))])
+        # 上位n人は保存
+        next_group = np.array([group[i][:save_num] for i in range(len(fig))])
+
+        # 次世代がN人超すまで
+        # トーナメント選択->交叉、突然変異->保存
+        # を繰り返す
+        while len(next_group[0]) <= N:
+            # トーナメントサイズの人数出場
+            entry = np.array([np.random.choice(group[i], tournament_size, replace=False) for i in range(len(fig))])
+
+            cross_children, mutate_children = [], []
+
+            for i in fig:
+                # 図形の種類によって"Crossover"で取る個体の数変更
+                if i == 0:
+                    num = 4
+                elif i == 1:
+                    num = 5
+                elif i == 2:
+                    num = 6
+                
+                # 上位num+1人選択
+                entry_tmp, _ = Rank(entry[i], points)[:num+1]
+                # 上位num人を交叉
+                cross_children.append([Crossover2(entry_tmp[:num])])
+                # num+1位を突然変異
+                mutate_children.append([Mutate(entry_tmp[num], max_p, min_p, l, rate=mutate_rate)])
+                
+            
+            #print(next_group.shape, cross_group.shape, mutate_group.shape)
+            
+            # c1, c2, c3を次世代に追加
+            next_group = np.concatenate([next_group, cross_children, mutate_children], axis=1)
+            #print("next:{}".format(next_group.shape))
+
+        group = next_group[:, :]
+
+        
+        # 途中経過表示
+        if epoch % 10 == 0:
+            print("{}回目成果".format(int(epoch/10)))
+
+            for i in range(len(fig)):
+                _, score_list = Rank(group[i], points)
+                print(score_list[:10])
+                DrawFig(points, group[i][0])
+                #DrawFig(points, people[1])
+        
+    # 最終結果表示
+    for i in range(len(fig)):
+        _, score_list = Rank(group[i], points)
+        print(score_list[:10])
+        DrawFig(points, group[i][0])
+
+    return group[0], group[1], group[2]
+
 def GA(points, fig=[0,1,2], epoch=100, N=500, add_num=50, save_num=1, tournament_size=50, cross_rate=0.75, mutate_rate=0.2):
     # AABB生成
     max_p, min_p, l = buildAABB(points)
@@ -107,9 +177,9 @@ def CreateRandomPerson(fig_type, max_p, min_p, l):
 
     return person(fig_type, figure)
     
-def CreateRandomPopulation(num, max_p, min_p, l, fig=[0,1,2]):
+def CreateRandomPopulation(num, max_p, min_p, l, fig):
     # ランダムに図形の種類を選択し、遺伝子たちを生成
-    population = np.array([CreateRandomPerson(np.random.choice(fig), max_p, min_p, l) for i in range(num)])
+    population = np.array([CreateRandomPerson(fig, max_p, min_p, l) for i in range(num)])
 
     return population
 
@@ -209,6 +279,7 @@ def Crossover(person1, person2, rate=1.0):
 
         # 違う図形なら
         else:
+            print("error")
             # 円と正三角形 or 円と長方形
             if f1 == 0 or f2 == 0:
                 # 図形パラメータの番号を選択
@@ -238,6 +309,56 @@ def Crossover(person1, person2, rate=1.0):
 
     return person1, person2
 
+# BLX-a
+def BLX(x1, x2, xmin, xmax, alpha):
+    r = Random(-alpha, 1+alpha)
+    x = r*x1 + (1-r)*x2
+
+    if any(xmin < x) and any(x < xmax):
+        return x
+        
+    else:
+        return BLX(x1, x2, xmin, xmax, alpha)
+
+# ブレンド交叉を採用
+def Crossover2(parents):
+
+    # n: パラメータの数, x: n+1人の親のパラメータのリスト
+    n = len(parents[0].figure.p)
+    x = np.array([parents[i].figure.p for i in range(n+1)])
+
+    # g: xの重心
+    g = np.sum(x, axis=0) / n
+
+    alpha = np.sqrt(n+2)
+
+    # p, cを定義
+    p, c = np.empty((0,n)), np.empty((0,n))
+    p = np.append(p, [g + alpha*(x[0] - g)], axis=0)
+    c = np.append(c, [[0 for i in range(n)]], axis=0)
+
+    for i in range(1, n+1):
+        r = Random(0, 1)**(1/i)
+        p = np.append(p, [g + alpha*(x[i] - g)], axis=0)
+        c = np.append(c, [r*(p[i-1]-p[i] + c[i-1])], axis=0)
+        #print(r, p[i], c[i])
+
+    # 子のパラメータはp[n]+c[n]となる
+    child = p[n] + c[n]
+
+    # パラメータをpersonクラスに代入する
+    fig = parents[0].fig_type
+
+    if fig == 0:
+        figure = F.circle(child)
+    elif fig == 1:
+        figure = F.tri(child)
+    elif fig == 2:
+        figure = F.rect(child)
+
+    return person(fig, figure)
+            
+
 def DrawFig(points, person):
     X1, Y1= Disassemble2d(points)
     points2 = ContourPoints(person.figure.f_rep, grid_step=1000, epsilon=0.01, down_rate = 0.5)
@@ -245,5 +366,8 @@ def DrawFig(points, person):
 
     plt.plot(X1, Y1, marker=".",linestyle="None",color="yellow")
     plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
+
+    plt.xlim(-2,2)
+    plt.ylim(-2,2)
 
     plt.show()

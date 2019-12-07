@@ -8,14 +8,19 @@ from GA import *
 
 ###GA######################################################
 # 標識
+
 C1 = F.tri([0,0,1,np.pi/3])
 sign = InteriorPoints(C1.f_rep, grid_step=1000, epsilon=0.01, down_rate = 0.5)
 
 print("ans:{}".format(CalcIoU(sign, C1)))
 
-best = GA(sign)
-print(best.fig_type, best.figure.p)
-print("ans:{}".format(CalcIoU(sign, C1)))
+#best = GA(sign)
+maru, sankaku, sikaku = EntireGA(sign)
+print(maru.figure.p, sankaku.figure.p, sikaku.figure.p)
+#print("ans:{}".format(CalcIoU(sign, C1)))
+
+
+
 """
 # ランダム図形生成
 people = CreateRandomPopulation(sign, 3)
@@ -50,4 +55,32 @@ plt.show()
 
 sorted_people, scores = Rank(people, sign)
 print(scores)
+"""
+"""
+a = 0.5
+x1 = np.array([1,3])
+x2 = np.array([2,4])
+print(np.stack([x1,x2]))
+xmax, xmin, _ = buildAABB(np.stack([x1,x2]))
+#xmin = [1,3]
+#xmax = [2,4]
+print(xmin, xmax)
+
+def BLX(x1, x2, xmin, xmax, a):
+    r = Random(-a, 1+a)
+    x = r*x1 + (1-r)*x2
+
+    if any(xmin < x) and any(x < xmax):
+        return x
+        
+    else:
+        return BLX(x1, x2, xmin, xmax, a)
+
+print(BLX(x1, x2, xmin, xmax, a))
+
+
+parents = CreateRandomPopulation(4, [2, 2], [-2, -2], 2*np.sqrt(2), 0)
+
+child = Crossover2(parents)
+print(child)
 """
