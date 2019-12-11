@@ -1,10 +1,11 @@
 import numpy as np
 import copy
 import matplotlib.pyplot as plt
+import csv
 
 from method2d import *
 import figure2d as F
-from IoUtest import CalcIoU
+from IoUtest import CalcIoU, CalcIoU2
 
 class person:
     def __init__(self, fig_type, figure):
@@ -13,7 +14,8 @@ class person:
         self.score = 0
         self.scoreFlag = False
 
-def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=5, tournament_size=10, cross_rate=0.75, mutate_rate=0.2):
+def EntireGA(points, fig=[0], n_epoch=100, N=100, add_num=30, save_num=2, tournament_size=10, \
+    cross_rate=0.75, mutate_rate=0.5, path=None):
     # AABB生成
     max_p, min_p, l = buildAABB(points)
 
@@ -22,11 +24,14 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=5, to
     print(group.shape)
 
     for epoch in range(n_epoch):
-        #print("epoch:{}".format(epoch))
+        print("epoch:{}".format(epoch))
         # 新しいクリーチャー追加
-        #group = [np.concatenate([group[i], CreateRandomPopulation(add_num, max_p, min_p, l, fig[i])]) for i in range(len(fig))]
+        group = np.array([np.concatenate([group[i], CreateRandomPopulation(add_num, max_p, min_p, l, fig[i])]) for i in range(len(fig))])
         # スコア順に並び替え
         group = np.array([Rank(group[i], points)[0] for i in range(len(fig))])
+        # csv?に保存
+        if path:
+            SaveCSV(group[0][0], epoch, path)
         # 上位n人は保存
         next_group = np.array([group[i][:save_num] for i in range(len(fig))])
 
@@ -36,24 +41,27 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=5, to
         while len(next_group[0]) <= N:
             # トーナメントサイズの人数出場
             entry = np.array([np.random.choice(group[i], tournament_size, replace=False) for i in range(len(fig))])
+            #print(entry.shape)
 
             cross_children, mutate_children = [], []
 
-            for i in fig:
+            for i, f in enumerate(fig):
                 # 図形の種類によって"Crossover"で取る個体の数変更
-                if i == 0:
+                if f == 0:
                     num = 4
-                elif i == 1:
+                elif f == 1:
                     num = 5
-                elif i == 2:
+                elif f == 2:
                     num = 6
                 
                 # 上位num+1人選択
                 entry_tmp, _ = Rank(entry[i], points)[:num+1]
-                # 上位num人を交叉
-                cross_children.append([Crossover2(entry_tmp[:num])])
-                # num+1位を突然変異
-                mutate_children.append([Mutate(entry_tmp[num], max_p, min_p, l, rate=mutate_rate)])
+                # 突然変異させる人を選択
+                mutate_index = np.random.choice(num+1)
+                # それ以外を交叉
+                cross_children.append([Crossover2(np.delete(entry_tmp, mutate_index), f, max_p, min_p, l)])
+                # 突然変異
+                mutate_children.append([Mutate(entry_tmp[mutate_index], max_p, min_p, l, rate=mutate_rate)])
                 
             
             #print(next_group.shape, cross_group.shape, mutate_group.shape)
@@ -64,14 +72,17 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=5, to
 
         group = next_group[:, :]
 
+
+
         
         # 途中経過表示
-        if epoch % 10 == 0:
-            print("{}回目成果".format(int(epoch/10)))
+        if epoch % 30 == 0:
+            print("{}回目成果".format(int(epoch/30)))
 
             for i in range(len(fig)):
                 _, score_list = Rank(group[i], points)
                 print(score_list[:10])
+                print(group[i][0].figure.p)
                 DrawFig(points, group[i][0])
                 #DrawFig(points, people[1])
         
@@ -81,7 +92,7 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=5, to
         print(score_list[:10])
         DrawFig(points, group[i][0])
 
-    return group[0], group[1], group[2]
+    return [group[i][0].figure.p for i in range(len(fig))]
 
 def GA(points, fig=[0,1,2], epoch=100, N=500, add_num=50, save_num=1, tournament_size=50, cross_rate=0.75, mutate_rate=0.2):
     # AABB生成
@@ -144,7 +155,7 @@ def CreateRandomPerson(fig_type, max_p, min_p, l):
         x = Random(min_p[0], max_p[0])
         y = Random(min_p[1], max_p[1])
         # 0 < r < 2/3*l
-        r = Random(0, 2/3*l)
+        r = Random(l/10, 2/3*l)
 
         figure = F.circle([x,y,r])
 
@@ -155,7 +166,7 @@ def CreateRandomPerson(fig_type, max_p, min_p, l):
         x = Random(min_p[0], max_p[0])
         y = Random(min_p[1], max_p[1])
         # 0 < r < 2/3*l
-        r = Random(0, 2/3*l)
+        r = Random(l/10, 2/3*l)
         # 0 < t < pi*2/3
         t = Random(0, np.pi*2/3)
 
@@ -168,8 +179,8 @@ def CreateRandomPerson(fig_type, max_p, min_p, l):
         x = Random(min_p[0], max_p[0])
         y = Random(min_p[1], max_p[1])
         # 0 < w,h < l
-        w = Random(0, l)
-        h = Random(0, l)
+        w = Random(l/10, l)
+        h = Random(l/10, l)
         # 0 < t < pi
         t = Random(0, np.pi)
 
@@ -186,7 +197,8 @@ def CreateRandomPopulation(num, max_p, min_p, l, fig):
 def Score(person, points):
     # scoreFlagが立ってなかったらIoUを計算
     if person.scoreFlag == False:
-        person.score = CalcIoU(points, person.figure)
+        #person.score = CalcIoU(points, person.figure)
+        person.score = CalcIoU2(points, person.figure)
         person.scoreFlag = True
 
     return person.score
@@ -219,7 +231,7 @@ def Mutate(person, max_p, min_p, l, rate=1.0):
                 person.figure.p[index] = Random(min_p[1], max_p[1])
             # r
             else:
-                person.figure.p[index] = Random(0, 2/3*l)
+                person.figure.p[index] = Random(l/10, 2/3*l)
 
         # 正三角形
         elif person.fig_type == 1:
@@ -231,7 +243,7 @@ def Mutate(person, max_p, min_p, l, rate=1.0):
                 person.figure.p[index] = Random(min_p[1], max_p[1])
             # r
             elif index == 2:
-                person.figure.p[index] = Random(0, 2/3*l)
+                person.figure.p[index] = Random(l/10, 2/3*l)
             # t
             else:
                 person.figure.p[index] = Random(0, np.pi*2/3)
@@ -246,10 +258,10 @@ def Mutate(person, max_p, min_p, l, rate=1.0):
                 person.figure.p[index] = Random(min_p[1], max_p[1])
             # w
             elif index == 2:
-                person.figure.p[index] = Random(0, l)
+                person.figure.p[index] = Random(l/10, l)
             # h
             elif index == 3:
-                person.figure.p[index] = Random(0, l)
+                person.figure.p[index] = Random(l/10, l)
             # t
             else:
                 person.figure.p[index] = Random(0, np.pi/2)
@@ -321,31 +333,37 @@ def BLX(x1, x2, xmin, xmax, alpha):
         return BLX(x1, x2, xmin, xmax, alpha)
 
 # ブレンド交叉を採用
-def Crossover2(parents):
+def Crossover2(parents, fig, max_p, min_p, l):
 
-    # n: パラメータの数, x: n+1人の親のパラメータのリスト
-    n = len(parents[0].figure.p)
-    x = np.array([parents[i].figure.p for i in range(n+1)])
+    while True:
 
-    # g: xの重心
-    g = np.sum(x, axis=0) / n
+        # n: パラメータの数, x: n+1人の親のパラメータのリスト
+        n = len(parents[0].figure.p)
+        x = np.array([parents[i].figure.p for i in range(n+1)])
 
-    alpha = np.sqrt(n+2)
+        # g: xの重心
+        g = np.sum(x, axis=0) / n
 
-    # p, cを定義
-    p, c = np.empty((0,n)), np.empty((0,n))
-    p = np.append(p, [g + alpha*(x[0] - g)], axis=0)
-    c = np.append(c, [[0 for i in range(n)]], axis=0)
+        alpha = np.sqrt(n+2)
 
-    for i in range(1, n+1):
-        r = Random(0, 1)**(1/i)
-        p = np.append(p, [g + alpha*(x[i] - g)], axis=0)
-        c = np.append(c, [r*(p[i-1]-p[i] + c[i-1])], axis=0)
-        #print(r, p[i], c[i])
+        # p, cを定義
+        p, c = np.empty((0,n)), np.empty((0,n))
+        p = np.append(p, [g + alpha*(x[0] - g)], axis=0)
+        c = np.append(c, [[0 for i in range(n)]], axis=0)
 
-    # 子のパラメータはp[n]+c[n]となる
-    child = p[n] + c[n]
+        for i in range(1, n+1):
+            r = Random(0, 1)**(1/i)
+            p = np.append(p, [g + alpha*(x[i] - g)], axis=0)
+            c = np.append(c, [r*(p[i-1]-p[i] + c[i-1])], axis=0)
+            #print(r, p[i], c[i])
 
+        # 子のパラメータはp[n]+c[n]となる
+        child = p[n] + c[n]
+
+        # パラメータが範囲外ならやり直し
+        if CheckIB(child, fig, max_p, min_p, l):
+            break
+        
     # パラメータをpersonクラスに代入する
     fig = parents[0].fig_type
 
@@ -357,6 +375,28 @@ def Crossover2(parents):
         figure = F.rect(child)
 
     return person(fig, figure)
+
+def CheckIB(child, fig, max_p, min_p, l):
+    # 円
+    if fig==0:
+        x, y, r = child
+        w, h, t_tri, t_rec = l/2, l/2, np.pi/6, np.pi/6
+    # 正三角形
+    elif fig==1:
+        x, y, r, t_tri = child
+        w, h, t_rec = l/2, l/2, np.pi/6
+    # 長方形
+    elif fig==2:
+        x, y, w, h, t_rec = child
+        r, t_tri = l/2, np.pi/6
+
+    if (min_p[0] < x < max_p[0]) and (min_p[1] < y < max_p[1]) and (0 < r < l) and (0 < w < l) and (0 < h < l)\
+        and (0 < t_tri < np.pi*2/3) and (0 < t_rec < np.pi/2):
+        return True
+
+    else:
+        return False
+
             
 
 def DrawFig(points, person):
@@ -367,7 +407,12 @@ def DrawFig(points, person):
     plt.plot(X1, Y1, marker=".",linestyle="None",color="yellow")
     plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
 
-    plt.xlim(-2,2)
-    plt.ylim(-2,2)
+    plt.xlim(-2,4)
+    plt.ylim(-2,4)
 
     plt.show()
+
+def SaveCSV(person, epoch, path):
+    with open(path, 'a', newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([epoch, person.score])

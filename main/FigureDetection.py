@@ -4,12 +4,13 @@ import numpy as np
 import random
 import queue
 import collections
+import time
 
 import figure2 as F
 from PreProcess2 import PreProcess2
 from method import *
 
-def CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03, alpha=np.pi/12):
+def CountPoints(figure, points, X, Y, Z, normals, epsilon, alpha, plotFlag=False):
 
     #条件を満たす点群を取り出す
     marked_index = MarkPoints(figure, X, Y, Z, normals, epsilon, alpha)
@@ -20,7 +21,10 @@ def CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03, alpha=np.pi/12):
         return [0], [0], [0], 0, np.array([])
 
     #ラベル化をする(label_list[i]にはi番目の点のラベル情報が入っている。0は無し)
-    label_list = LabelPoints(points, marked_index, k=5)
+    #label_list = LabelPoints(points, marked_index, k=5)
+    # 各点におけるk近傍点のリスト
+    indices = K_neighbor2(points, k=5)
+    label_list = LabelPoints2(points, marked_index, indices)
 
     #ラベルの種類の数(0は除く)
     label_num = np.max(label_list)
@@ -39,6 +43,10 @@ def CountPoints(figure, points, X, Y, Z, normals, epsilon=0.03, alpha=np.pi/12):
     max_label_num = val[val.index(max(val))] 
 
     X, Y, Z = Disassemble(max_label_points)
+
+    if plotFlag == True:
+        return label_list, max_label, max_label_num
+
 
     #print("label_num:{}\nval:{}\nmax_label:{}".format(label_num, val, max_label_num))
 
@@ -74,6 +82,8 @@ def MarkPoints(figure, X, Y, Z, normals, epsilon, alpha):
     return list(index)
 
 def LabelPoints(points, marked_index, k=5):
+    start = time.time()
+
     #pointsの各点に対応するラベルを格納するリスト
     label_list = [0 for i in range(points.shape[0])]
     label = 1
@@ -108,7 +118,89 @@ def LabelPoints(points, marked_index, k=5):
         #ラベルを変える
         label = label + 1
 
+    end = time.time()
+    print("time:{}s".format(end-start))
+
     return np.array(label_list)
+
+def LabelPoints2(points, marked_index, indices):
+    start = time.time()
+
+    #pointsの各点に対応するラベルを格納するリスト
+    label_list = [0 for i in range(points.shape[0])]
+    label = 1
+
+    #キュー作成(先入れ先出し)
+    q = []
+
+    for i in range(points.shape[0]):
+        #マークされてない or すでにラベルがついてたらスキップ
+        if i not in marked_index or label_list[i] != 0:
+            continue
+
+        #最初の点にラベルをつける
+        label_list[i] = label
+
+        #K近傍の点のindexをキューに格納
+        for p in indices[i]:
+            q.append(p)
+        #list(set(q))
+
+        #キューがなくなるまでデキューし続ける
+        while len(q):
+            x = q.pop(0)
+        
+            #マークされた点 and ラベルを付けてない点をデキューした場合
+            if x in marked_index and label_list[x] == 0:
+                #ラベルを付ける
+                label_list[x] = label
+                #K近傍をエンキュー
+                for p in indices[i]:
+                    q.append(p)
+                #list(set(q))
+
+        #ラベルを変える
+        label = label + 1
+
+    end = time.time()
+
+    
+    print("{}, {}".format(len(marked_index), end-start))
+
+    return np.array(label_list)
+"""
+def LabelPoints3(points, marked_index, indices):
+    start = time.time()
+
+    #pointsの各点に対応するラベルを格納するリスト
+    label_list = [0 for i in range(points.shape[0])]
+    label = 1
+
+    #キュー作成
+    queue = np.array([])
+
+    for i, neighbor in enumerate(indices):
+        # ラベル付けしていたら省略
+        if label_list[i] == 0:
+
+            if np.all(label_list[neighbor])):
+                firstlabel = lable_list[np.where(label_list[neighbor] != 0)[0][0]]
+                label_list[np.where(label_list[neighbor] == 0)[0]] = firstlabel
+                label_list[i] = firstlabel
+
+        else:
+            label_list[np.where(label_list[neighbor] == 0)[0]] = label_list[i]
+
+
+
+
+    end = time.time()
+
+    
+    print("time:{}s".format(end-start))
+
+    return np.array(label_list)
+"""
 
 """
 #グラフ作成

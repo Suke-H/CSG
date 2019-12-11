@@ -308,6 +308,59 @@ def RANSAC(fig, points, normals, X, Y, Z, length):
     # res1のスコア0 OR res2よりスコアが多い => res1を出力
     return res1, MX1, MY1, MZ1, num1, index1
 
+def RANSAC2(fig, points, normals, X, Y, Z, length):
+    # 図形に応じてRANSAC
+    if fig==0:
+        res1, figure = SphereDict(points, normals, X, Y, Z, length)
+        epsilon, alpha = 0.01*length, np.pi/12
+
+    elif fig==1:
+        res1, figure = PlaneDict(points, normals, X, Y, Z, length)
+        epsilon, alpha = 0.08*length, np.pi/9
+
+    elif fig==2:
+        res1, figure = CylinderDict(points, normals, X, Y, Z, length)
+        epsilon, alpha = 0.01*length, np.pi/12
+
+    elif fig==3:
+        res1, figure = ConeDict(points, normals, X, Y, Z, length)
+        epsilon, alpha = 0.03*length, np.pi/9
+
+    # フィット点を抽出
+    label_list1, max_label1, num1 = CountPoints(figure, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha, plotFlag=True)
+
+    print("BEFORE_num:{}".format(len(label_list1)))
+    print(list(label_list1)
+    """
+    if num1!=0:
+        # フィット点を入力にフィッティング処理
+        res2 = Fitting(MX1, MY1, MZ1, normals[index1], length, fig, figure.p, epsilon=epsilon, alpha=alpha)
+        print(res2.x)
+
+        if fig==0:
+            figure = F.sphere(res2.x)
+
+        elif fig==1:
+            figure = F.plane(res2.x)
+
+        elif fig==2:
+            figure = F.cylinder(res2.x)
+
+        elif fig==3:
+            figure = F.cone(res2.x)
+
+        # フィッティング後のスコア出力
+        label_list2, max_label2, num2 = CountPoints(figure, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha, plotFlag=True)
+
+        print("AFTER_num:{}".format(num2))
+
+        # フィッティング後の方が良ければres2を出力
+        if num2 >= num1:
+            return res2.x, label_list2, max_label2, num2
+    """
+    # res1のスコア0 OR res2よりスコアが多い => res1を出力
+    return res1, label_list1, max_label1, num1
+
 """
 points, X, Y, Z, normals, length = PreProcess2()
 

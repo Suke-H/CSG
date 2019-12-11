@@ -3,20 +3,24 @@ import matplotlib.pyplot as plt
 
 from method2d import *
 import figure2d as F
-from IoUtest import CalcIoU
+from IoUtest import CalcIoU, CalcIoU2
 from GA import *
 
 ###GA######################################################
 # 標識
 
-C1 = F.tri([0,0,1,np.pi/3])
-sign = InteriorPoints(C1.f_rep, grid_step=1000, epsilon=0.01, down_rate = 0.5)
+C1 = F.circle([1,1,2])
+sign = InteriorPoints(C1.f_rep, bbox=(-2, 4) ,grid_step=1000, epsilon=0.01, down_rate = 0.5)
 
-print("ans:{}".format(CalcIoU(sign, C1)))
+test = F.circle([-0.06751492266443182, 1.4380856028775904, 0.04503599669797543])
+
+#F1 = F.tri([-0.53995553,0.53059937,3.64442983,0.22395693])
+print("ans:{}".format(CalcIoU2(sign, C1)))
+print("ans:{}".format(CalcIoU2(sign, test)))
 
 #best = GA(sign)
-maru, sankaku, sikaku = EntireGA(sign)
-print(maru.figure.p, sankaku.figure.p, sikaku.figure.p)
+sankaku = EntireGA(sign, path="../data/結果/GA7/test.csv")
+#print(sankaku)
 #print("ans:{}".format(CalcIoU(sign, C1)))
 
 

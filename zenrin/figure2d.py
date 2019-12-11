@@ -11,6 +11,10 @@ class circle:
         x0, y0, r = self.p
 
         return r - np.sqrt((x-x0)**2 + (y-y0)**2)
+        
+    # S = pi*r^2
+    def CalcArea(self):
+        return np.pi * self.p[2]**2
 
 class line:
     def __init__(self, p):
@@ -48,6 +52,10 @@ class tri:
 
         return tri.f_rep(x, y)
 
+    #S = √3/3 * r^2
+    def CalcArea(self):
+        return np.sqrt(3)/3 * self.p[2]**2
+
 class rect:
     def __init__(self, p):
         # パラメータ
@@ -71,6 +79,9 @@ class rect:
         rect = spin(rect, x0, y0, t)
 
         return rect.f_rep(x, y)
+
+    def CalcArea(self):
+        return self.p[2] * self.p[3]
 
 class spin:
     def __init__(self, fig, x0, y0, t):

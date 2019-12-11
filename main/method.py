@@ -9,6 +9,7 @@ sns.set_style("darkgrid")
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+from sklearn.neighbors import NearestNeighbors
 
 """
 def AND(f1, f2):
@@ -53,6 +54,20 @@ def K_neighbor(points, p, k):
     sorted_index = np.argsort(distances)
 
     return sorted_index[:k]
+
+def K_neighbor2(points, k):
+    # scikit-learnより全ての点群のk近傍のインデックスを受け取る
+    nn = NearestNeighbors(n_neighbors=k+1)
+    nn.fit(points)
+    _, indices = nn.kneighbors(points)
+
+    # 自分もk近傍に含んじゃってるので自分を消す処理
+    mask = indices != np.arange(indices.shape[0])[:,np.newaxis]
+    mask[:,-1] &= np.logical_not(mask.all(axis=1))
+    shape = (indices.shape[0], indices.shape[1] - 1)
+
+    return indices[mask].reshape(shape)
+
 
 #点群データなどをx, y, zに分解する
 
@@ -172,7 +187,6 @@ def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05)
 
     return points, pointX, pointY, pointZ
 
-
 def ViewerInit(points, X, Y, Z, normals=[]):
     #グラフの枠を作っていく
     fig = plt.figure()
@@ -237,6 +251,31 @@ def OBBViewer(ax, points):
     ax.plot(Xmin,Ymin,Zmin,marker="X",linestyle="None",color="blue")
     ax.plot([vert_max[0], vert_min[0]],[vert_max[1], vert_min[1]],[vert_max[2], vert_min[2]],marker="o",linestyle="None",color="black")
 
+# ラベルの色分け
+def LabelViewer(ax, points, label_list, max_label):
+
+    colorlist = ['#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf']
+
+    # ラベルの数
+    label_num = np.max(label_list)
+
+    # ラベルなしの点群を白でプロット
+
+    X, Y, Z = Disassemble(points[np.where(label_list == 0)])
+    ax.plot(X, Y, Z, marker=".",linestyle="None",color="white")
+
+
+    for i in range(1, label_num+1):
+        #同じラベルの点群のみにする
+        same_label_points = points[np.where(label_list == i)]
+
+        #plot
+        X, Y, Z = Disassemble(same_label_points)
+        if i == max_label:       
+            ax.plot(X, Y, Z, marker="o",linestyle="None",color=colorlist[i%len(colorlist)])
+        else:
+            ax.plot(X, Y, Z, marker=".",linestyle="None",color=colorlist[i%len(colorlist)])
+
 #陰関数のグラフ描画
 #fn  ...fn(x, y, z) = 0の左辺
 #AABB_size ...AABBの各辺をAABB_size倍する
@@ -299,3 +338,7 @@ def plot_normal(ax, figure, X, Y, Z):
 
     #法線を描画
     ax.quiver(X, Y, Z, U, V, W,  length=0.1,color='red', normalize=True)
+
+
+points = np.array([[1,1],[2,2],[3,3],[4,4],[5,5]])
+print(K_neighbor2(points, 3))

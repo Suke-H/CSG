@@ -12,7 +12,7 @@ from PreProcess2 import PreProcess2
 from method import *
 from figure_sample import *
 from FigureDetection import CountPoints
-from ransac import RANSAC
+from ransac import RANSAC, RANSAC2
 from fitting import Fitting
 
 
@@ -28,10 +28,10 @@ def OptiViewer(path, fig_type):
     ax.set_zlabel("Z")
 
     #点群,法線,OBBの対角線の長さ  取得
-    points, X, Y, Z, normals, length = PreProcess(path)
+    #points, X, Y, Z, normals, length = PreProcess(path)
     
     #自作の点群を扱いたいときはこちら
-    #points, X, Y, Z, normals, length = PreProcess2()
+    points, X, Y, Z, normals, length = PreProcess2()
 
     print("points:{}".format(points.shape[0]))
 
@@ -74,6 +74,62 @@ def OptiViewer(path, fig_type):
     #最後に.show()を書いてグラフ表示
     plt.show()
 
+def OptiViewer2(path, fig_type):
+    #グラフの枠を作っていく
+    fig = plt.figure()
+    ax = Axes3D(fig)
+
+    #軸にラベルを付けたいときは書く
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+
+    #点群,法線,OBBの対角線の長さ  取得
+    points, X, Y, Z, normals, length = PreProcess(path)
+    
+    #自作の点群を扱いたいときはこちら
+    #points, X, Y, Z, normals, length = PreProcess2()
+
+    print("points:{}".format(points.shape[0]))
+
+    #点群を描画
+    #ax.plot(X,Y,Z,marker="o",linestyle='None',color="white")
+
+    U, V, W = Disassemble(normals)
+
+    #法線を描画
+    #ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
+
+    #OBBを描画
+    #OBBViewer(ax, points)
+
+    ###最適化###
+    #result = figOptimize(points, normals, length, fig_type)
+    #result = figOptimize2(X, Y, Z, normals, length, fig_type)
+    result, label_list, max_label, num = RANSAC2(fig_type, points, normals, X, Y, Z, length)
+    print(result)
+
+    #fig_typeに応じた図形を選択
+    if fig_type==0:
+        figure = F.sphere(result)
+    elif fig_type==1:
+        figure = F.plane(result)
+    elif fig_type==2:
+        figure = F.cylinder(result)
+    else:
+        figure = F.cone(result)
+
+    #最適化された図形を描画
+    plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=30)
+
+    print("num:{}".format(num))
+
+    # ラベルに色分けして点群プロット
+    LabelViewer(ax, points, label_list, max_label)
+    
+    #最後に.show()を書いてグラフ表示
+    plt.show()
+
 def DetectViewer(path):
     #点群,法線,OBBの対角線の長さ  取得
     #points, X, Y, Z, normals, length = PreProcess(path)
@@ -107,7 +163,7 @@ def DetectViewer(path):
 
             #図形フィッティング
             #result = figOptimize(points, normals, length, fig_type)
-            #result = figOptimize2(X, Y, Z, normals, length, fig_type)
+            result = figOptimize2(X, Y, Z, normals, length, fig_type)
             print(result.x)
 
             #fig_typeに応じた図形を選択
@@ -173,10 +229,10 @@ def DetectViewer(path):
 
 def DetectViewer2(path):
     #点群,法線,OBBの対角線の長さ  取得
-    points, X, Y, Z, normals, length = PreProcess(path)
+    #points, X, Y, Z, normals, length = PreProcess(path)
     
     #自作の点群を扱いたいときはこちら
-    #points, X, Y, Z, normals, length = PreProcess2()
+    points, X, Y, Z, normals, length = PreProcess2()
 
     #元の点群データを保存しておく
     ori_points = points[:, :]
@@ -295,7 +351,7 @@ def DetectViewer2(path):
     plt.show()
 
 
-OptiViewer("../data/points.obj", 1)
+OptiViewer2("../data/points.obj", 1)
 #DetectViewer("")
 #DetectViewer2("../data/pum")
 
