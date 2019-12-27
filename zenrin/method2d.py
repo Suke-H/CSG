@@ -3,6 +3,9 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import cv2
+import itertools
+
+import figure2d as F
 
 # aからbまでのランダムな実数値を返す
 def Random(a, b):
@@ -103,8 +106,8 @@ def InteriorPoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0
     # 変更前
     #W = fn(X, Y)
 
-    #W > 0(=図形の内部)のインデックスを取り出す
-    index = np.where(W>0)
+    #W >= 0(=図形の内部)のインデックスを取り出す
+    index = np.where(W>=0)
     index = [(index[0][i], index[1][i]) for i in range(len(index[0]))]
 
     #ランダムにダウンサンプリング
@@ -163,7 +166,112 @@ def buildAABB(points):
     max_p = np.amax(points, axis=0)
     min_p = np.amin(points, axis=0)
 
-    return max_p, min_p, LA.norm(max_p - min_p)
+    # 図形作成処理
+    lx1 = F.line([1, 0, max_p[0]])
+    lx2 = F.line([-1, 0, -min_p[0]])
+    ly1 = F.line([0, 1, max_p[1]])
+    ly2 = F.line([0, -1, -min_p[1]])
+
+    AABB = F.inter(lx1, F.inter(lx2, F.inter(ly1, ly2)))
+
+    # 面積算出
+    area = abs((max_p[0]-min_p[0]) * (max_p[1]-min_p[1]))
+
+    return max_p, min_p, AABB, LA.norm(max_p - min_p), area
+
+###OBB生成####
+def buildOBB(points):
+    # 分散共分散行列Sを生成
+    S = np.cov(points, rowvar=0, bias=1)
+
+    # 固有ベクトルを算出
+    w,svd_vector = LA.eig(S)
+
+    # 固有値が小さい順に固有ベクトルを並べる
+    svd_vector = svd_vector[np.argsort(w)]
+
+    # 正規直交座標にする(=直行行列にする)
+    # u = [sの単位ベクトル, tの単位ベクトル]になる
+    u = np.asarray([svd_vector[i] / np.linalg.norm(svd_vector[i]) for i in range(2)])
+
+    # 点群の各点と各固有ベクトルとの内積を取る
+    # P V^T = [[p1*v1, p1*v2], ... ,[pN*v1, pN*v2]]
+    inner_product = np.dot(points, u.T)
+    
+    # 各固有値の内積最大、最小を抽出(max_st_point = [s座標max, tmax])
+    max_st_point = np.amax(inner_product, axis=0)
+    min_st_point = np.amin(inner_product, axis=0)
+
+    # xyz座標に変換・・・単位ベクトル*座標
+    # max_xyz_point = [[xs, ys], [xt, yt]]
+    max_xy_point = np.asarray([u[i]*max_st_point[i] for i in range(2)])
+    min_xy_point = np.asarray([u[i]*min_st_point[i] for i in range(2)])
+
+    #################################################################
+
+    # 図形作成処理
+
+    # s, t軸の単位ベクトル
+    s, t = u
+    # 法線: s, -s, t, -s
+    # c: 法線と1点(smaxなど)との内積
+    lx1 = F.line([s[0], s[1], np.dot(max_xy_point[0], s)])
+    lx2 = F.line([-s[0], -s[1], -np.dot(min_xy_point[0], s)])
+    ly1 = F.line([t[0], t[1], np.dot(max_xy_point[1], t)])
+    ly2 = F.line([-t[0], -t[1], -np.dot(min_xy_point[1], t)])
+    OBB = F.inter(lx1, F.inter(lx2, F.inter(ly1, ly2)))
+
+    # 対角線の長さ算出
+    vert_max = min_xy_point[0] + min_xy_point[1]
+    vert_min = max_xy_point[0] + max_xy_point[1]
+    l = np.linalg.norm(vert_max-vert_min)
+
+    # 面積算出
+    area = abs((max_st_point[0]-min_st_point[0]) * (max_st_point[1]-min_st_point[1]))
+
+    return max_xy_point, min_xy_point, OBB, l, area
+
+# OBBを描画する
+def OBBViewer(max_p, min_p):
+
+    # 直積：[smax, smin]*[tmax, tmin] <=> 頂点
+    s_axis = np.vstack((max_p[0], min_p[0]))
+    t_axis = np.vstack((max_p[1], min_p[1]))
+
+    products = np.asarray(list(itertools.product(s_axis, t_axis)))
+    vertices = np.sum(products, axis=1)
+
+    # 各頂点に対応するビットの列を作成
+    bit = np.asarray([1, -1])
+    vertices_bit = np.asarray(list(itertools.product(bit, bit)))
+
+    # 頂点同士のハミング距離が1なら辺を引く
+    for i, v1 in enumerate(vertices_bit):
+        for j, v2 in enumerate(vertices_bit):
+            if np.count_nonzero(v1-v2) == 1:
+                x, y = line2d(vertices[i], vertices[j])
+                plt.plot(x,y,marker=".",color="orange")
+
+# AABBを描画する
+def AABBViewer(max_p, min_p):
+
+    # [xmax, xmin]と[ymax, ymin]の直積 <=> 頂点
+    x_axis = [max_p[0], min_p[0]]
+    y_axis = [max_p[1], min_p[1]]
+
+    vertices = np.asarray(list(itertools.product(x_axis, y_axis)))
+
+    # 各頂点に対応するビットの列を作成
+    bit = np.asarray([1, -1])
+    vertices_bit = np.asarray(list(itertools.product(bit, bit)))
+
+    # 頂点同士のハミング距離が1なら辺を引く
+    for i, v1 in enumerate(vertices_bit):
+        for j, v2 in enumerate(vertices_bit):
+            if np.count_nonzero(v1-v2) == 1:
+                x, y = line2d(vertices[i], vertices[j])
+                plt.plot(x,y,marker=".",color="red")
+
 
 #陰関数のグラフ描画
 #fn  ...fn(x, y) = 0の左辺

@@ -269,6 +269,8 @@ def LabelViewer(ax, points, label_list, max_label):
         #同じラベルの点群のみにする
         same_label_points = points[np.where(label_list == i)]
 
+        print("{}:{}".format(i, same_label_points.shape[0]))
+
         #plot
         X, Y, Z = Disassemble(same_label_points)
         if i == max_label:       

@@ -10,21 +10,25 @@ import figure2 as F
 from PreProcess2 import PreProcess2
 from method import *
 
-def CountPoints(figure, points, X, Y, Z, normals, epsilon, alpha, plotFlag=False):
+def CountPoints(figure, points, X, Y, Z, normals, epsilon, alpha, printFlag=False, labelFlag=False, plotFlag=False):
 
     #条件を満たす点群を取り出す
-    marked_index = MarkPoints(figure, X, Y, Z, normals, epsilon, alpha)
+    marked_index = MarkPoints(figure, X, Y, Z, normals, epsilon, alpha, printFlag=printFlag)
     #print(marked_index)
 
     #マークされてないときの処理
     if marked_index == []:
         return [0], [0], [0], 0, np.array([])
 
+    # labelFlagが立ってなかったら、ラベル化しない
+    if labelFlag == False:
+        return X[marked_index], Y[marked_index], Z[marked_index], len(marked_index), marked_index
+
     #ラベル化をする(label_list[i]にはi番目の点のラベル情報が入っている。0は無し)
-    #label_list = LabelPoints(points, marked_index, k=5)
+    label_list = LabelPoints(points, marked_index, k=5000)
     # 各点におけるk近傍点のリスト
-    indices = K_neighbor2(points, k=5)
-    label_list = LabelPoints2(points, marked_index, indices)
+    #indices = K_neighbor2(points, k=50)
+    #label_list = LabelPoints2(points, marked_index, indices)
 
     #ラベルの種類の数(0は除く)
     label_num = np.max(label_list)
@@ -52,32 +56,23 @@ def CountPoints(figure, points, X, Y, Z, normals, epsilon, alpha, plotFlag=False
 
     return X, Y, Z, max_label_num, max_label_index[0]
     
-def MarkPoints(figure, X, Y, Z, normals, epsilon, alpha):
+def MarkPoints(figure, X, Y, Z, normals, epsilon, alpha, printFlag=False):
     #|f(x,y,z)|<εを満たす点群だけにする
     D = figure.f_rep(X, Y, Z)
     index_1 = np.where(np.abs(D)<epsilon)
-    #print("f<ε：{}".format(len(index_1[0])))
 
     #次にcos-1(|nf*ni|)<αを満たす点群だけにする
     T = np.arccos(np.abs(np.sum(figure.normal(X,Y,Z) * normals, axis=1)))
     # (0<T<pi/2のはずだが念のため絶対値をつけてる)
     index_2 = np.where(np.abs(T)<alpha)
-    #print("θ<α：{}".format(len(index_2[0])))
-
+    
     #どちらも満たすindexを残す
     index = list(filter(lambda x: x in index_2[0], index_1[0]))
-    #print("f<ε and θ<α：{}".format(len(index)))
-
-    """
-
-    X = X[index]
-    Y = Y[index]
-    Z = Z[index]
-
-    #points生成
-    points = np.stack([X, Y, Z])
-    points = points.T
-    """
+    
+    if printFlag:
+        print("f<ε：{}".format(len(index_1[0])))
+        print("θ<α：{}".format(len(index_2[0])))
+        print("f<ε and θ<α：{}".format(len(index)))
 
     return list(index)
 

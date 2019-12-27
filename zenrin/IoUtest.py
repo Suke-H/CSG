@@ -64,9 +64,9 @@ def CalcIoU2(points, figure):
     # pointsを図形の関数に代入
     W = figure.f_rep(X, Y)
 
-    # W > 0(=図形の内部)のインデックスを取り出し、
+    # W >= 0(=図形の内部)のインデックスを取り出し、
     # その数をCinとして保存
-    index = np.where(W>0)
+    index = np.where(W>=0)
     Cin = len(index[0])
 
     # Ainに図形の面積

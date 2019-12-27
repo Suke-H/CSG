@@ -7,84 +7,42 @@ from IoUtest import CalcIoU, CalcIoU2
 from GA import *
 
 ###GA######################################################
-# 標識
+# # 標識
 
-C1 = F.circle([1,1,2])
-sign = InteriorPoints(C1.f_rep, bbox=(-2, 4) ,grid_step=1000, epsilon=0.01, down_rate = 0.5)
+# #C1 = F.rect([0,0,1,1,np.pi/4])
+# C1 = F.tri([0,0,1,np.pi/3])
+# sign = InteriorPoints(C1.f_rep, bbox=(-2, 2) ,grid_step=100, epsilon=0.01, down_rate = 0.5)
+# signX, signY = Disassemble2d(sign)
+# plt.plot(signX, signY, marker=".",linestyle="None",color="yellow")
+# plt.show()
 
-test = F.circle([-0.06751492266443182, 1.4380856028775904, 0.04503599669797543])
+# #test = F.tri([ 0.1266216 , -0.00942684,  0.97585683,  0.98332958])
+# test = F.tri([-0.11409518,  0.06197383,  0.9390659 ,  1.08170844])
 
-#F1 = F.tri([-0.53995553,0.53059937,3.64442983,0.22395693])
-print("ans:{}".format(CalcIoU2(sign, C1)))
-print("ans:{}".format(CalcIoU2(sign, test)))
+# #test = F.circle([-0.06751492266443182, 1.4380856028775904, 0.04503599669797543])
 
-#best = GA(sign)
-sankaku = EntireGA(sign, path="../data/結果/GA7/test.csv")
-#print(sankaku)
-#print("ans:{}".format(CalcIoU(sign, C1)))
+# #F1 = F.tri([-0.53995553,0.53059937,3.64442983,0.22395693])
+# print("ans:{}".format(CalcIoU2(sign, C1)))
+# print("ans:{}".format(CalcIoU2(sign, test)))
 
+# #best = GA(sign)
+# sankaku = EntireGA(sign, path="../data/結果/GA8/tri2.csv")
+# print(sankaku)
+# #print("ans:{}".format(CalcIoU(sign, C1)))
 
+C1 = F.tri([0,0,1,np.pi/9])
+sign = InteriorPoints(C1.f_rep, bbox=(-2, 2) ,grid_step=100, epsilon=0.01, down_rate = 0.5)
+X, Y = Disassemble2d(sign)
+plt.plot(X, Y, marker=".",linestyle="None",color="yellow")
 
-"""
-# ランダム図形生成
-people = CreateRandomPopulation(sign, 3)
+OBBmax, OBBmin, OBB, l1, area = buildOBB(sign)
+AABBmax, AABBmin, AABB, l2, area = buildAABB(sign)
 
-print(people[0].fig_type, people[0].figure.p)
-print(people[1].fig_type, people[1].figure.p)
+points = InteriorPoints(OBB.f_rep, bbox=(-5, 5) ,grid_step=1000, epsilon=0.01, down_rate = 0.5)
+X, Y = Disassemble2d(points)
+plt.plot(X, Y, marker=".",linestyle="None",color="orange")
 
-Crossover(people[0], people[1])
-
-print(people[0].figure.p)
-print(people[1].figure.p)
-
-
-# plot
-signX, signY = Disassemble2d(sign)
-points1 = ContourPoints(people[0].figure.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
-X1, Y1= Disassemble2d(points1)
-points2 = ContourPoints(people[1].figure.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
-X2, Y2= Disassemble2d(points2)
-points3 = ContourPoints(people[2].figure.f_rep, grid_step=300, epsilon=0.01, down_rate = 0.5)
-X3, Y3= Disassemble2d(points3)
-
-plt.plot(signX, signY, marker=".",linestyle="None",color="yellow")
-plt.plot(X1, Y1, marker="o",linestyle="None",color="blue")
-plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
-plt.plot(X3, Y3, marker="o",linestyle="None",color="green")
-
-print("IoU1:{}".format(CalcIoU(sign, people[0].figure, flag=True)))
-print("IoU2:{}".format(CalcIoU(sign, people[1].figure, flag=True)))
-print("IoU3:{}".format(CalcIoU(sign, people[2].figure, flag=True)))
+print(l1, l2)
+OBBViewer(OBBmax, OBBmin)
+AABBViewer(AABBmax, AABBmin)
 plt.show()
-
-sorted_people, scores = Rank(people, sign)
-print(scores)
-"""
-"""
-a = 0.5
-x1 = np.array([1,3])
-x2 = np.array([2,4])
-print(np.stack([x1,x2]))
-xmax, xmin, _ = buildAABB(np.stack([x1,x2]))
-#xmin = [1,3]
-#xmax = [2,4]
-print(xmin, xmax)
-
-def BLX(x1, x2, xmin, xmax, a):
-    r = Random(-a, 1+a)
-    x = r*x1 + (1-r)*x2
-
-    if any(xmin < x) and any(x < xmax):
-        return x
-        
-    else:
-        return BLX(x1, x2, xmin, xmax, a)
-
-print(BLX(x1, x2, xmin, xmax, a))
-
-
-parents = CreateRandomPopulation(4, [2, 2], [-2, -2], 2*np.sqrt(2), 0)
-
-child = Crossover2(parents)
-print(child)
-"""

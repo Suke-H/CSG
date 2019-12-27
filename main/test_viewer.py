@@ -9,6 +9,7 @@ import figure2 as F
 #from optimize2 import figOptimize2
 from PreProcess import PreProcess
 from PreProcess2 import PreProcess2
+from ViewPLY import ViewPLY
 from method import *
 from figure_sample import *
 from FigureDetection import CountPoints
@@ -18,6 +19,73 @@ from fitting import Fitting
 
 #mainの部分
 def OptiViewer(path, fig_type):
+
+    #点群,法線,OBBの対角線の長さ  取得
+    #points, X, Y, Z, normals, length = PreProcess(path)
+    
+    #自作の点群を扱いたいときはこちら
+    #points, X, Y, Z, normals, length = PreProcess2()
+
+    # PLYデータを扱いたいときはこちら
+    points, X, Y, Z, normals, length = ViewPLY(path)
+
+    #U, V, W = Disassemble(normals)
+
+    #法線を描画
+    #ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
+
+    while True:
+        print("points:{}".format(points.shape[0]))
+
+        #グラフの枠を作っていく
+        fig = plt.figure()
+        ax = Axes3D(fig)
+
+        #軸にラベルを付けたいときは書く
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("Z")
+
+        #点群を描画
+        ax.plot(X,Y,Z,marker="o",linestyle='None',color="white")
+
+        #OBBを描画
+        OBBViewer(ax, points)
+
+        ###最適化###
+        #result = figOptimize(points, normals, length, fig_type)
+        #result = figOptimize2(X, Y, Z, normals, length, fig_type)
+        result, MX, MY, MZ, num, index = RANSAC(fig_type, points, normals, X, Y, Z, length)
+        print(result)
+
+        #fig_typeに応じた図形を選択
+        if fig_type==0:
+            figure = F.sphere(result)
+        elif fig_type==1:
+            figure = F.plane(result)
+        elif fig_type==2:
+            figure = F.cylinder(result)
+        else:
+            figure = F.cone(result)
+
+        #最適化された図形を描画
+        plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=15)
+
+        #S_optを検出
+        #MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
+
+        print("num:{}".format(num))
+        ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="red")
+
+        # グラフ表示
+        plt.show()
+
+        # フィットした点群を削除
+        points = np.delete(points, index, axis=0)
+        normals = np.delete(normals, index, axis=0)
+        X, Y, Z = Disassemble(points)
+
+def OptiViewer2(path, fig_type):
     #グラフの枠を作っていく
     fig = plt.figure()
     ax = Axes3D(fig)
@@ -31,64 +99,10 @@ def OptiViewer(path, fig_type):
     #points, X, Y, Z, normals, length = PreProcess(path)
     
     #自作の点群を扱いたいときはこちら
-    points, X, Y, Z, normals, length = PreProcess2()
-
-    print("points:{}".format(points.shape[0]))
-
-    #点群を描画
-    ax.plot(X,Y,Z,marker="o",linestyle='None',color="white")
-
-    U, V, W = Disassemble(normals)
-
-    #法線を描画
-    #ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
-
-    #OBBを描画
-    OBBViewer(ax, points)
-
-    ###最適化###
-    #result = figOptimize(points, normals, length, fig_type)
-    #result = figOptimize2(X, Y, Z, normals, length, fig_type)
-    result, MX, MY, MZ, num, index = RANSAC(fig_type, points, normals, X, Y, Z, length)
-    print(result)
-
-    #fig_typeに応じた図形を選択
-    if fig_type==0:
-        figure = F.sphere(result)
-    elif fig_type==1:
-        figure = F.plane(result)
-    elif fig_type==2:
-        figure = F.cylinder(result)
-    else:
-        figure = F.cone(result)
-
-    #最適化された図形を描画
-    plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=15)
-
-    #S_optを検出
-    #MX, MY, MZ, num, index = CountPoints(figure, points, X, Y, Z, normals, epsilon=0.08*length, alpha=np.pi/9)
-
-    print("num:{}".format(num))
-    ax.plot(MX,MY,MZ,marker=".",linestyle='None',color="red")
-
-    #最後に.show()を書いてグラフ表示
-    plt.show()
-
-def OptiViewer2(path, fig_type):
-    #グラフの枠を作っていく
-    fig = plt.figure()
-    ax = Axes3D(fig)
-
-    #軸にラベルを付けたいときは書く
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
-
-    #点群,法線,OBBの対角線の長さ  取得
-    points, X, Y, Z, normals, length = PreProcess(path)
-    
-    #自作の点群を扱いたいときはこちら
     #points, X, Y, Z, normals, length = PreProcess2()
+
+    # PLYデータを扱いたいときはこちら
+    points, X, Y, Z, normals, length = ViewPLY(path)
 
     print("points:{}".format(points.shape[0]))
 
@@ -101,7 +115,7 @@ def OptiViewer2(path, fig_type):
     #ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True)
 
     #OBBを描画
-    #OBBViewer(ax, points)
+    OBBViewer(ax, points)
 
     ###最適化###
     #result = figOptimize(points, normals, length, fig_type)
@@ -120,7 +134,7 @@ def OptiViewer2(path, fig_type):
         figure = F.cone(result)
 
     #最適化された図形を描画
-    plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=30)
+    #plot_implicit(ax, figure.f_rep, points, AABB_size=1, contourNum=30)
 
     print("num:{}".format(num))
 
@@ -232,7 +246,10 @@ def DetectViewer2(path):
     #points, X, Y, Z, normals, length = PreProcess(path)
     
     #自作の点群を扱いたいときはこちら
-    points, X, Y, Z, normals, length = PreProcess2()
+    #points, X, Y, Z, normals, length = PreProcess2()
+
+    # PLYデータを扱いたいときはこちら
+    points, X, Y, Z, normals, length = ViewPLY(path)
 
     #元の点群データを保存しておく
     ori_points = points[:, :]
@@ -254,7 +271,7 @@ def DetectViewer2(path):
         indices = []
 
         ###最適化###
-        for fig_type in [0, 1, 2, 3]:
+        for fig_type in [0,1,2,3]:
 
             ###グラフ初期化##
             #ax = ViewerInit(points, X, Y, Z, normals)
@@ -324,6 +341,7 @@ def DetectViewer2(path):
             figure = F.cone(paras[best_fig])
             print("円錐の勝ち")
 
+
         # フィット点描画
         ax.plot(X[indices[best_fig]],Y[indices[best_fig]],Z[indices[best_fig]],\
                 marker=".",linestyle='None',color="orange")
@@ -351,9 +369,9 @@ def DetectViewer2(path):
     plt.show()
 
 
-OptiViewer2("../data/points.obj", 1)
+OptiViewer("../data/triangle.ply", 1)
 #DetectViewer("")
-#DetectViewer2("../data/pum")
+#DetectViewer2("../data/triangle.ply")
 
 """
 points, X, Y, Z, normals, length = PreProcess2()

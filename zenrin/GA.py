@@ -14,7 +14,7 @@ class person:
         self.score = 0
         self.scoreFlag = False
 
-def EntireGA(points, fig=[0], n_epoch=100, N=100, add_num=30, save_num=2, tournament_size=10, \
+def EntireGA(points, fig=[1], n_epoch=100, N=100, add_num=30, save_num=2, tournament_size=10, \
     cross_rate=0.75, mutate_rate=0.5, path=None):
     # AABB生成
     max_p, min_p, l = buildAABB(points)
@@ -26,7 +26,7 @@ def EntireGA(points, fig=[0], n_epoch=100, N=100, add_num=30, save_num=2, tourna
     for epoch in range(n_epoch):
         print("epoch:{}".format(epoch))
         # 新しいクリーチャー追加
-        group = np.array([np.concatenate([group[i], CreateRandomPopulation(add_num, max_p, min_p, l, fig[i])]) for i in range(len(fig))])
+        #group = np.array([np.concatenate([group[i], CreateRandomPopulation(add_num, max_p, min_p, l, fig[i])]) for i in range(len(fig))])
         # スコア順に並び替え
         group = np.array([Rank(group[i], points)[0] for i in range(len(fig))])
         # csv?に保存
@@ -59,6 +59,7 @@ def EntireGA(points, fig=[0], n_epoch=100, N=100, add_num=30, save_num=2, tourna
                 # 突然変異させる人を選択
                 mutate_index = np.random.choice(num+1)
                 # それ以外を交叉
+                #cross_children.append([Crossover(np.delete(entry_tmp, mutate_index))])
                 cross_children.append([Crossover2(np.delete(entry_tmp, mutate_index), f, max_p, min_p, l)])
                 # 突然変異
                 mutate_children.append([Mutate(entry_tmp[mutate_index], max_p, min_p, l, rate=mutate_rate)])
@@ -83,7 +84,7 @@ def EntireGA(points, fig=[0], n_epoch=100, N=100, add_num=30, save_num=2, tourna
                 _, score_list = Rank(group[i], points)
                 print(score_list[:10])
                 print(group[i][0].figure.p)
-                DrawFig(points, group[i][0])
+                #DrawFig(points, group[i][0])
                 #DrawFig(points, people[1])
         
     # 最終結果表示
@@ -197,8 +198,8 @@ def CreateRandomPopulation(num, max_p, min_p, l, fig):
 def Score(person, points):
     # scoreFlagが立ってなかったらIoUを計算
     if person.scoreFlag == False:
-        #person.score = CalcIoU(points, person.figure)
-        person.score = CalcIoU2(points, person.figure)
+        person.score = CalcIoU(points, person.figure)
+        #person.score = CalcIoU2(points, person.figure)
         person.scoreFlag = True
 
     return person.score

@@ -259,107 +259,114 @@ def ConeDict(points, normals, X, Y, Z, length):
 def RANSAC(fig, points, normals, X, Y, Z, length):
     # 図形に応じてRANSAC
     if fig==0:
-        res1, figure = SphereDict(points, normals, X, Y, Z, length)
+        res1, figure1 = SphereDict(points, normals, X, Y, Z, length)
         epsilon, alpha = 0.01*length, np.pi/12
 
     elif fig==1:
-        res1, figure = PlaneDict(points, normals, X, Y, Z, length)
-        epsilon, alpha = 0.08*length, np.pi/9
+        res1, figure1 = PlaneDict(points, normals, X, Y, Z, length)
+        epsilon, alpha = 0.03*length, np.pi/12
 
     elif fig==2:
-        res1, figure = CylinderDict(points, normals, X, Y, Z, length)
+        res1, figure1 = CylinderDict(points, normals, X, Y, Z, length)
         epsilon, alpha = 0.01*length, np.pi/12
 
     elif fig==3:
-        res1, figure = ConeDict(points, normals, X, Y, Z, length)
-        epsilon, alpha = 0.03*length, np.pi/9
+        res1, figure1 = ConeDict(points, normals, X, Y, Z, length)
+        epsilon, alpha = 0.01*length, np.pi/9
 
     # フィット点を抽出
-    MX1, MY1, MZ1, num1, index1 = CountPoints(figure, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
+    MX1, MY1, MZ1, num1, index1 = CountPoints(figure1, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
 
     print("BEFORE_num:{}".format(num1))
 
     if num1!=0:
         # フィット点を入力にフィッティング処理
-        res2 = Fitting(MX1, MY1, MZ1, normals[index1], length, fig, figure.p, epsilon=epsilon, alpha=alpha)
+        res2 = Fitting(MX1, MY1, MZ1, normals[index1], length, fig, figure1.p, epsilon=epsilon, alpha=alpha)
         print(res2.x)
 
         if fig==0:
-            figure = F.sphere(res2.x)
+            figure2 = F.sphere(res2.x)
 
         elif fig==1:
-            figure = F.plane(res2.x)
+            figure2 = F.plane(res2.x)
 
         elif fig==2:
-            figure = F.cylinder(res2.x)
+            figure2 = F.cylinder(res2.x)
 
         elif fig==3:
-            figure = F.cone(res2.x)
+            figure2 = F.cone(res2.x)
 
         # フィッティング後のスコア出力
-        MX2, MY2, MZ2, num2, index2 = CountPoints(figure, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
+        _, _, _,  num2, _ = CountPoints(figure2, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
 
         print("AFTER_num:{}".format(num2))
 
         # フィッティング後の方が良ければres2を出力
         if num2 >= num1:
-            return res2.x, MX2, MY2, MZ2, num2, index2
+            MX, MY, MZ, num, index = CountPoints(figure2, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha, printFlag=True)
+            return res2.x, MX, MY, MZ, num, index
 
     # res1のスコア0 OR res2よりスコアが多い => res1を出力
-    return res1, MX1, MY1, MZ1, num1, index1
+    MX, MY, MZ, num, index = CountPoints(figure1, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha, printFlag=True)
+    return res1, MX, MY, MZ, num, index
 
 def RANSAC2(fig, points, normals, X, Y, Z, length):
     # 図形に応じてRANSAC
     if fig==0:
-        res1, figure = SphereDict(points, normals, X, Y, Z, length)
+        res1, figure1 = SphereDict(points, normals, X, Y, Z, length)
         epsilon, alpha = 0.01*length, np.pi/12
 
     elif fig==1:
-        res1, figure = PlaneDict(points, normals, X, Y, Z, length)
+        res1, figure1 = PlaneDict(points, normals, X, Y, Z, length)
         epsilon, alpha = 0.08*length, np.pi/9
 
     elif fig==2:
-        res1, figure = CylinderDict(points, normals, X, Y, Z, length)
+        res1, figure1 = CylinderDict(points, normals, X, Y, Z, length)
         epsilon, alpha = 0.01*length, np.pi/12
 
     elif fig==3:
-        res1, figure = ConeDict(points, normals, X, Y, Z, length)
+        res1, figure1 = ConeDict(points, normals, X, Y, Z, length)
         epsilon, alpha = 0.03*length, np.pi/9
 
     # フィット点を抽出
-    label_list1, max_label1, num1 = CountPoints(figure, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha, plotFlag=True)
+    MX1, MY1, MZ1, num1, index1 = CountPoints(figure1, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
 
-    print("BEFORE_num:{}".format(len(label_list1)))
-    print(list(label_list1)
-    """
+    print("BEFORE_num:{}".format(num1))
+    
     if num1!=0:
         # フィット点を入力にフィッティング処理
-        res2 = Fitting(MX1, MY1, MZ1, normals[index1], length, fig, figure.p, epsilon=epsilon, alpha=alpha)
+        res2 = Fitting(MX1, MY1, MZ1, normals[index1], length, fig, figure1.p, epsilon=epsilon, alpha=alpha)
         print(res2.x)
 
         if fig==0:
-            figure = F.sphere(res2.x)
+            figure2 = F.sphere(res2.x)
 
         elif fig==1:
-            figure = F.plane(res2.x)
+            figure2 = F.plane(res2.x)
 
         elif fig==2:
-            figure = F.cylinder(res2.x)
+            figure2 = F.cylinder(res2.x)
 
         elif fig==3:
-            figure = F.cone(res2.x)
+            figure2 = F.cone(res2.x)
 
         # フィッティング後のスコア出力
-        label_list2, max_label2, num2 = CountPoints(figure, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha, plotFlag=True)
+        _, _, _, num2, _ = CountPoints(figure2, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha, plotFlag=True)
 
         print("AFTER_num:{}".format(num2))
 
         # フィッティング後の方が良ければres2を出力
         if num2 >= num1:
-            return res2.x, label_list2, max_label2, num2
-    """
+            label_list, max_label, max_label_num = CountPoints(figure2, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha, printFlag=True, labelFlag=True, plotFlag=True)
+            return res2.x, label_list, max_label, max_label_num
+            #X, Y, Z, num, index = CountPoints(figure2, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
+    
     # res1のスコア0 OR res2よりスコアが多い => res1を出力
-    return res1, label_list1, max_label1, num1
+    label_list, max_label, max_label_num = CountPoints(figure1, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha, printFlag=True, labelFlag=True, plotFlag=True)
+    #X, Y, Z, num, index = CountPoints(figure2, points, X, Y, Z, normals, epsilon=epsilon, alpha=alpha)
+    return res1, label_list, max_label, max_label_num
+    #return res1, X, Y, Z, num, index
+
 
 """
 points, X, Y, Z, normals, length = PreProcess2()
