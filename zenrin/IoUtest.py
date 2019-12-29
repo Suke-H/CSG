@@ -57,7 +57,7 @@ def CalcIoU(points, figure, flag=False):
     return and_num / or_area
 
 # Score = Cin/(Ain+√Cin) - Cout/Aout
-def CalcIoU2(points, figure):
+def CalcIoU2(points, figure, flag=False):
 
     X, Y = Disassemble2d(points)
 
@@ -90,4 +90,7 @@ def CalcIoU2(points, figure):
     #y = Cin*np.cos(x)
     #print("{} -> {}".format(x, y))
 
-    return Cin/(Ain+np.sqrt(Cin)) - Cout/Aout
+    if flag==True:
+        print("{}/{} - {}/{}".format(Cin, Ain, Cout, Aout))
+
+    return Cin/(Ain+np.sqrt(Cin)) - Cout/Ain

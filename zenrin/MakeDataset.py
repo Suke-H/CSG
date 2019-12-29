@@ -5,6 +5,13 @@ import matplotlib.pyplot as plt
 from method2d import *
 import figure2d as F
 
+def RandomCircle(x_min=-100, x_max=100, y_min=-100, y_max=100, r_min=0, r_max=10):
+    x = Random(x_min, x_max)
+    y = Random(y_min, y_max)
+    r = Random(r_min, r_max)
+
+    return F.circle([x, y, r])
+
 def RandomTriangle(x_min=-100, x_max=100, y_min=-100, y_max=100, r_min=0, r_max=10):
     x = Random(x_min, x_max)
     y = Random(y_min, y_max)
@@ -22,25 +29,42 @@ def RandomRectangle(x_min=-100, x_max=100, y_min=-100, y_max=100, w_min=0, w_max
 
     return F.rect([x, y, w, h, t])
 
-def CheckInternal(figure, AABB):
+def CheckInternal(fig_type, figure, AABB):
     xmin, xmax, ymin, ymax = AABB
+
+    # 円なら
+    if fig_type == 0:
+        x, y, r = figure.p
+        ## 描画
+        sign = MakePoints(figure.f_rep, AABB=AABB ,grid_step=100, epsilon=0.01, down_rate = 0.5)
+        signX, signY = Disassemble2d(sign)
+        plt.plot(signX, signY, marker=".",linestyle="None",color="orange")
+        max_p = [AABB[1], AABB[3]]
+        min_p = [AABB[0], AABB[2]]
+        AABBViewer(max_p, min_p)
+
+        plt.show()
+
+        if (abs(xmax-x) > r) and (abs(xmin-x) > r) and (abs(ymax-y) > r) and (abs(ymax-y) > r):
+            return True
+
+        else:
+            return False
 
     # 多角形なら頂点を取得する
     vertices = figure.CalcVertices()
     X, Y = Disassemble2d(vertices)
-    plt.plot(X, Y, marker="o",linestyle="None",color="red")
 
-    print("p:{}".format(figure.p))
-    print("vertices:{}".format(vertices))
-    
-    sign = MakePoints(figure.f_rep, AABB=AABB ,grid_step=100, epsilon=0.01, down_rate = 0.5)
-    signX, signY = Disassemble2d(sign)
-    plt.plot(signX, signY, marker=".",linestyle="None",color="orange")
-    max_p = [AABB[1], AABB[3]]
-    min_p = [AABB[0], AABB[2]]
-    AABBViewer(max_p, min_p)
+    ## 描画
+    #plt.plot(X, Y, marker="o",linestyle="None",color="red")
+    # sign = MakePoints(figure.f_rep, AABB=AABB ,grid_step=100, epsilon=0.01, down_rate = 0.5)
+    # signX, signY = Disassemble2d(sign)
+    # plt.plot(signX, signY, marker=".",linestyle="None",color="orange")
+    # max_p = [AABB[1], AABB[3]]
+    # min_p = [AABB[0], AABB[2]]
+    # AABBViewer(max_p, min_p)
 
-    plt.show()
+    # plt.show()
 
     # 全ての頂点がAABB内にあればTrue
     if np.all((xmin <= X) & (X <= xmax)) and np.all((ymin <= Y) & (Y <= ymax)):
@@ -52,7 +76,7 @@ def CheckInternal(figure, AABB):
 # <条件>
 # 1. 図形の点群+ノイズの合計値はNとし、図形点群の割合(最低0.5以上)をランダムで出す
 # 2. AABB内に図形が入っていなかったら再生成
-def MakePointSet(N, low=-100, high=100, grid_step=50):
+def MakePointSet(fig_type, N, low=-100, high=100, grid_step=50):
     # 平面点群の割合をランダムで決める
     rate = Random(0.5, 1)
     size = int(N*rate//1)
@@ -70,9 +94,8 @@ def MakePointSet(N, low=-100, high=100, grid_step=50):
                 x_axis = [x1, x2]
             AABB.extend(x_axis)
 
-        print(AABB)
+        #print(AABB)
         xmin, xmax, ymin, ymax = AABB
-        
         w = abs(xmax-xmin)
         h = abs(ymax-ymin)
 
@@ -86,16 +109,21 @@ def MakePointSet(N, low=-100, high=100, grid_step=50):
     l = np.sqrt((xmax-xmin)**2 + (ymax-ymin)**2)
 
     while True:
+
         # 図形ランダム生成
-        fig = RandomTriangle(x_min=xmin, x_max=xmax, y_min=ymin, y_max=ymax, r_min=l/10, r_max=l/2)
-        #fig = RandomRectangle(x_min=xmin, x_max=xmax, y_min=ymin, y_max=ymax, w_min=w/10, w_max=w/1.5, h_min=h/10, h_max=h/1.5)
+        if fig_type == 0:
+            fig = RandomCircle(x_min=xmin, x_max=xmax, y_min=ymin, y_max=ymax, r_min=l/10, r_max=l/2)
+        elif fig_type == 1:
+            fig = RandomTriangle(x_min=xmin, x_max=xmax, y_min=ymin, y_max=ymax, r_min=l/10, r_max=l/2)
+        elif fig_type == 2:
+            fig = RandomRectangle(x_min=xmin, x_max=xmax, y_min=ymin, y_max=ymax, w_min=w/8, w_max=w/1.5, h_min=h/8, h_max=h/1.5)
 
         # AABB内に図形がなければ再生成
-        if CheckInternal(fig, AABB):
+        if CheckInternal(fig_type, fig, AABB):
             break
 
     # 平面点群を生成
-    fig_points, _, _ = InteriorPoints(fig.f_rep, AABB, size, grid_step=grid_step)
+    fig_points = InteriorPoints(fig.f_rep, AABB, size, grid_step=grid_step)
 
     # N-size点のノイズ生成
     xmin, xmax, ymin, ymax = AABB

@@ -15,8 +15,8 @@ class person:
         self.scoreFlag = False
         self.area = figure.CalcArea()
 
-def EntireGA(points, fig=[2], n_epoch=1000, N=100, add_num=30, save_num=2, tournament_size=10, \
-    cross_rate=0.75, mutate_rate=1, path=None):
+def EntireGA(points, fig=[0], n_epoch=1000, N=100, add_num=30, save_num=2, tournament_size=10, \
+    mutate_rate=1, path=None):
     # AABB生成
     max_p, min_p, _, l, _ = buildAABB(points)
 
@@ -136,7 +136,7 @@ def GA(points, fig=[0,1,2], epoch=100, N=500, add_num=50, save_num=1, tournament
             sorted_People, score_list = Rank(people, points)
             print("{}回目成果".format(int(i/10)))
             print(score_list[:10])
-            #DrawFig(points, people[0])
+            DrawFig(points, people[0])
             #DrawFig(points, people[1])
             
 
@@ -144,7 +144,7 @@ def GA(points, fig=[0,1,2], epoch=100, N=500, add_num=50, save_num=1, tournament
     sorted_People, score_list = Rank(people, points)
     print(score_list[:10])
     DrawFig(points, people[0])
-    DrawFig(points, people[1])
+    #DrawFig(points, people[1])
 
     return people[0]
 
@@ -401,15 +401,16 @@ def CheckIB(child, fig, max_p, min_p, l):
             
 
 def DrawFig(points, person):
+    # 目標点群プロット
     X1, Y1= Disassemble2d(points)
-    points2 = ContourPoints(person.figure.f_rep, grid_step=1000, epsilon=0.01, down_rate = 0.5)
-    X2, Y2= Disassemble2d(points2)
-
     plt.plot(X1, Y1, marker=".",linestyle="None",color="yellow")
-    plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
 
-    plt.xlim(-2,4)
-    plt.ylim(-2,4)
+    # 推定図形プロット
+    max_p, min_p, _, _, _ = buildAABB(points)
+    AABB = [min_p[0], max_p[0], min_p[1], max_p[1]]
+    points2 = ContourPoints(person.figure.f_rep, AABB=AABB, grid_step=1000, epsilon=0.01, down_rate = 0.5)
+    X2, Y2= Disassemble2d(points2)
+    plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
 
     plt.show()
 

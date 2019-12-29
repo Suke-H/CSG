@@ -53,10 +53,13 @@ def norm(normal):
 
 
 # 図形の境界線の点群を生成
-def ContourPoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
+def ContourPoints(fn, AABB=None, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
     #import time
     #start = time.time()
-    xmin, xmax, ymin, ymax= bbox*2
+    if AABB is None:
+        xmin, xmax, ymin, ymax= bbox*2
+    else:
+        xmin, xmax, ymin, ymax= AABB
 
     #点群X, Y, pointsを作成
     x = np.linspace(xmin, xmax, grid_step)
@@ -176,7 +179,7 @@ def InteriorPoints(fn, AABB, sampling_size, grid_step=50):
     # end = time.time()
     # print("time:{}s".format(end-start))
 
-    return points, pointX, pointY
+    return points
 
 # 凸包の関数により輪郭点抽出
 def MakeContour(points):
