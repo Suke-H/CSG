@@ -13,20 +13,21 @@ class person:
         self.figure = figure
         self.score = 0
         self.scoreFlag = False
+        self.area = figure.CalcArea()
 
-def EntireGA(points, fig=[1], n_epoch=100, N=100, add_num=30, save_num=2, tournament_size=10, \
-    cross_rate=0.75, mutate_rate=0.5, path=None):
+def EntireGA(points, fig=[2], n_epoch=1000, N=100, add_num=30, save_num=2, tournament_size=10, \
+    cross_rate=0.75, mutate_rate=1, path=None):
     # AABB生成
-    max_p, min_p, l = buildAABB(points)
+    max_p, min_p, _, l, _ = buildAABB(points)
 
     # 図形の種類ごとにN人クリーチャー作成
     group = np.array([CreateRandomPopulation(N, max_p, min_p, l, fig[i]) for i in range(len(fig))])
     print(group.shape)
 
     for epoch in range(n_epoch):
-        print("epoch:{}".format(epoch))
+        #print("epoch:{}".format(epoch))
         # 新しいクリーチャー追加
-        #group = np.array([np.concatenate([group[i], CreateRandomPopulation(add_num, max_p, min_p, l, fig[i])]) for i in range(len(fig))])
+        group = np.array([np.concatenate([group[i], CreateRandomPopulation(add_num, max_p, min_p, l, fig[i])]) for i in range(len(fig))])
         # スコア順に並び替え
         group = np.array([Rank(group[i], points)[0] for i in range(len(fig))])
         # csv?に保存
@@ -97,7 +98,7 @@ def EntireGA(points, fig=[1], n_epoch=100, N=100, add_num=30, save_num=2, tourna
 
 def GA(points, fig=[0,1,2], epoch=100, N=500, add_num=50, save_num=1, tournament_size=50, cross_rate=0.75, mutate_rate=0.2):
     # AABB生成
-    max_p, min_p, l = buildAABB(points)
+    max_p, min_p, _, l, _ = buildAABB(points)
 
     # N人クリーチャー作成
     people = CreateRandomPopulation(N, max_p, min_p, l, fig)
@@ -146,7 +147,6 @@ def GA(points, fig=[0,1,2], epoch=100, N=500, add_num=50, save_num=1, tournament
     DrawFig(points, people[1])
 
     return people[0]
-
 
 def CreateRandomPerson(fig_type, max_p, min_p, l):
     # 円
@@ -198,8 +198,8 @@ def CreateRandomPopulation(num, max_p, min_p, l, fig):
 def Score(person, points):
     # scoreFlagが立ってなかったらIoUを計算
     if person.scoreFlag == False:
-        person.score = CalcIoU(points, person.figure)
-        #person.score = CalcIoU2(points, person.figure)
+        #person.score = CalcIoU(points, person.figure)
+        person.score = CalcIoU2(points, person.figure)
         person.scoreFlag = True
 
     return person.score

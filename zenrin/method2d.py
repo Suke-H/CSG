@@ -90,11 +90,14 @@ def ContourPoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.
     return points
 
 # 図形の内部の点群を生成
-def InteriorPoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
+def MakePoints(fn, AABB=None, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
     #import time
     #start = time.time()
-    xmin, xmax, ymin, ymax= bbox*2
-
+    if AABB is None:
+        xmin, xmax, ymin, ymax= bbox*2
+    else:
+        xmin, xmax, ymin, ymax= AABB
+    
     #点群X, Y, pointsを作成
     x = np.linspace(xmin, xmax, grid_step)
     y = np.linspace(ymin, ymax, grid_step)
@@ -125,6 +128,55 @@ def InteriorPoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0
     #print("time:{}s".format(end-start))
 
     return points
+
+def InteriorPoints(fn, AABB, sampling_size, grid_step=50):
+    # import time
+    # start = time.time()
+    xmin, xmax, ymin, ymax = AABB
+
+    c=0
+
+    while True:
+        c+=1
+        print(c)
+
+        # 点群X, Y, Z, pointsを作成
+        x = np.linspace(xmin, xmax, grid_step)
+        y = np.linspace(ymin, ymax, grid_step)
+
+        X, Y = np.meshgrid(x, y)
+
+        # 格子点X, Yをすべてfnにぶち込んでみる
+        W = np.array([fn(X[i], Y[i]) for i in range(grid_step)])
+        # 変更前
+        # W = fn(X, Y, Z)
+
+        # Ｗ>=0のインデックスを取り出す
+        index = np.where(W >= 0)
+        index = [(index[0][i], index[1][i]) for i in range(len(index[0]))]
+        # print(index)
+
+        # indexがsampling_size分なかったらgrid_stepを増やしてやり直し
+        if len(index) >= sampling_size:
+            break
+
+        grid_step += 10
+
+    # サンプリング
+    index = random.sample(index, sampling_size)
+
+    # 格子点から境界面(fn(x,y,z)=0)に近い要素のインデックスを取り出す
+    pointX = np.array([X[i] for i in index])
+    pointY = np.array([Y[i] for i in index])
+
+    # points作成([[x1,y1,z1],[x2,y2,z2],...])
+    points = np.stack([pointX, pointY])
+    points = points.T
+
+    # end = time.time()
+    # print("time:{}s".format(end-start))
+
+    return points, pointX, pointY
 
 # 凸包の関数により輪郭点抽出
 def MakeContour(points):
@@ -305,4 +357,3 @@ def plot_implicit2d(fn, points=None, AABB_size=1, bbox=(2.5,2.5), contourNum=30)
     #Z = fn(X,Y)
     Z = np.array([fn(X[i], Y[i]) for i in range(contourNum)])
     plt.contour(X, Y, Z, [0])
-

@@ -56,7 +56,7 @@ def CalcIoU(points, figure, flag=False):
     # IoU = AND(点群数) / OR(面積) とする
     return and_num / or_area
 
-# Score = Cin/Ain - Cout/Aout
+# Score = Cin/(Ain+√Cin) - Cout/Aout
 def CalcIoU2(points, figure):
 
     X, Y = Disassemble2d(points)
@@ -64,7 +64,7 @@ def CalcIoU2(points, figure):
     # pointsを図形の関数に代入
     W = figure.f_rep(X, Y)
 
-    # W >= 0(=図形の内部)のインデックスを取り出し、
+    # W >= 0(-図形の内部)のインデックスを取り出し、
     # その数をCinとして保存
     index = np.where(W>=0)
     Cin = len(index[0])
@@ -76,12 +76,18 @@ def CalcIoU2(points, figure):
     Cout = points.shape[0] - Cin
 
     # AABB作成, 面積も計算
-    max_p, min_p, _ = buildAABB(points)
+    max_p, min_p, _, _, _ = buildAABB(points)
     AABB_area = abs((max_p[0]-min_p[0]) * (max_p[1]-min_p[1]))* 9
 
     # Aout = AABBの面積 - Ain
     Aout = AABB_area - Ain
 
-    #print("{}/{} - {}/{}".format(Cin, Ain, Cout, Aout))
+    # Ain = Ain * (√Cin / (AABB/a))
+    #Ain = Ain*(np.sqrt(Cin))/(Aout/20)
 
-    return Cin/Ain - Cout/Aout
+    #print("{}/{} - {}/{}".format(Cin, Ain, Cout, Aout))
+    #x = np.pi*Ain/(2*Aout) + np.pi/4
+    #y = Cin*np.cos(x)
+    #print("{} -> {}".format(x, y))
+
+    return Cin/(Ain+np.sqrt(Cin)) - Cout/Aout

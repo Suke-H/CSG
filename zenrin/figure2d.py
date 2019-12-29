@@ -40,11 +40,11 @@ class tri:
     # 正三角形: spin(inter(l1,l2,l3), x0, y0, t)
     def f_rep(self, x, y):
         x0, y0, r, t = self.p
-        num = np.sqrt(3)/2
+        s = np.sqrt(3)/2
         # 3辺作成
-        l1 = line([0,-1,-y0+r])
-        l2 = line([num,0.5,num*x0+0.5*y0+r])
-        l3 = line([-num,0.5,-num*x0+0.5*y0+r])
+        l1 = line([0,-1,-y0+r/2])
+        l2 = line([s,0.5,s*x0+0.5*y0+r/2])
+        l3 = line([-s,0.5,-s*x0+0.5*y0+r/2])
         # intersectionで正三角形作成
         tri = inter(l1, inter(l2, l3))
         # 回転
@@ -54,7 +54,27 @@ class tri:
 
     #S = √3/3 * r^2
     def CalcArea(self):
-        return np.sqrt(3)/3 * self.p[2]**2
+        return 3*np.sqrt(3)/4 * self.p[2]**2
+
+    def CalcVertices(self):
+        x0, y0, r, t = self.p
+        s = np.sqrt(3)/2
+
+        # θ=0としたときの3頂点の座標
+        v1 = np.array([x0, y0+r])
+        v2 = np.array([x0-s*r, y0-0.5*r])
+        v3 = np.array([x0+s*r, y0-0.5*r])
+
+        # 回転させる
+        P = np.array([[np.cos(t),-np.sin(t)],[np.sin(t),np.cos(t)]])
+        P = np.linalg.inv(P)
+        p0 = [x0, y0]
+        v1 = np.dot(v1-p0, P) + p0
+        v2 = np.dot(v2-p0, P) + p0
+        v3 = np.dot(v3-p0, P) + p0
+
+        return np.stack([v1, v2, v3])
+
 
 class rect:
     def __init__(self, p):
@@ -82,6 +102,26 @@ class rect:
 
     def CalcArea(self):
         return self.p[2] * self.p[3]
+
+    def CalcVertices(self):
+        x0, y0, w, h, t = self.p
+
+        # θ=0としたときの4頂点の座標
+        v1 = np.array([x0+w/2, y0+h/2])
+        v2 = np.array([x0+w/2, y0-h/2])
+        v3 = np.array([x0-w/2, y0+h/2])
+        v4 = np.array([x0-w/2, y0-h/2])
+
+        # 回転させる
+        P = np.array([[np.cos(t),-np.sin(t)],[np.sin(t),np.cos(t)]])
+        P = np.linalg.inv(P)
+        p0 = [x0, y0]
+        v1 = np.dot(v1-p0, P) + p0
+        v2 = np.dot(v2-p0, P) + p0
+        v3 = np.dot(v3-p0, P) + p0
+        v4 = np.dot(v4-p0, P) + p0
+
+        return np.stack([v1, v2, v3, v4])
 
 class spin:
     def __init__(self, fig, x0, y0, t):
