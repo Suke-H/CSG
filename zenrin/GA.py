@@ -15,7 +15,7 @@ class person:
         self.scoreFlag = False
         self.area = figure.CalcArea()
 
-def EntireGA(points, fig=[0], n_epoch=1000, N=100, add_num=30, save_num=2, tournament_size=10, \
+def EntireGA(points, fig=[0,1,2], n_epoch=1000, N=100, add_num=30, save_num=2, tournament_size=10, \
     mutate_rate=1, path=None):
     # AABB生成
     max_p, min_p, _, l, _ = buildAABB(points)
@@ -61,20 +61,21 @@ def EntireGA(points, fig=[0], n_epoch=1000, N=100, add_num=30, save_num=2, tourn
                 mutate_index = np.random.choice(num+1)
                 # それ以外を交叉
                 #cross_children.append([Crossover(np.delete(entry_tmp, mutate_index))])
-                cross_children.append([Crossover2(np.delete(entry_tmp, mutate_index), f, max_p, min_p, l)])
+                c = Crossover2(np.delete(entry_tmp, mutate_index), f, max_p, min_p, l)
+                if c is not None:
+                    cross_children.append([c])
                 # 突然変異
                 mutate_children.append([Mutate(entry_tmp[mutate_index], max_p, min_p, l, rate=mutate_rate)])
                 
             
             #print(next_group.shape, cross_group.shape, mutate_group.shape)
+            #print(len(next_group), len(cross_children), len(mutate_children))
             
             # c1, c2, c3を次世代に追加
             next_group = np.concatenate([next_group, cross_children, mutate_children], axis=1)
             #print("next:{}".format(next_group.shape))
 
         group = next_group[:, :]
-
-
 
         
         # 途中経過表示
@@ -364,6 +365,10 @@ def Crossover2(parents, fig, max_p, min_p, l):
         # パラメータが範囲外ならやり直し
         if CheckIB(child, fig, max_p, min_p, l):
             break
+
+    # パラメータが範囲外なら子は生成しない
+    # if not CheckIB(child, fig, max_p, min_p, l):
+    #     return None
         
     # パラメータをpersonクラスに代入する
     fig = parents[0].fig_type
@@ -391,8 +396,8 @@ def CheckIB(child, fig, max_p, min_p, l):
         x, y, w, h, t_rec = child
         r, t_tri = l/2, np.pi/6
 
-    if (min_p[0] < x < max_p[0]) and (min_p[1] < y < max_p[1]) and (0 < r < l) and (0 < w < l) and (0 < h < l)\
-        and (0 < t_tri < np.pi*2/3) and (0 < t_rec < np.pi/2):
+    if (min_p[0] < x < max_p[0]) and (min_p[1] < y < max_p[1]) and (0 < r < l) and (0 < w < l) and (0 < h < l):
+        #and (0 < t_tri < np.pi*2/3) and (0 < t_rec < np.pi/2)
         return True
 
     else:

@@ -3,9 +3,10 @@ import matplotlib.pyplot as plt
 
 from method2d import *
 import figure2d as F
-from IoUtest import CalcIoU, CalcIoU2
+from IoUtest import CalcIoU, CalcIoU2, LastIoU
 from GA import *
 from MakeDataset import MakePointSet
+
 
 # 標識の点群作成
 fig, sign, AABB = MakePointSet(0, 500)
@@ -23,6 +24,8 @@ plt.show()
 print(fig.p)
 print("ans:{}".format(CalcIoU2(sign, fig, flag=True)))
 
+a = input()
+
 # GAにより最適パラメータ出力
 #best = GA(sign)
 best = EntireGA(sign)
@@ -30,6 +33,8 @@ print("="*100)
 #fig = F.tri([  4.69031672, -31.1625267 ,   0.41589902,   0.38685724])
 print(fig.p)
 print("ans:{}".format(CalcIoU2(sign, fig, flag=True)))
-fig = F.circle(best[0])
+fig2 = F.circle(best[0])
 print(best)
-print("opt:{}".format(CalcIoU2(sign, fig, flag=True)))
+print("opt:{}".format(CalcIoU2(sign, fig2, flag=True)))
+
+print(LastIoU(fig, fig2, AABB))

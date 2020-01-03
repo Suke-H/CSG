@@ -94,3 +94,29 @@ def CalcIoU2(points, figure, flag=False):
         print("{}/{} - {}/{}".format(Cin, Ain, Cout, Aout))
 
     return Cin/(Ain+np.sqrt(Cin)) - Cout/Ain
+
+# 目標図形と最適図形でIoUを算出
+def LastIoU(goal, opti, AABB):
+    
+    # intersectionの面積
+    inter_fig = F.inter(goal, opti)
+    inter_points = ContourPoints(inter_fig.f_rep, AABB=AABB)
+    inter_points = np.array(inter_points, dtype=np.float32)
+    inter_area = cv2.contourArea(cv2.convexHull(inter_points))
+
+    # unionの面積
+    union_fig = F.union(goal, opti)
+    union_points = ContourPoints(union_fig.f_rep, AABB=AABB)
+    union_points = np.array(union_points, dtype=np.float32)
+    union_area = cv2.contourArea(cv2.convexHull(union_points))
+
+    X1, Y1 = Disassemble2d(inter_points)
+    X2, Y2 = Disassemble2d(union_points)
+
+    plt.plot(X1, Y1, marker=".",linestyle="None",color="red")
+    plt.plot(X2, Y2, marker=".",linestyle="None",color="yellow")
+    plt.show()
+
+    print("{} / {}".format(inter_area, union_area))
+
+    return inter_area / union_area

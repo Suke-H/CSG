@@ -53,7 +53,7 @@ def norm(normal):
 
 
 # 図形の境界線の点群を生成
-def ContourPoints(fn, AABB=None, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
+def ContourPoints(fn, AABB=None, bbox=(-2.5,2.5), grid_step=1000, down_rate = 1.0, epsilon=0.01):
     #import time
     #start = time.time()
     if AABB is None:
