@@ -54,18 +54,22 @@ def EntireGA(points, fig=[0,1,2], n_epoch=1000, N=100, add_num=30, save_num=2, t
                     num = 5
                 elif f == 2:
                     num = 6
-                
-                # 上位num+1人選択
-                entry_tmp, _ = Rank(entry[i], points)[:num+1]
-                # 突然変異させる人を選択
-                mutate_index = np.random.choice(num+1)
-                # それ以外を交叉
-                #cross_children.append([Crossover(np.delete(entry_tmp, mutate_index))])
-                c = Crossover2(np.delete(entry_tmp, mutate_index), f, max_p, min_p, l)
-                if c is not None:
-                    cross_children.append([c])
-                # 突然変異
-                mutate_children.append([Mutate(entry_tmp[mutate_index], max_p, min_p, l, rate=mutate_rate)])
+
+                c = None
+
+                while c is None:
+
+                    # 上位num+1人選択
+                    entry_tmp, _ = Rank(entry[i], points)[:num+1]
+                    # 突然変異させる人を選択
+                    mutate_index = np.random.choice(num+1)
+                    # それ以外を交叉
+                    #cross_children.append([Crossover(np.delete(entry_tmp, mutate_index))])
+                    c = Crossover2(np.delete(entry_tmp, mutate_index), f, max_p, min_p, l)
+                    if c is not None:
+                        cross_children.append([c])
+                    # 突然変異
+                    mutate_children.append([Mutate(entry_tmp[mutate_index], max_p, min_p, l, rate=mutate_rate)])
                 
             
             #print(next_group.shape, cross_group.shape, mutate_group.shape)

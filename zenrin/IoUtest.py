@@ -93,7 +93,8 @@ def CalcIoU2(points, figure, flag=False):
     if flag==True:
         print("{}/{} - {}/{}".format(Cin, Ain, Cout, Aout))
 
-    return Cin/(Ain+np.sqrt(Cin)) - Cout/Ain
+    #return Cin/(Ain+np.sqrt(Cin)) - Cout/Ain
+    return (Cin-Cout)/(Ain+np.sqrt(Cin))
 
 # 目標図形と最適図形でIoUを算出
 def LastIoU(goal, opti, AABB):

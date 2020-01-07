@@ -336,7 +336,7 @@ def plot_implicit2d(fn, points=None, AABB_size=1, bbox=(2.5,2.5), contourNum=30)
     # pointsの入力があればAABB生成してそれをもとにスケール設定
     if points is not None:
         #AABB生成
-        max_p, min_p = buildAABB(points)
+        max_p, min_p, _, _, _ = buildAABB(points)
 
         xmax, ymax = max_p
         xmin, ymin = min_p
