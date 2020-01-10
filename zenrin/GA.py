@@ -20,7 +20,7 @@ class person:
         print("para: {}".format(self.figure.p))
         print("score: {}".format(self.score))
 
-def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, tournament_size=10, \
+def EntireGA(points, fig=[0,1,2], n_epoch=90, N=100, add_num=30, save_num=2, tournament_size=10, \
     mutate_rate=1, path=None, half_reset_num=5, all_reset_num=3):
 
     # reset指数
@@ -31,7 +31,10 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, to
     prev_score_list = [0 for i in range(len(fig))]
 
     # 全個体初期化前の1位の記録
-    #records = []
+    records = [[] for i in range(len(fig))]
+
+    # 最終結果の図形保存
+    result_list = []
 
     # AABB生成
     max_p, min_p, _, l, _ = buildAABB(points)
@@ -85,7 +88,7 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, to
                 # 次世代に子を追加
                 next_people = np.append(next_people, cross_child)
                 
-            ##### RESET処理 #####
+            ##### RESET処理 ############################################################################
             people, score_list = Rank(next_people, points)
             current_score = score_list[0]
         
@@ -93,21 +96,24 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, to
             if prev_score_list[i] >= current_score:
                 half_list[i] += 1
 
-                # 半初期化する状況、かつ半初期化したらall_nが上限に達するというときに、1位だけ記録に残しておいて全て初期化
+                # 半初期化する状況、かつ半初期化したらall_nが上限に達するというときに、1位を記録に残しておいて全て初期化
                 if all_list[i] == all_reset_num-1 and half_list[i] == half_reset_num:
                     print("全初期化")
-                    #records.append(people[0])
-                    best = people[0]
-                    people = CreateRandomPopulation(N-1, max_p, min_p, l, fig[i])
-                    people = np.append(people, best)
+                    records[i].append(people[0])
+                    people = CreateRandomPopulation(N, max_p, min_p, l, fig[i])
 
                     half_list[i] = 0
                     all_list[i] = 0
 
-                # half_nが上限に達したら下位半数を初期化
+                # half_nが上限に達したら(1位以外の)半数をランダムに初期化
                 if half_list[i] == half_reset_num:
                     print("半初期化")
-                    people = people[:int(N/2)]
+                    reset_index = np.random.choice([i for i in range(1, N)], int(N/2), replace=False)
+                    #reset_index = np.random.choice(N, int(N/2), replace=False)
+                    # もし1位も消すなら記録に残しておく
+                    #if 0 in reset_index:
+                    #    records[i].append(people[0])
+                    people = np.delete(people, reset_index)
                     new_people = CreateRandomPopulation(int(N/2), max_p, min_p, l, fig[i])
                     people = np.concatenate([people, new_people])
 
@@ -124,10 +130,12 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, to
             # 現在のスコアを前のスコアとして、終わり
             prev_score_list[i] = current_score
 
+            ######################################################################################
+
             group[i] = people
         
         # 途中経過表示
-        if epoch % 10 == 0:
+        if epoch % 30 == 0:
             print("{}回目成果".format(int(epoch/30)))
 
             for i in range(len(fig)):
@@ -135,12 +143,29 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, to
                 print(score_list[:10])
                 print(group[i][0].figure.p)
                 DrawFig(points, group[i][0])
+    
         
     # 最終結果表示
     for i in range(len(fig)):
-        _, score_list = Rank(group[i], points)
+        # 記録した図形を呼び出す
+        if len(records[i]) != 0:
+            record_score_list = [records[i][j].score for j in range(len(records[i]))]
+            record_score = max(record_score_list)
+            record_fig = records[i][record_score_list.index(max(record_score_list))]
+        # 最終世代の一位と記録図形の一位を比較    
+        people, score_list = Rank(group[i], points)
         print(score_list[:10])
-        DrawFig(points, group[i][0])
+
+        # 最終世代の一位と記録図形の一位を比較
+        if score_list[0] >= record_score:
+            print("最終世代1位の勝ち")
+            result_list.append(people[0])
+        else:
+            print("記録1位の勝ち")
+            result_list.append(record_fig)
+
+        # 描画
+        DrawFig(points, result_list[i])
 
     return [group[i][0].figure.p for i in range(len(fig))]
 
