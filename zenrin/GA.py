@@ -21,7 +21,7 @@ class person:
         print("score: {}".format(self.score))
 
 def EntireGA(points, fig=[0,1,2], n_epoch=90, N=100, add_num=30, save_num=2, tournament_size=10, \
-    mutate_rate=1, path=None, half_reset_num=5, all_reset_num=3):
+    mutate_rate=1, path=None, half_reset_num=100, all_reset_num=100):
 
     # reset指数
     half_list = [0 for i in range(len(fig))]
@@ -147,22 +147,24 @@ def EntireGA(points, fig=[0,1,2], n_epoch=90, N=100, add_num=30, save_num=2, tou
         
     # 最終結果表示
     for i in range(len(fig)):
+        
+        # 最終世代   
+        people, score_list = Rank(group[i], points)
+        print(score_list[:10])
+
         # 記録した図形を呼び出す
         if len(records[i]) != 0:
             record_score_list = [records[i][j].score for j in range(len(records[i]))]
             record_score = max(record_score_list)
             record_fig = records[i][record_score_list.index(max(record_score_list))]
-        # 最終世代の一位と記録図形の一位を比較    
-        people, score_list = Rank(group[i], points)
-        print(score_list[:10])
 
-        # 最終世代の一位と記録図形の一位を比較
-        if score_list[0] >= record_score:
-            print("最終世代1位の勝ち")
-            result_list.append(people[0])
-        else:
-            print("記録1位の勝ち")
-            result_list.append(record_fig)
+            # 最終世代の一位と記録図形の一位を比較
+            if score_list[0] >= record_score:
+                print("最終世代1位の勝ち")
+                result_list.append(people[0])
+            else:
+                print("記録1位の勝ち")
+                result_list.append(record_fig)
 
         # 描画
         DrawFig(points, result_list[i])
