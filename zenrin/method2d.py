@@ -53,13 +53,18 @@ def norm(normal):
 
 
 # 図形の境界線の点群を生成
-def ContourPoints(fn, AABB=None, bbox=(-2.5,2.5), grid_step=1000, down_rate = 1.0, epsilon=0.01):
+def ContourPoints(fn, AABB=None, bbox=(-2.5,2.5), AABB_size=1, grid_step=1000, down_rate = 1.0, epsilon=0.01):
     #import time
     #start = time.time()
     if AABB is None:
         xmin, xmax, ymin, ymax= bbox*2
     else:
         xmin, xmax, ymin, ymax= AABB
+        #AABBの各辺がAABB_size倍されるように頂点を変更
+        xmax = xmax + (xmax - xmin)/2 * AABB_size
+        xmin = xmin - (xmax - xmin)/2 * AABB_size
+        ymax = ymax + (ymax - ymin)/2 * AABB_size
+        ymin = ymin - (ymax - ymin)/2 * AABB_size
 
     #点群X, Y, pointsを作成
     x = np.linspace(xmin, xmax, grid_step)
@@ -93,13 +98,18 @@ def ContourPoints(fn, AABB=None, bbox=(-2.5,2.5), grid_step=1000, down_rate = 1.
     return points
 
 # 図形の内部の点群を生成
-def MakePoints(fn, AABB=None, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
+def MakePoints(fn, AABB=None, AABB_size=1.5, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
     #import time
     #start = time.time()
     if AABB is None:
         xmin, xmax, ymin, ymax= bbox*2
     else:
         xmin, xmax, ymin, ymax= AABB
+        #AABBの各辺がAABB_size倍されるように頂点を変更
+        xmax = xmax + (xmax - xmin)/2 * AABB_size
+        xmin = xmin - (xmax - xmin)/2 * AABB_size
+        ymax = ymax + (ymax - ymin)/2 * AABB_size
+        ymin = ymin - (ymax - ymin)/2 * AABB_size
     
     #点群X, Y, pointsを作成
     x = np.linspace(xmin, xmax, grid_step)

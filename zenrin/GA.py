@@ -5,7 +5,7 @@ import csv
 
 from method2d import *
 import figure2d as F
-from IoUtest import CalcIoU, CalcIoU2
+from IoUtest import CalcIoU, CalcIoU2, CalcIoU3
 
 class person:
     def __init__(self, fig_type, figure):
@@ -15,8 +15,24 @@ class person:
         self.scoreFlag = False
         self.area = figure.CalcArea()
 
-def EntireGA(points, fig=[0,1,2], n_epoch=1000, N=100, add_num=30, save_num=2, tournament_size=10, \
-    mutate_rate=1, path=None):
+    def Profile(self):
+        print("fig_type: {}".format(self.fig_type))
+        print("para: {}".format(self.figure.p))
+        print("score: {}".format(self.score))
+
+def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, tournament_size=10, \
+    mutate_rate=1, path=None, half_reset_num=5, all_reset_num=3):
+
+    # reset指数
+    half_list = [0 for i in range(len(fig))]
+    all_list = [0 for i in range(len(fig))]
+
+    # 前世代のスコア最大値
+    prev_score_list = [0 for i in range(len(fig))]
+
+    # 全個体初期化前の1位の記録
+    records = []
+
     # AABB生成
     max_p, min_p, _, l, _ = buildAABB(points)
 
@@ -25,7 +41,7 @@ def EntireGA(points, fig=[0,1,2], n_epoch=1000, N=100, add_num=30, save_num=2, t
     print(group.shape)
 
     for epoch in range(n_epoch):
-        #print("epoch:{}".format(epoch))
+        print("epoch:{}".format(epoch))
         # 新しいクリーチャー追加
         group = np.array([np.concatenate([group[i], CreateRandomPopulation(add_num, max_p, min_p, l, fig[i])]) for i in range(len(fig))])
         # スコア順に並び替え
@@ -72,25 +88,55 @@ def EntireGA(points, fig=[0,1,2], n_epoch=1000, N=100, add_num=30, save_num=2, t
                     mutate_children.append([Mutate(entry_tmp[mutate_index], max_p, min_p, l, rate=mutate_rate)])
                 
             
-            #print(next_group.shape, cross_group.shape, mutate_group.shape)
-            #print(len(next_group), len(cross_children), len(mutate_children))
-            
             # c1, c2, c3を次世代に追加
-            next_group = np.concatenate([next_group, cross_children, mutate_children], axis=1)
+            #next_group = np.concatenate([next_group, cross_children, mutate_children], axis=1)
+            next_group = np.concatenate([next_group, cross_children], axis=1)
             #print("next:{}".format(next_group.shape))
 
+            """
+            # RESET処理
+            for i in range(len(fig)):
+                people, score_list = Rank(group[i], points)
+                current_score = score_list[0]
+            
+                # スコアが変わらないようならhalf_nを増やす
+                if prev_score_list[i] >= current_score:
+                    half_list[i] += 1
+
+                # half_nが上限に達したら下位半数を初期化
+                if half_list[i] == half_reset_num:
+                    print("半初期化")
+                    people = people[:int(N/2)]
+                    new_people = CreateRandomPopulation(int(N/2), max_p, min_p, l, fig[i])
+                    people = np.concatenate([people, new_people])
+                    next_group[i] = people
+
+                    half_list[i] = 0
+                    all_list[i] += 1
+
+                    # all_nが上限に達したら、1位だけ記録に残しておいて全て初期化
+                    if all_list[i] == all_reset_num:
+                        print("全初期化")
+                        records.append(people[0])
+                        next_group[i] = CreateRandomPopulation(N/2, max_p, min_p, l, fig[i])
+
+                        all_list[i] = 0
+
+            """
+
+                    
         group = next_group[:, :]
 
         
         # 途中経過表示
-        if epoch % 30 == 0:
+        if epoch % 10 == 0:
             print("{}回目成果".format(int(epoch/30)))
 
             for i in range(len(fig)):
                 _, score_list = Rank(group[i], points)
                 print(score_list[:10])
                 print(group[i][0].figure.p)
-                #DrawFig(points, group[i][0])
+                DrawFig(points, group[i][0])
                 #DrawFig(points, people[1])
         
     # 最終結果表示
@@ -101,7 +147,7 @@ def EntireGA(points, fig=[0,1,2], n_epoch=1000, N=100, add_num=30, save_num=2, t
 
     return [group[i][0].figure.p for i in range(len(fig))]
 
-def GA(points, fig=[0,1,2], epoch=100, N=500, add_num=50, save_num=1, tournament_size=50, cross_rate=0.75, mutate_rate=0.2):
+def GA(points, fig=[0,1,2], epoch=3, N=500, add_num=50, save_num=1, tournament_size=50, cross_rate=0.75, mutate_rate=0.2):
     # AABB生成
     max_p, min_p, _, l, _ = buildAABB(points)
 
@@ -204,7 +250,8 @@ def Score(person, points):
     # scoreFlagが立ってなかったらIoUを計算
     if person.scoreFlag == False:
         #person.score = CalcIoU(points, person.figure)
-        person.score = CalcIoU2(points, person.figure)
+        #person.score = CalcIoU2(points, person.figure)
+        person.score = CalcIoU3(points, F.tri([0,0,1.2,0]), person.figure)
         person.scoreFlag = True
 
     return person.score
@@ -341,41 +388,38 @@ def BLX(x1, x2, xmin, xmax, alpha):
 # ブレンド交叉を採用
 def Crossover2(parents, fig, max_p, min_p, l):
 
-    while True:
+    # n: パラメータの数, x: n+1人の親のパラメータのリスト
+    n = len(parents[0].figure.p)
+    x = np.array([parents[i].figure.p for i in range(n+1)])
 
-        # n: パラメータの数, x: n+1人の親のパラメータのリスト
-        n = len(parents[0].figure.p)
-        x = np.array([parents[i].figure.p for i in range(n+1)])
+    # g: xの重心
+    g = np.sum(x, axis=0) / n
 
-        # g: xの重心
-        g = np.sum(x, axis=0) / n
+    alpha = np.sqrt(n+2)
 
-        alpha = np.sqrt(n+2)
+    # p, cを定義
+    p, c = np.empty((0,n)), np.empty((0,n))
+    p = np.append(p, [g + alpha*(x[0] - g)], axis=0)
+    c = np.append(c, [[0 for i in range(n)]], axis=0)
 
-        # p, cを定義
-        p, c = np.empty((0,n)), np.empty((0,n))
-        p = np.append(p, [g + alpha*(x[0] - g)], axis=0)
-        c = np.append(c, [[0 for i in range(n)]], axis=0)
+    for i in range(1, n+1):
+        r = Random(0, 1)**(1/i)
+        p = np.append(p, [g + alpha*(x[i] - g)], axis=0)
+        c = np.append(c, [r*(p[i-1]-p[i] + c[i-1])], axis=0)
+        #print(r, p[i], c[i])
 
-        for i in range(1, n+1):
-            r = Random(0, 1)**(1/i)
-            p = np.append(p, [g + alpha*(x[i] - g)], axis=0)
-            c = np.append(c, [r*(p[i-1]-p[i] + c[i-1])], axis=0)
-            #print(r, p[i], c[i])
+    # 子のパラメータはp[n]+c[n]となる
+    child = p[n] + c[n]
 
-        # 子のパラメータはp[n]+c[n]となる
-        child = p[n] + c[n]
-
-        # パラメータが範囲外ならやり直し
-        if CheckIB(child, fig, max_p, min_p, l):
-            break
+    # パラメータが範囲外ならやり直し
+    # if CheckIB(child, fig, max_p, min_p, l):
+    #     break
 
     # パラメータが範囲外なら子は生成しない
     # if not CheckIB(child, fig, max_p, min_p, l):
     #     return None
         
     # パラメータをpersonクラスに代入する
-    fig = parents[0].fig_type
 
     if fig == 0:
         figure = F.circle(child)
@@ -406,18 +450,21 @@ def CheckIB(child, fig, max_p, min_p, l):
 
     else:
         return False
-
             
 
-def DrawFig(points, person):
+def DrawFig(points, person, AABB_size=1.5):
+    print(CalcIoU3(points, F.tri([0,0,1.2,0]), person.figure, flag=True))
+
     # 目標点群プロット
     X1, Y1= Disassemble2d(points)
     plt.plot(X1, Y1, marker=".",linestyle="None",color="yellow")
 
     # 推定図形プロット
     max_p, min_p, _, _, _ = buildAABB(points)
+    
     AABB = [min_p[0], max_p[0], min_p[1], max_p[1]]
-    points2 = ContourPoints(person.figure.f_rep, AABB=AABB, grid_step=1000, epsilon=0.01, down_rate = 0.5)
+
+    points2 = ContourPoints(person.figure.f_rep, AABB=AABB, AABB_size=AABB_size, grid_step=1000, epsilon=0.02, down_rate=1)
     X2, Y2= Disassemble2d(points2)
     plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
 

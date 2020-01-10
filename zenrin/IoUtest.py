@@ -56,8 +56,41 @@ def CalcIoU(points, figure, flag=False):
     # IoU = AND(点群数) / OR(面積) とする
     return and_num / or_area
 
+def CheckIB(child, fig, max_p, min_p, l):
+    # 円
+    if fig==0:
+        x, y, r = child
+        w, h = l/2, l/2
+    # 正三角形
+    elif fig==1:
+        x, y, r, _= child
+        w, h = l/2, l/2
+    # 長方形
+    elif fig==2:
+        x, y, w, h, _ = child
+        r = l/2
+
+    if (min_p[0] < x < max_p[0]) and (min_p[1] < y < max_p[1]) and (0 < r < l) and (0 < w < l) and (0 < h < l):
+        return True
+
+    else:
+        return False
+
 # Score = Cin/(Ain+√Cin) - Cout/Aout
 def CalcIoU2(points, figure, flag=False):
+
+    # AABB内にあるのかチェック
+    max_p, min_p, _, l, AABB_area = buildAABB(points)
+
+    if len(figure.p) == 3:
+        fig = 0
+    elif len(figure.p) == 4:
+        fig = 1
+    else:
+        fig = 2
+
+    if not CheckIB(figure.p, fig, max_p, min_p, l):
+        return -100
 
     X, Y = Disassemble2d(points)
 
@@ -66,7 +99,12 @@ def CalcIoU2(points, figure, flag=False):
 
     # W >= 0(-図形の内部)のインデックスを取り出し、
     # その数をCinとして保存
+
     index = np.where(W>=0)
+
+    #W = np.delete(W, index)
+
+
     Cin = len(index[0])
 
     # Ainに図形の面積
@@ -74,10 +112,6 @@ def CalcIoU2(points, figure, flag=False):
 
     # Cout = 全点群数 - Cin
     Cout = points.shape[0] - Cin
-
-    # AABB作成, 面積も計算
-    max_p, min_p, _, _, _ = buildAABB(points)
-    AABB_area = abs((max_p[0]-min_p[0]) * (max_p[1]-min_p[1]))* 9
 
     # Aout = AABBの面積 - Ain
     Aout = AABB_area - Ain
@@ -93,8 +127,77 @@ def CalcIoU2(points, figure, flag=False):
     if flag==True:
         print("{}/{} - {}/{}".format(Cin, Ain, Cout, Aout))
 
+    out_W = np.delete(W, index)
+    out_sum = np.sum(1/out_W)
+
     #return Cin/(Ain+np.sqrt(Cin)) - Cout/Ain
-    return (Cin-Cout)/(Ain+np.sqrt(Cin))
+    #return (Cin-Cout)/(Ain+np.sqrt(Cin))
+    return Cin/(Ain+np.sqrt(Cin)) + 0.05*out_sum
+
+# outの枠内に図形が入っているかのチェック
+# contoursはoutの輪郭点の点群配列
+def CheckIB2(figure, contours):
+    
+    X, Y = Disassemble2d(contours)
+
+    W = figure.f_rep(X, Y)
+
+    # 輪郭点が全て図形の外部ならOK
+    if np.all(W<0):
+        return True
+    else:
+        return False
+
+# Score = Cin/(Ain+√Cin) - Cout/Aout
+def CalcIoU3(points, out_shape, figure, flag=False):
+
+    # AABB内にあるのかチェック
+    max_p, min_p, _, l, AABB_area = buildAABB(points)
+
+    if len(figure.p) == 3:
+        fig = 0
+    elif len(figure.p) == 4:
+        fig = 1
+    else:
+        fig = 2
+
+    if not CheckIB(figure.p, fig, max_p, min_p, l):
+        return -100
+
+    # outの枠内にあるかチェック
+    out_contour = ContourPoints(out_shape.f_rep, grid_step=200)
+
+    if not CheckIB2(figure, out_contour):
+        return -100
+
+    ########################################################
+
+    # W >= 0(-図形の内部)のインデックスを取り出し、
+    # その数をCinとして保存
+    X, Y = Disassemble2d(points)
+    W = figure.f_rep(X, Y)
+    in_index = np.where(W>=0)
+    Cin = len(in_index[0])
+
+    # Ain = 推定図形の面積
+    Ain = figure.CalcArea()
+
+    # out(out_shapeより内かつinより外)のインデックスを保存
+    W_2 = out_shape.f_rep(X, Y)
+    out_index = np.where(W_2>=0)
+    out_index = np.delete(out_index, in_index)
+
+    # Cout = outの点群数
+    Cout = len(out_index)
+
+    # Aout = out_shapeの面積 - Ain
+    Aout = out_shape.CalcArea() - Ain
+
+    if flag==True:
+        print(points.shape)
+        print("{}/{} - {}/{}".format(Cin, Ain, Cout, Aout))
+
+    return Cin/(Ain+np.sqrt(Cin)) - Cout/(Aout+np.sqrt(Cout))
 
 # 目標図形と最適図形でIoUを算出
 def LastIoU(goal, opti, AABB):
