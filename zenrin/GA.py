@@ -31,7 +31,7 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, to
     prev_score_list = [0 for i in range(len(fig))]
 
     # 全個体初期化前の1位の記録
-    records = []
+    #records = []
 
     # AABB生成
     max_p, min_p, _, l, _ = buildAABB(points)
@@ -42,27 +42,29 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, to
 
     for epoch in range(n_epoch):
         print("epoch:{}".format(epoch))
-        # 新しいクリーチャー追加
-        group = np.array([np.concatenate([group[i], CreateRandomPopulation(add_num, max_p, min_p, l, fig[i])]) for i in range(len(fig))])
-        # スコア順に並び替え
-        group = np.array([Rank(group[i], points)[0] for i in range(len(fig))])
-        # csv?に保存
-        if path:
-            SaveCSV(group[0][0], epoch, path)
-        # 上位n人は保存
-        next_group = np.array([group[i][:save_num] for i in range(len(fig))])
 
-        # 次世代がN人超すまで
-        # トーナメント選択->交叉、突然変異->保存
-        # を繰り返す
-        while len(next_group[0]) <= N:
-            # トーナメントサイズの人数出場
-            entry = np.array([np.random.choice(group[i], tournament_size, replace=False) for i in range(len(fig))])
-            #print(entry.shape)
+        for i, f in enumerate(fig):
 
-            cross_children, mutate_children = [], []
+            people = group[i]
 
-            for i, f in enumerate(fig):
+            # 新しいクリーチャー追加
+            people = np.concatenate([people, CreateRandomPopulation(add_num, max_p, min_p, l, f)])
+            # スコア順に並び替え
+            people, _ = Rank(people, points)
+            # 上位n人は保存
+            next_people = people[:save_num]
+            
+            # csv?に保存
+            #if path:
+                #SaveCSV(group[0][0], epoch, path)
+
+            # 次世代がN人超すまで
+            # トーナメント選択->交叉、突然変異->保存
+            # を繰り返す
+            while len(next_people) < N:
+                # トーナメントサイズの人数出場
+                entry = np.random.choice(people, tournament_size, replace=False)
+
                 # 図形の種類によって"Crossover"で取る個体の数変更
                 if f == 0:
                     num = 4
@@ -71,37 +73,36 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, to
                 elif f == 2:
                     num = 6
 
-                c = None
+                # 上位num+1人選択
+                winners, _ = Rank(entry, points)[:num+1]
+                # 突然変異させる人を選択
+                mutate_index = np.random.choice(num+1)
+                # それ以外を交叉
+                cross_child = Crossover2(np.delete(winners, mutate_index), f, max_p, min_p, l)
+                # 突然変異
+                #mutate_child = Mutate(winners[mutate_index], max_p, min_p, l, rate=mutate_rate)
 
-                while c is None:
-
-                    # 上位num+1人選択
-                    entry_tmp, _ = Rank(entry[i], points)[:num+1]
-                    # 突然変異させる人を選択
-                    mutate_index = np.random.choice(num+1)
-                    # それ以外を交叉
-                    #cross_children.append([Crossover(np.delete(entry_tmp, mutate_index))])
-                    c = Crossover2(np.delete(entry_tmp, mutate_index), f, max_p, min_p, l)
-                    if c is not None:
-                        cross_children.append([c])
-                    # 突然変異
-                    mutate_children.append([Mutate(entry_tmp[mutate_index], max_p, min_p, l, rate=mutate_rate)])
+                # 次世代に子を追加
+                next_people = np.append(next_people, cross_child)
                 
-            
-            # c1, c2, c3を次世代に追加
-            #next_group = np.concatenate([next_group, cross_children, mutate_children], axis=1)
-            next_group = np.concatenate([next_group, cross_children], axis=1)
-            #print("next:{}".format(next_group.shape))
+            ##### RESET処理 #####
+            people, score_list = Rank(next_people, points)
+            current_score = score_list[0]
+        
+            # スコアが変わらないようならhalf_nを増やす
+            if prev_score_list[i] >= current_score:
+                half_list[i] += 1
 
-            """
-            # RESET処理
-            for i in range(len(fig)):
-                people, score_list = Rank(group[i], points)
-                current_score = score_list[0]
-            
-                # スコアが変わらないようならhalf_nを増やす
-                if prev_score_list[i] >= current_score:
-                    half_list[i] += 1
+                # 半初期化する状況、かつ半初期化したらall_nが上限に達するというときに、1位だけ記録に残しておいて全て初期化
+                if all_list[i] == all_reset_num-1 and half_list[i] == half_reset_num:
+                    print("全初期化")
+                    #records.append(people[0])
+                    best = people[0]
+                    people = CreateRandomPopulation(N-1, max_p, min_p, l, fig[i])
+                    people = np.append(people, best)
+
+                    half_list[i] = 0
+                    all_list[i] = 0
 
                 # half_nが上限に達したら下位半数を初期化
                 if half_list[i] == half_reset_num:
@@ -109,24 +110,21 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, to
                     people = people[:int(N/2)]
                     new_people = CreateRandomPopulation(int(N/2), max_p, min_p, l, fig[i])
                     people = np.concatenate([people, new_people])
-                    next_group[i] = people
 
                     half_list[i] = 0
                     all_list[i] += 1
 
-                    # all_nが上限に達したら、1位だけ記録に残しておいて全て初期化
-                    if all_list[i] == all_reset_num:
-                        print("全初期化")
-                        records.append(people[0])
-                        next_group[i] = CreateRandomPopulation(N/2, max_p, min_p, l, fig[i])
+            # スコアが上がったらhalfもallも0に
+            else:
+                half_list[i] = 0
+                all_list[i] = 0
 
-                        all_list[i] = 0
+            print("{} -> {} : ({},{})".format(prev_score_list[i], current_score, half_list[i], all_list[i]))
 
-            """
+            # 現在のスコアを前のスコアとして、終わり
+            prev_score_list[i] = current_score
 
-                    
-        group = next_group[:, :]
-
+            group[i] = people
         
         # 途中経過表示
         if epoch % 10 == 0:
@@ -137,7 +135,6 @@ def EntireGA(points, fig=[0,1,2], n_epoch=100, N=100, add_num=30, save_num=2, to
                 print(score_list[:10])
                 print(group[i][0].figure.p)
                 DrawFig(points, group[i][0])
-                #DrawFig(points, people[1])
         
     # 最終結果表示
     for i in range(len(fig)):
