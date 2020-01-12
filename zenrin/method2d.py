@@ -21,6 +21,14 @@ def Disassemble2d(XY):
 
     return X, Y
 
+# 上の逆
+def Composition2d(X, Y):
+    points = np.stack([X, Y])
+    points = np.transpose(points, (1,0))
+
+    return points
+
+
 def line2d(a, b):
     t = np.arange(0, 1, 0.01)
 

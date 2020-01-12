@@ -13,6 +13,7 @@ import figure2d as F
 from IoUtest import CalcIoU, CalcIoU2, LastIoU
 from GA import *
 from MakeDataset import MakePointSet
+from TransPix import MakeOuterFrame
 
 
 
@@ -63,41 +64,14 @@ def PlaneViewer(path, savepath):
 fig_type = 1
 
 #標識の点群作成
-#fig, sign, AABB = MakePointSet(fig_type, 500)
+fig, sign, AABB = MakePointSet(fig_type, 500)
+out_points, out_area = MakeOuterFrame(sign, path="data/last/test.png")
 
-#sign = np.load("data/FC_00587.npy")
-#print(sign.shape)
-
-#print(CalcIoU2(sign, fig, True))
-
-# 目標と、枠
-fig = F.tri([0,0,1,0])
-out_fig = F.tri([0,0,1.2,0])
-
-sign = InteriorPoints(fig.f_rep, [-2, 2, -2, 2], 500)
-out_shape = ContourPoints(out_fig.f_rep)
-
-print(CalcIoU3(sign, out_fig, fig,  True))
-
-
-# 点群プロット
-X1, Y1= Disassemble2d(sign)
-plt.plot(X1, Y1, marker="o",linestyle="None",color="orange")
-X2, Y2= Disassemble2d(out_shape)
-plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
-
-
-
-# figure = F.rect([0.5434855012414951, 0.0631636962438673, 1.7262828639445207, 3.484746973450081, 2.730669636231897])
-
-#plot_implicit2d(figure.f_rep, sign ,AABB_size=2)
-
-plt.show()
-
+print(CalcIoU3(sign, out_points, out_area, fig,  True))
 
 # GAにより最適パラメータ出力
 #best = GA(sign)
-best = EntireGA(sign)
+best = EntireGA(sign, out_points, out_area)
 print("="*100)
 
 print(best[fig_type])
@@ -105,8 +79,6 @@ print(best[fig_type])
 best_circle = F.circle(best[0])
 best_tri = F.tri(best[1])
 best_rect = F.rect(best[2])
-
-AABB = [-2,2,-2,2]
 
 print(LastIoU(fig, best_circle, AABB))
 print(LastIoU(fig, best_tri, AABB))

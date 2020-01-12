@@ -20,7 +20,8 @@ class person:
         print("para: {}".format(self.figure.p))
         print("score: {}".format(self.score))
 
-def EntireGA(points, fig=[0,1,2], n_epoch=90, N=100, add_num=30, save_num=2, tournament_size=10, \
+def EntireGA(points, out_points, out_area, \
+    fig=[0,1,2], n_epoch=90, N=100, add_num=30, save_num=2, tournament_size=10, \
     mutate_rate=1, path=None, half_reset_num=100, all_reset_num=100):
 
     # reset指数
@@ -53,7 +54,7 @@ def EntireGA(points, fig=[0,1,2], n_epoch=90, N=100, add_num=30, save_num=2, tou
             # 新しいクリーチャー追加
             people = np.concatenate([people, CreateRandomPopulation(add_num, max_p, min_p, l, f)])
             # スコア順に並び替え
-            people, _ = Rank(people, points)
+            people, _ = Rank(people, points, out_points, out_area)
             # 上位n人は保存
             next_people = people[:save_num]
             
@@ -77,7 +78,7 @@ def EntireGA(points, fig=[0,1,2], n_epoch=90, N=100, add_num=30, save_num=2, tou
                     num = 6
 
                 # 上位num+1人選択
-                winners, _ = Rank(entry, points)[:num+1]
+                winners, _ = Rank(entry, points, out_points, out_area)[:num+1]
                 # 突然変異させる人を選択
                 mutate_index = np.random.choice(num+1)
                 # それ以外を交叉
@@ -89,7 +90,7 @@ def EntireGA(points, fig=[0,1,2], n_epoch=90, N=100, add_num=30, save_num=2, tou
                 next_people = np.append(next_people, cross_child)
                 
             ##### RESET処理 ############################################################################
-            people, score_list = Rank(next_people, points)
+            people, score_list = Rank(next_people, points, out_points, out_area)
             current_score = score_list[0]
         
             # スコアが変わらないようならhalf_nを増やす
@@ -139,17 +140,17 @@ def EntireGA(points, fig=[0,1,2], n_epoch=90, N=100, add_num=30, save_num=2, tou
             print("{}回目成果".format(int(epoch/30)))
 
             for i in range(len(fig)):
-                _, score_list = Rank(group[i], points)
+                _, score_list = Rank(group[i], points, out_points, out_area)
                 print(score_list[:10])
                 print(group[i][0].figure.p)
-                DrawFig(points, group[i][0])
+                DrawFig(points, group[i][0], out_points, out_area)
     
         
     # 最終結果表示
     for i in range(len(fig)):
         
         # 最終世代   
-        people, score_list = Rank(group[i], points)
+        people, score_list = Rank(group[i], points, out_points, out_area)
         print(score_list[:10])
 
         # 記録した図形を呼び出す
@@ -167,61 +168,10 @@ def EntireGA(points, fig=[0,1,2], n_epoch=90, N=100, add_num=30, save_num=2, tou
                 result_list.append(record_fig)
 
         # 描画
-        DrawFig(points, result_list[i])
+        DrawFig(points, result_list[i], out_points, out_area)
 
     return [group[i][0].figure.p for i in range(len(fig))]
 
-def GA(points, fig=[0,1,2], epoch=3, N=500, add_num=50, save_num=1, tournament_size=50, cross_rate=0.75, mutate_rate=0.2):
-    # AABB生成
-    max_p, min_p, _, l, _ = buildAABB(points)
-
-    # N人クリーチャー作成
-    people = CreateRandomPopulation(N, max_p, min_p, l, fig)
-
-    for i in range(epoch):
-        #print("epoch:{}".format(i))
-        # 新しいクリーチャー追加
-        people = np.concatenate([people, CreateRandomPopulation(add_num, max_p, min_p, l, fig)])
-        # スコア順に並び替え
-        people, _ = Rank(people, points)
-        # 上位n人は保存
-        next_people = people[:save_num]
-
-        # 次世代がN人超すまで
-        # トーナメント選択->交叉、突然変異->保存
-        # を繰り返す
-        while len(next_people) <= N:
-            # トーナメントサイズの人数出場
-            entry = np.random.choice(people, tournament_size, replace=False)
-            # 上位3人選択
-            entry, _ = Rank(entry, points)[:3]
-            # 1位と2位を交叉
-            c1, c2 = Crossover(entry[0], entry[1], rate=cross_rate)
-            # 3位を突然変異
-            c3 = Mutate(entry[2], max_p, min_p, l, rate=mutate_rate)
-            
-            next_people = np.append(next_people, c1)
-            next_people = np.append(next_people, c2)
-            next_people = np.append(next_people, c3)
-
-        people = next_people[:]
-
-        # 途中経過表示
-        if i % 10 == 0:
-            sorted_People, score_list = Rank(people, points)
-            print("{}回目成果".format(int(i/10)))
-            print(score_list[:10])
-            DrawFig(points, people[0])
-            #DrawFig(points, people[1])
-            
-
-    # 最終結果表示
-    sorted_People, score_list = Rank(people, points)
-    print(score_list[:10])
-    DrawFig(points, people[0])
-    #DrawFig(points, people[1])
-
-    return people[0]
 
 def CreateRandomPerson(fig_type, max_p, min_p, l):
     # 円
@@ -270,19 +220,19 @@ def CreateRandomPopulation(num, max_p, min_p, l, fig):
 
     return population
 
-def Score(person, points):
+def Score(person, points, out_points, out_area):
     # scoreFlagが立ってなかったらIoUを計算
     if person.scoreFlag == False:
         #person.score = CalcIoU(points, person.figure)
         #person.score = CalcIoU2(points, person.figure)
-        person.score = CalcIoU3(points, F.tri([0,0,1.2,0]), person.figure)
+        person.score = CalcIoU3(points, out_points, out_area, person.figure)
         person.scoreFlag = True
 
     return person.score
 
-def Rank(people, points):
+def Rank(people, points, out_points, out_area):
     # リストにスコアを記録していく
-    score_list = [Score(people[i], points) for i in range(len(people))]
+    score_list = [Score(people[i], points, out_points, out_area) for i in range(len(people))]
     # Scoreの大きい順からインデックスを読み上げ、リストに記録
     index_list = sorted(range(len(score_list)), reverse=True, key=lambda k: score_list[k])
     # index_listの順にPeopleを並べる
@@ -476,8 +426,8 @@ def CheckIB(child, fig, max_p, min_p, l):
         return False
             
 
-def DrawFig(points, person, AABB_size=1.5):
-    print(CalcIoU3(points, F.tri([0,0,1.2,0]), person.figure, flag=True))
+def DrawFig(points, person, out_points, out_area, AABB_size=1.5):
+    print(CalcIoU3(points, out_points, out_area, person.figure, flag=True))
 
     # 目標点群プロット
     X1, Y1= Disassemble2d(points)

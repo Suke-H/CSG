@@ -149,7 +149,7 @@ def CheckIB2(figure, contours):
         return False
 
 # Score = Cin/(Ain+√Cin) - Cout/Aout
-def CalcIoU3(points, out_shape, figure, flag=False):
+def CalcIoU3(points, out_contour, out_area, figure, flag=False):
 
     # AABB内にあるのかチェック
     max_p, min_p, _, l, AABB_area = buildAABB(points)
@@ -165,8 +165,6 @@ def CalcIoU3(points, out_shape, figure, flag=False):
         return -100
 
     # outの枠内にあるかチェック
-    out_contour = ContourPoints(out_shape.f_rep, grid_step=200)
-
     if not CheckIB2(figure, out_contour):
         return -100
 
@@ -183,15 +181,15 @@ def CalcIoU3(points, out_shape, figure, flag=False):
     Ain = figure.CalcArea()
 
     # out(out_shapeより内かつinより外)のインデックスを保存
-    W_2 = out_shape.f_rep(X, Y)
-    out_index = np.where(W_2>=0)
-    out_index = np.delete(out_index, in_index)
+    #W_2 = out_shape.f_rep(X, Y)
+    #out_index = np.where(W_2>=0)
+    out_index = np.delete(np.array([i for i in range(len(W))]), in_index)
 
     # Cout = outの点群数
     Cout = len(out_index)
 
     # Aout = out_shapeの面積 - Ain
-    Aout = out_shape.CalcArea() - Ain
+    Aout = out_area - Ain
 
     if flag==True:
         print(points.shape)
