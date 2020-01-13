@@ -8,14 +8,12 @@ from ransac import RANSAC
 from Projection import PlaneProjection
 
 # zenrin
-
 import figure2d as F
 from IoUtest import CalcIoU, CalcIoU2, LastIoU
 from GA import *
 from MakeDataset import MakePointSet
 from TransPix import MakeOuterFrame
-
-
+from ClossNum import CheckClossNum, CheckClossNum2
 
 def PlaneViewer(path, savepath):
     #グラフの枠を作っていく
@@ -67,19 +65,54 @@ fig_type = 1
 fig, sign, AABB = MakePointSet(fig_type, 500)
 out_points, out_area = MakeOuterFrame(sign, path="data/last/test.png")
 
+print(fig.p)
+print(AABB)
+print(out_area)
+
+np.save("data/last/sign", sign)
+np.save("data/last/out", out_points)
+
+# fig = F.tri([54.6477030005436, 61.480097301238054, 9.813207149437893, 1.0337986278688602])
+# AABB = [43.71376348524868, 70.73072201781974, 50.70809854597516, 76.68202602668589]
+# out_area = 154.63881276751636
+
+# sign = np.load("data/last/sign.npy")
+# out_points = np.load("data/last/out.npy")
+
+print("="*50)
+
+# 外枠内の点群だけにする
+#inside = np.array([CheckClossNum(points[i], out_contour) for i in range(points.shape[0])])
+inside = CheckClossNum2(sign, out_points)
+sign = sign[inside]
+
 print(CalcIoU3(sign, out_points, out_area, fig,  True))
+
+# points = ContourPoints(fig.f_rep, AABB=AABB, grid_step=1000, epsilon=0.01)
+# print(points.shape)
+
+# X1, Y1 = Disassemble2d(points)
+# X2, Y2 = Disassemble2d(out_points)
+# plt.plot(X2, Y2, marker=".",linestyle="None",color="red")
+# plt.plot(X1, Y1, marker="o",linestyle="None",color="orange")
+# plt.show()
+
 
 # GAにより最適パラメータ出力
 #best = GA(sign)
 best = EntireGA(sign, out_points, out_area)
 print("="*100)
 
-print(best[fig_type])
-
-best_circle = F.circle(best[0])
-best_tri = F.tri(best[1])
-best_rect = F.rect(best[2])
-
-print(LastIoU(fig, best_circle, AABB))
+print(best[0].figure.p)
+best_tri = F.tri(best[0].figure.p)
 print(LastIoU(fig, best_tri, AABB))
-print(LastIoU(fig, best_rect, AABB))
+
+# print(best[fig_type])
+
+# best_circle = F.circle(best[0])
+# best_tri = F.tri(best[1])
+# best_rect = F.rect(best[2])
+
+# print(LastIoU(fig, best_circle, AABB))
+# print(LastIoU(fig, best_tri, AABB))
+# print(LastIoU(fig, best_rect, AABB))

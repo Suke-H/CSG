@@ -2,6 +2,7 @@ import numpy as np
 
 from method2d import *
 import figure2d as F
+from ClossNum import CheckClossNum, CheckClossNum2
 
 # 標識の点群pointsと図形figureとの一致度を計算する
 def CalcIoU(points, figure, flag=False):
@@ -136,17 +137,27 @@ def CalcIoU2(points, figure, flag=False):
 
 # outの枠内に図形が入っているかのチェック
 # contoursはoutの輪郭点の点群配列
-def CheckIB2(figure, contours):
-    
-    X, Y = Disassemble2d(contours)
+def CheckIB2(figure, contour, max_p, min_p):
+    # 図形の輪郭点を取る
+    AABB = [min_p[0], max_p[0], min_p[1], max_p[1]]
+    points = ContourPoints(figure.f_rep, AABB=AABB, grid_step=1000, epsilon=0.01)
+    #print(points.shape)
 
-    W = figure.f_rep(X, Y)
+    # X1, Y1 = Disassemble2d(points)
+    # X2, Y2 = Disassemble2d(contour)
+    # plt.plot(X2, Y2, marker=".",linestyle="None",color="red")
+    # plt.plot(X1, Y1, marker="o",linestyle="None",color="orange")
+    # plt.show()
 
-    # 輪郭点が全て図形の外部ならOK
-    if np.all(W<0):
+    # 図形の輪郭点がoutの枠内に入ってるかチェック
+    inside = np.array([CheckClossNum(points[i], contour) for i in range(points.shape[0])])
+
+    if np.all(inside):
         return True
+
     else:
         return False
+
 
 # Score = Cin/(Ain+√Cin) - Cout/Aout
 def CalcIoU3(points, out_contour, out_area, figure, flag=False):
@@ -165,8 +176,8 @@ def CalcIoU3(points, out_contour, out_area, figure, flag=False):
         return -100
 
     # outの枠内にあるかチェック
-    if not CheckIB2(figure, out_contour):
-        return -100
+    #if not CheckIB2(figure, out_contour, max_p, min_p):
+        #return -100
 
     ########################################################
 
@@ -180,16 +191,16 @@ def CalcIoU3(points, out_contour, out_area, figure, flag=False):
     # Ain = 推定図形の面積
     Ain = figure.CalcArea()
 
-    # out(out_shapeより内かつinより外)のインデックスを保存
-    #W_2 = out_shape.f_rep(X, Y)
-    #out_index = np.where(W_2>=0)
-    out_index = np.delete(np.array([i for i in range(len(W))]), in_index)
-
     # Cout = outの点群数
-    Cout = len(out_index)
+    # (外枠内の点群数 - inの点群数)
+    
+    Cout = points.shape[0] - Cin
 
     # Aout = out_shapeの面積 - Ain
     Aout = out_area - Ain
+
+    if Aout < 0:
+        return -100
 
     if flag==True:
         print(points.shape)

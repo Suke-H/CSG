@@ -110,7 +110,7 @@ def Morphology(path, dilate_size=25, erode_size=10, close_size=30, open_size=30,
     max_contour = np.array(max_contour).reshape([len(max_contour), 2])
     print(len(max_contour))
 
-    return max_contour, max_area
+    return max_contour
 
 # 画像->点群
 # 画像座標の輪郭点を点群座標に変換
@@ -128,10 +128,12 @@ def MakeOuterFrame(points, path='data/good/test6rgb.png'):
     dx, dy, px, py, cx, cy = TransPix(points, path)
 
     # 画像からモルフォロジーを利用して、領域面積最大の輪郭点抽出
-    contour, area = Morphology(path)
+    contour = Morphology(path)
 
     # 画像座標の輪郭点を点群に変換
     contour_points = TransPoints(contour, dx, dy, px, py, cx, cy)
+
+    area = cv.contourArea(np.array(contour_points, dtype=np.float32))
 
     X1, Y1 = Disassemble2d(points)
     X2, Y2 = Disassemble2d(contour_points)

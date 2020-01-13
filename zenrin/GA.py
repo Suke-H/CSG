@@ -21,8 +21,8 @@ class person:
         print("score: {}".format(self.score))
 
 def EntireGA(points, out_points, out_area, \
-    fig=[0,1,2], n_epoch=90, N=100, add_num=30, save_num=2, tournament_size=10, \
-    mutate_rate=1, path=None, half_reset_num=100, all_reset_num=100):
+    fig=[1], n_epoch=100, N=100, add_num=30, save_num=2, tournament_size=10, \
+    mutate_rate=1, path=None, half_reset_num=5, all_reset_num=3):
 
     # reset指数
     half_list = [0 for i in range(len(fig))]
@@ -52,7 +52,7 @@ def EntireGA(points, out_points, out_area, \
             people = group[i]
 
             # 新しいクリーチャー追加
-            people = np.concatenate([people, CreateRandomPopulation(add_num, max_p, min_p, l, f)])
+            #people = np.concatenate([people, CreateRandomPopulation(add_num, max_p, min_p, l, f)])
             # スコア順に並び替え
             people, _ = Rank(people, points, out_points, out_area)
             # 上位n人は保存
@@ -136,14 +136,14 @@ def EntireGA(points, out_points, out_area, \
             group[i] = people
         
         # 途中経過表示
-        if epoch % 30 == 0:
-            print("{}回目成果".format(int(epoch/30)))
+        if epoch % 10 == 0:
+            print("{}回目成果".format(int(epoch/10)))
 
             for i in range(len(fig)):
                 _, score_list = Rank(group[i], points, out_points, out_area)
                 print(score_list[:10])
                 print(group[i][0].figure.p)
-                DrawFig(points, group[i][0], out_points, out_area)
+                #DrawFig(points, group[i][0], out_points, out_area)
     
         
     # 最終結果表示
@@ -162,15 +162,22 @@ def EntireGA(points, out_points, out_area, \
             # 最終世代の一位と記録図形の一位を比較
             if score_list[0] >= record_score:
                 print("最終世代1位の勝ち")
+                print(people[0].figure.p)
                 result_list.append(people[0])
             else:
                 print("記録1位の勝ち")
+                print(record_fig.figure.p)
                 result_list.append(record_fig)
+
+        else:
+            print("最終世代1位の不戦勝")
+            print(people[0].figure.p)
+            result_list.append(people[0])
 
         # 描画
         DrawFig(points, result_list[i], out_points, out_area)
 
-    return [group[i][0].figure.p for i in range(len(fig))]
+    return result_list
 
 
 def CreateRandomPerson(fig_type, max_p, min_p, l):
