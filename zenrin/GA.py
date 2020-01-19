@@ -21,8 +21,8 @@ class person:
         print("score: {}".format(self.score))
 
 def EntireGA(points, out_points, out_area, \
-    fig=[1], n_epoch=100, N=100, add_num=30, save_num=2, tournament_size=10, \
-    mutate_rate=1, path=None, half_reset_num=5, all_reset_num=3):
+    fig=[0,1,2], n_epoch=1000, N=200, add_num=30, save_num=5, tournament_size=10, \
+    mutate_rate=1, path=None, half_reset_num=50, all_reset_num=30):
 
     # reset指数
     half_list = [0 for i in range(len(fig))]
@@ -38,14 +38,13 @@ def EntireGA(points, out_points, out_area, \
     result_list = []
 
     # AABB生成
-    max_p, min_p, _, l, _ = buildAABB(points)
+    max_p, min_p, _, l, _ = buildAABB2d(points)
 
     # 図形の種類ごとにN人クリーチャー作成
     group = np.array([CreateRandomPopulation(N, max_p, min_p, l, fig[i]) for i in range(len(fig))])
-    print(group.shape)
 
     for epoch in range(n_epoch):
-        print("epoch:{}".format(epoch))
+        #print("epoch:{}".format(epoch))
 
         for i, f in enumerate(fig):
 
@@ -99,7 +98,7 @@ def EntireGA(points, out_points, out_area, \
 
                 # 半初期化する状況、かつ半初期化したらall_nが上限に達するというときに、1位を記録に残しておいて全て初期化
                 if all_list[i] == all_reset_num-1 and half_list[i] == half_reset_num:
-                    print("全初期化")
+                    #print("全初期化")
                     records[i].append(people[0])
                     people = CreateRandomPopulation(N, max_p, min_p, l, fig[i])
 
@@ -108,7 +107,7 @@ def EntireGA(points, out_points, out_area, \
 
                 # half_nが上限に達したら(1位以外の)半数をランダムに初期化
                 if half_list[i] == half_reset_num:
-                    print("半初期化")
+                    #print("半初期化")
                     reset_index = np.random.choice([i for i in range(1, N)], int(N/2), replace=False)
                     #reset_index = np.random.choice(N, int(N/2), replace=False)
                     # もし1位も消すなら記録に残しておく
@@ -126,7 +125,7 @@ def EntireGA(points, out_points, out_area, \
                 half_list[i] = 0
                 all_list[i] = 0
 
-            print("{} -> {} : ({},{})".format(prev_score_list[i], current_score, half_list[i], all_list[i]))
+            #print("{} -> {} : ({},{})".format(prev_score_list[i], current_score, half_list[i], all_list[i]))
 
             # 現在のスコアを前のスコアとして、終わり
             prev_score_list[i] = current_score
@@ -136,8 +135,8 @@ def EntireGA(points, out_points, out_area, \
             group[i] = people
         
         # 途中経過表示
-        if epoch % 10 == 0:
-            print("{}回目成果".format(int(epoch/10)))
+        if epoch % 100 == 0:
+            print("{}回目成果".format(int(epoch/100)))
 
             for i in range(len(fig)):
                 _, score_list = Rank(group[i], points, out_points, out_area)
@@ -441,7 +440,7 @@ def DrawFig(points, person, out_points, out_area, AABB_size=1.5):
     plt.plot(X1, Y1, marker=".",linestyle="None",color="yellow")
 
     # 推定図形プロット
-    max_p, min_p, _, _, _ = buildAABB(points)
+    max_p, min_p, _, _, _ = buildAABB2d(points)
     
     AABB = [min_p[0], max_p[0], min_p[1], max_p[1]]
 

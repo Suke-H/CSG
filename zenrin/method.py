@@ -146,6 +146,7 @@ def buildAABB(points):
     min_p = np.amin(points, axis=0)
 
     return max_p, min_p
+    
 
 def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
     #import time
@@ -185,7 +186,7 @@ def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05)
     #end = time.time()
     #print("time:{}s".format(end-start))
 
-    return points, pointX, pointY, pointZ
+    return points
 
 def ViewerInit(points, X, Y, Z, normals=[]):
     #グラフの枠を作っていく
@@ -207,15 +208,15 @@ def ViewerInit(points, X, Y, Z, normals=[]):
         ax.quiver(X, Y, Z, U, V, W,  length=0.1, normalize=True, color="blue")
     """
 
+    max_p, min_p, _ = buildOBB(points)
+
     #OBBを描画
-    OBBViewer(ax, points)
+    OBBViewer(ax, max_p, min_p)
 
     return ax
 
 #点群を入力としてOBBを描画する
-def OBBViewer(ax, points):
-    #OBB生成
-    max_p, min_p, _ = buildOBB(points)
+def OBBViewer(ax, max_p, min_p):
 
     #直積：[smax, smin]*[tmax, tmin]*[umax, umin] <=> 頂点
     s_axis = np.vstack((max_p[0], min_p[0]))
@@ -250,6 +251,29 @@ def OBBViewer(ax, points):
     ax.plot(Xmax,Ymax,Zmax,marker="X",linestyle="None",color="red")
     ax.plot(Xmin,Ymin,Zmin,marker="X",linestyle="None",color="blue")
     ax.plot([vert_max[0], vert_min[0]],[vert_max[1], vert_min[1]],[vert_max[2], vert_min[2]],marker="o",linestyle="None",color="black")
+
+#点群を入力としてAABBを描画する
+def AABBViewer(ax, max_p, min_p):
+
+    # [xmax, xmin]と[ymax, ymin]の直積 <=> 頂点
+    x_axis = [max_p[0], min_p[0]]
+    y_axis = [max_p[1], min_p[1]]
+    z_axis = [max_p[2], min_p[2]]
+
+    vertices = np.asarray(list(itertools.product(x_axis, y_axis, z_axis)))
+
+    #各頂点に対応するビットの列を作成
+    bit = np.asarray([1, -1])
+    vertices_bit = np.asarray(list(itertools.product(bit, bit, bit)))
+
+
+    #頂点同士のハミング距離が1なら辺を引く
+    for i, v1 in enumerate(vertices_bit):
+        for j, v2 in enumerate(vertices_bit):
+            if np.count_nonzero(v1-v2) == 1:
+                x, y, z = line(vertices[i], vertices[j])
+                ax.plot(x,y,z,marker=".",color="orange")
+
 
 # ラベルの色分け
 def LabelViewer(ax, points, label_list, max_label):

@@ -48,7 +48,7 @@ def TransPix(points, path, x_pix=1000):
     return dx, dy, px, py, cx, cy
 
 
-def Morphology(path, dilate_size=25, erode_size=10, close_size=30, open_size=30, add_size=30):
+def Morphology(path, dilate_size=25, erode_size=10, close_size=30, open_size=30, add_size=35):
      # ファイルを読み込み
     #pix = cv.imread(path, cv.IMREAD_GRAYSCALE)
     pix = cv.imread(path, cv.IMREAD_COLOR)

@@ -59,10 +59,15 @@ def PlaneViewer(path, savepath):
 # PlaneViewer("data/FC_00652.jpg_0.txt", "data/FC_00652")
 # PlaneViewer("data/点群データFC_00587.jpg_0.txt", "data/FC_00587")
 
-fig_type = 1
+fig_type = 0
 
 #標識の点群作成
 fig, sign, AABB = MakePointSet(fig_type, 500)
+
+X1, Y1 = Disassemble2d(sign)
+plt.plot(X1, Y1, marker="o",linestyle="None",color="orange")
+plt.show()
+
 out_points, out_area = MakeOuterFrame(sign, path="data/last/test.png")
 
 print(fig.p)
@@ -103,16 +108,16 @@ print(CalcIoU3(sign, out_points, out_area, fig,  True))
 best = EntireGA(sign, out_points, out_area)
 print("="*100)
 
-print(best[0].figure.p)
-best_tri = F.tri(best[0].figure.p)
-print(LastIoU(fig, best_tri, AABB))
-
-# print(best[fig_type])
-
-# best_circle = F.circle(best[0])
-# best_tri = F.tri(best[1])
-# best_rect = F.rect(best[2])
-
-# print(LastIoU(fig, best_circle, AABB))
+# print(best[0].figure.p)
+# best_tri = F.tri(best[0].figure.p)
 # print(LastIoU(fig, best_tri, AABB))
-# print(LastIoU(fig, best_rect, AABB))
+
+print(best[fig_type].figure.p)
+
+best_circle = F.circle(best[0].figure.p)
+best_tri = F.tri(best[1].figure.p)
+best_rect = F.rect(best[2].figure.p)
+
+print(LastIoU(fig, best_circle, AABB))
+print(LastIoU(fig, best_tri, AABB))
+print(LastIoU(fig, best_rect, AABB))

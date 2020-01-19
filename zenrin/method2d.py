@@ -106,7 +106,7 @@ def ContourPoints(fn, AABB=None, bbox=(-2.5,2.5), AABB_size=1, grid_step=1000, d
     return points
 
 # 図形の内部の点群を生成
-def MakePoints(fn, AABB=None, AABB_size=1.5, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
+def MakePoints2d(fn, AABB=None, AABB_size=1.5, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
     #import time
     #start = time.time()
     if AABB is None:
@@ -234,7 +234,7 @@ def PlotContour(hull, color="red"):
         LX, LY = line2d(a, b)
         plt.plot(LX, LY, color=color)
 
-def buildAABB(points):
+def buildAABB2d(points):
     # (x,y)の最大と最小をとる
     max_p = np.amax(points, axis=0)
     min_p = np.amin(points, axis=0)
@@ -305,7 +305,7 @@ def buildOBB(points):
     return max_xy_point, min_xy_point, OBB, l, area
 
 # OBBを描画する
-def OBBViewer(max_p, min_p):
+def OBBViewer2d(max_p, min_p):
 
     # 直積：[smax, smin]*[tmax, tmin] <=> 頂点
     s_axis = np.vstack((max_p[0], min_p[0]))
@@ -326,7 +326,7 @@ def OBBViewer(max_p, min_p):
                 plt.plot(x,y,marker=".",color="orange")
 
 # AABBを描画する
-def AABBViewer(max_p, min_p):
+def AABBViewer2d(max_p, min_p):
 
     # [xmax, xmin]と[ymax, ymin]の直積 <=> 頂点
     x_axis = [max_p[0], min_p[0]]
@@ -354,7 +354,7 @@ def plot_implicit2d(fn, points=None, AABB_size=1, bbox=(2.5,2.5), contourNum=30)
     # pointsの入力があればAABB生成してそれをもとにスケール設定
     if points is not None:
         #AABB生成
-        max_p, min_p, _, _, _ = buildAABB(points)
+        max_p, min_p, _, _, _ = buildAABB2d(points)
 
         xmax, ymax = max_p
         xmin, ymin = min_p
