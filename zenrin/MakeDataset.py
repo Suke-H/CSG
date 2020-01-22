@@ -3,11 +3,12 @@ import numpy.linalg as LA
 import matplotlib.pyplot as plt
 
 from method import *
-
 from method2d import *
 import figure2d as F
-
 import figure2 as F2
+from Projection import Plane3DProjection
+
+import open3d
 
 def RandomCircle(x_min=-100, x_max=100, y_min=-100, y_max=100, r_min=0, r_max=20):
     x = Random(x_min, x_max)
@@ -89,6 +90,18 @@ def CheckInternal(fig_type, figure, AABB):
         return True
 
     return False
+
+
+def ConstructAABBObject2d(max_p, min_p):
+    # 図形作成処理
+    lx1 = F.line([1, 0, max_p[0]])
+    lx2 = F.line([-1, 0, -min_p[0]])
+    ly1 = F.line([0, 1, max_p[1]])
+    ly2 = F.line([0, -1, -min_p[1]])
+
+    AABB = F.inter(lx1, F.inter(lx2, F.inter(ly1, ly2)))
+
+    return AABB
 
 # 図形の点群＋ランダムに生成したAABB内にノイズ作成
 # <条件>
@@ -176,22 +189,21 @@ def ConstructAABBObject(max_p, min_p):
 
 # 図形の点群＋ランダムに生成したAABB内にノイズ作成
 # <条件>
-# 1. 図形の点群+ノイズの合計値はNとし、図形点群の割合(最低0.5以上)をランダムで出す
-# 2. AABB内に図形が入っていなかったらAABB再生成
+# 1. 図形の点群+ノイズの合計値はN, rateによって図形点群の割合が変わる
+# 2. AABBは射影した図形点群のAABBの1~1.5割増に作成
 def MakePointSet3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_step=50):
-    # 平面点群の割合をランダムで決める
-    #rate = Random(0.5, 1)
+
     print("rate:{}".format(rate))
     size = int(N*rate//1)
-    print(size)
+    print("size:{}".format(size))
 
+    ## 平面図形設定 + 点群作成 ##
+    fig2d, points2d, _ = MakePointSet(fig_type, N, rate=1.0)
 
-    # 平面図形設定 + 点群作成
-    fig, points2d, _ = MakePointSet(fig_type, N, rate=1.0)
-
-    # 平面ランダム生成
+    ## 平面ランダム生成 ##
     plane = RandomPlane()
 
+    ## 平面に2D点群を射影 ##
     # 平面上の2点をランダムに定める
     a, b, c, d = plane.p
     ox, oy, ax, ay = Random(low, high), Random(low, high), Random(low, high), Random(low, high)
@@ -199,56 +211,20 @@ def MakePointSet3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_st
     az = (d - a*ax - b*ay) / c
     O = np.array([ox, oy, oz])
     A = np.array([ax, ay, az])
-
     # uを定める
     u = norm(A - O)
-
     # 平面のnよりv算出
     n = np.array([a, b, c])
     v = norm(np.cross(u, n))
+    # 平面3d射影
+    para3d, points3d = Plane3DProjection(points2d, fig2d, u, v, O)
 
-    # 三次元に射影
-    uv = np.array([u, v])
-    points3d = np.dot(points2d, uv) + np.array([O for i in range(points2d.shape[0])])
-
-    # 点群を法線方向に微量動かす
     max_p, min_p = buildAABB(points3d)
-    print((max_p[0]-min_p[0]), (max_p[1]-min_p[1]), (max_p[2]-min_p[2]))
-    l = np.sqrt((max_p[0]-min_p[0])**2 + (max_p[1]-min_p[1])**2 + (max_p[2]-min_p[2])**2)
-    print(l)
-    tn = np.array([Random(0, 1)*n for i in range(points3d.shape[0])])
-    points3d += tn
 
-    ###################################################
-
-    # AABBランダム生成
-    # while True:
-    #     while True:
-    #         max_p = []
-    #         min_p = []
-    #         for i in range(3):
-    #             x1 = Random(low, high)
-    #             x2 = Random(low, high)
-    #             if x1>=x2:
-    #                 max_p.append(x1)
-    #                 min_p.append(x2)
-    #             else:
-    #                 max_p.append(x2)
-    #                 min_p.append(x1)
-                
-    #     AABB = ConstructAABBObject(max_p, min_p)
-
-    #     X, Y, Z = Disassemble(points3d)
-    #     W = AABB.f_rep(X, Y, Z)
-
-    #     # 図形点群がすべてAABB内にあればOK
-    #     if np.all(W>0):
-    #         continue
-
-    X, Y, Z = Disassemble(points3d)
-
+    ## ノイズ用AABBを、図形点群のAABBの1~1.5倍増しに作成 ##
     xmax, ymax, zmax = max_p
     xmin, ymin, zmin = min_p
+    AABB = [xmin, xmax, ymin, ymax, zmax, zmin]
 
     p = [Random(1, 1.5) for i in range(6)]
 
@@ -259,59 +235,71 @@ def MakePointSet3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_st
     zmax = zmax + (zmax - zmin)/2 * p[4]
     zmin = zmin - (zmax - zmin)/2 * p[5]
 
-    #AABB = [xmin, xmax, ymin, ymax, zmin, zmax]
     max_p = np.array([xmax, ymax, zmax])
     min_p = np.array([xmin, ymin, zmin])
 
-    print(max_p, min_p)
+    ## 点群を法線方向に"微量な値"分動かす ##
+    # AABBの対角線の長さlを"微量な値"に利用
+    l = np.sqrt((xmax-xmin)**2 + (ymax-ymin)**2 + (zmax-zmin)**2)
+    tn = np.array([Random(0, 0.01)*l*n for i in range(points3d.shape[0])])
+    points3d += tn
+    print("l:{}".format(l))
 
-    # ノイズなし
-    # if N == size:
-    #     return fig, fig_points, AABB
+    ## ノイズ生成、図形点群と結合 ##
+    if N == size:
+        # ノイズなし
+        points = points3d[:, :]
 
-    noise = np.array([[Random(xmin, xmax), Random(ymin, ymax), Random(zmin, zmax)] for i in range(N-size)])
+    else:
+        # AABBにランダムにノイズ生成
+        noise = np.array([[Random(xmin, xmax), Random(ymin, ymax), Random(zmin, zmax)] for i in range(N-size)])
+        # 平面点群とノイズの結合
+        # シャッフルもしておく
+        points = np.concatenate([points3d, noise])
+        #np.random.shuffle(points)
 
-    # 平面点群とノイズの結合
-    # シャッフルもしておく
-    points = np.concatenate([points3d, noise])
-    np.random.shuffle(points)
 
-    #グラフの枠を作っていく
+    ## 確認用 ##
+
     fig_plt = plt.figure()
     ax = Axes3D(fig_plt)
-
-    #軸にラベルを付けたいときは書く
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
 
     X, Y, Z = Disassemble(points)
 
-    ax.plot(X, Y, Z, marker="o", linestyle='None', color="red")
+    ax.plot(X, Y, Z, marker=".", linestyle='None', color="red")
 
     AABBViewer(ax, max_p, min_p)
     plt.show()
 
-MakePointSet3D(2, 500)
-#点群,法線, 取得
-# max_p = [1, 1, 1]
-# min_p = [-1, -1, -1]
-# AABB = ConstructAABBObject(max_p, min_p)
 
-# points = MakePoints(AABB.f_rep, bbox=(-1.2, 1.2), grid_step=30)
+    # #点群をnp配列⇒open3d形式に
+    # pointcloud = open3d.PointCloud()
+    # pointcloud.points = open3d.Vector3dVector(points)
 
-# print(points.shape)
-# #グラフの枠を作っていく
-# fig_plt = plt.figure()
-# ax = Axes3D(fig_plt)
+    # # color
+    # colors3 = np.asarray(pointcloud.colors)
+    # print(colors3.shape)
+    # colors3 = np.array([[255, 130, 0] if i < points3d.shape[0] else [0, 0, 255] for i in range(points.shape[0])]) / 255
+    # pointcloud.colors = open3d.Vector3dVector(colors3)
 
-# #軸にラベルを付けたいときは書く
-# ax.set_xlabel("X")
-# ax.set_ylabel("Y")
-# ax.set_zlabel("Z")
+    # # 法線推定
+    # open3d.estimate_normals(
+    # 	pointcloud,
+    # 	search_param = open3d.KDTreeSearchParamHybrid(
+    # 	radius = l*0.05, max_nn = 100))
 
-# X, Y, Z = Disassemble(points)
-# ax.plot(X, Y, Z, marker=".", linestyle='None', color="red")
+	# # 法線の方向を視点ベースでそろえる
+    # open3d.orient_normals_towards_camera_location(
+    #     pointcloud,
+    #     camera_location = np.array([0., 10., 10.], 
+    #     dtype="float64"))
 
-# plot_implicit(ax, AABB.f_rep, points, AABB_size=1.5, contourNum=100)
-# plt.show()
+    # #nキーで法線表示
+    # open3d.draw_geometries([pointcloud])
+
+    return para3d, points, AABB
+
+_, _, _ = MakePointSet3D(1, 4000, rate=0.5)

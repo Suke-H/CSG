@@ -71,10 +71,9 @@ def PlaneDict(points, normals, epsilon, alpha):
 
 # 入力：点群、法線
 # 出力：最適平面のパラメータ、フィット点のインデックス
-def RANSAC(points, normals):
+def RANSAC(points, normals, epsilon=0.05, alpha=np.pi/8):
 
     X, Y, Z = Disassemble(points)
-    epsilon, alpha = 0.05, np.pi/12
 
     # 平面検出
     figure = PlaneDict(points, normals, epsilon, alpha)

@@ -81,7 +81,7 @@ def CheckIB(child, fig, max_p, min_p, l):
 def CalcIoU2(points, figure, flag=False):
 
     # AABB内にあるのかチェック
-    max_p, min_p, _, l, AABB_area = buildAABB(points)
+    max_p, min_p, _, l, AABB_area = buildAABB2d(points)
 
     if len(figure.p) == 3:
         fig = 0
@@ -163,7 +163,7 @@ def CheckIB2(figure, contour, max_p, min_p):
 def CalcIoU3(points, out_contour, out_area, figure, flag=False):
 
     # AABB内にあるのかチェック
-    max_p, min_p, _, l, AABB_area = buildAABB(points)
+    max_p, min_p, _, l, AABB_area = buildAABB2d(points)
 
     if len(figure.p) == 3:
         fig = 0

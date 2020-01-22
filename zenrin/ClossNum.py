@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from method2d import *
 
-#pointsの各点が輪郭点contour内にあるかの判定
+# 点pが輪郭点contour内にあるかの判定
 def CheckClossNum(p, contour):
     # 輪郭点の辺をつくるため、
     # 輪郭点を[0,1,2,..n] -> [1,2,...,n,0]の順にした配列を作成
@@ -37,7 +37,7 @@ def CheckClossNum(p, contour):
         return True
 
 
-#pointsの各点が輪郭点contour内にあるかの判定
+# pointsの各点が輪郭点contour内にあるかの判定
 def CheckClossNum2(points, contour):
     # 輪郭点の辺をつくるため、
     # 輪郭点を[0,1,2,..n] -> [1,2,...,n,0]の順にした配列を作成
@@ -86,35 +86,73 @@ def CheckClossNum2(points, contour):
 
     return inout_judge
 
-# import time
 
-# n = 2000
-# x = (np.random.rand(n) - 0.5)*2.5
-# y = (np.random.rand(n) - 0.5)*2.5
-# x1, y1 = [], []
+# 点pが輪郭点contour内にあるかの判定
+def CheckClossNum3(p, contour):
+    # 輪郭点の辺をつくるため、
+    # 輪郭点を[0,1,2,..n] -> [1,2,...,n,0]の順にした配列を作成
+    order = [i for i in range(1, contour.shape[0])]
+    order.append(0)
+    contour2 = contour[order, :]
+
+    # l: pから右に伸ばした半直線
+    # 各辺とlの交差数をカウントする
+    crossCount = 0
+    for a, b in zip(contour, contour2):
+        # ルール1,2,3
+        if (a[1]<=p[1] and b[1]>p[1]) or (a[1]>p[1] and b[1]<=p[1]):
+
+            # ルール4: cx > pxなら交差する
+            #print("a:{}, b:{}, p:{}".format(a,b,p))
+            cx = (p[1]*(a[0]-b[0]) + a[1]*b[0] - a[0]*b[1]) / (a[1]-b[1])
+            if cx > p[0]:
+                crossCount+=1
+
+    # 交差数が偶数なら外、奇数なら内
+    if crossCount%2 == 0:
+        return False
+    else:
+        return True
+
+import time
+
+n = 2000
+x = (np.random.rand(n) - 0.5)*2.5
+y = (np.random.rand(n) - 0.5)*2.5
+x1, y1 = [], []
     
-# # define a polygon
-# for i in range(5):
-#     x1.append(np.cos(i*2.*np.pi/5.))
-#     y1.append(np.sin(i*2.*np.pi/5.))
+# define a polygon
+for i in range(5):
+    x1.append(np.cos(i*2.*np.pi/5.))
+    y1.append(np.sin(i*2.*np.pi/5.))
 
-# points = Composition2d(x, y)
-# contour = Composition2d(x1, y1)
+# x1 = [-1,-1,1,1]
+# y1 = [1,-1,-1,1]
 
-# start = time.time()
+# x = (np.random.rand(4) - 0.5)*2.5
+# y = np.array(y1[:])
 
-# #inside = np.array([CheckClossNum(points[i], contour) for i in range(points.shape[0])])
-# inside = CheckClossNum2(points, contour)
+points = Composition2d(x, y)
+contour = Composition2d(x1, y1)
 
-# end = time.time()
+print(points.shape)
 
-# print("time:{}s".format(end-start))
+start = time.time()
 
-# x1.extend([x1[0]])
-# y1.extend([y1[0]])
+inside = np.array([CheckClossNum3(points[i], contour) for i in range(points.shape[0])])
+#inside = CheckClossNum2(points, contour)
 
-# plt.plot(x[inside], y[inside], marker=".",linestyle="None",color="red")
-# plt.plot(x[inside==False], y[inside==False], marker=".",linestyle="None",color="black")
-# plt.plot(x1, y1)
-# plt.savefig("data/inpoly.png")
-# plt.show()
+print(inside)
+
+end = time.time()
+
+print("time:{}s".format(end-start))
+
+x1.extend([x1[0]])
+y1.extend([y1[0]])
+
+plt.plot(x[inside], y[inside], marker=".",linestyle="None",color="red")
+plt.plot(x[inside==False], y[inside==False], marker=".",linestyle="None",color="black")
+plt.plot(x1, y1)
+plt.savefig("data/inpoly.png")
+plt.show()

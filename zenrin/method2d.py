@@ -59,6 +59,15 @@ def norm(normal):
         norm = np.array([np.full(2, norm[i]) for i in range(len(norm))])
         return normal / norm
 
+# deg: 循環させる値。単位はなんでもいい
+# unit : 循環の単位
+def cycle(deg, unit):
+    if deg >= 0:
+        return deg % unit
+
+    else:
+        return deg + (-deg//unit + 1) * unit
+
 
 # 図形の境界線の点群を生成
 def ContourPoints(fn, AABB=None, bbox=(-2.5,2.5), AABB_size=1, grid_step=1000, down_rate = 1.0, epsilon=0.01):
@@ -253,7 +262,7 @@ def buildAABB2d(points):
     return max_p, min_p, AABB, LA.norm(max_p - min_p), area
 
 ###OBB生成####
-def buildOBB(points):
+def buildOBB2d(points):
     # 分散共分散行列Sを生成
     S = np.cov(points, rowvar=0, bias=1)
 

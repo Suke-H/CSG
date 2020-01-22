@@ -11,7 +11,7 @@ from method2d import *
 import figure2 as F
 from method import *
 
-def PlaneProjection(points, plane):
+def Plane2DProjection(points, plane):
     N = points.shape[0]
 
     # 平面のパラメータ
@@ -41,5 +41,26 @@ def PlaneProjection(points, plane):
     # reshape
     #UVvector = np.reshape(UVvector, (N, 2))
 
-    # 平面に落とした点の"3次元"座標、"2次元"座標
-    return plane_points, UVvector
+    # 平面に落とした点の"3次元"座標、"2次元"座標, u, v, O 出力
+    return plane_points, UVvector, u, v, O
+
+def Plane3DProjection(points2d, fig2d, u, v, O):
+
+    # 三次元に射影
+    uv = np.array([u, v])
+    points3d = np.dot(points2d, uv) + np.array([O for i in range(points2d.shape[0])])
+
+    ## 図形のパラメータも、中心座標を3次元に射影する ##
+    # 中心座標だけ抽出
+    para2d = fig2d.p[:]
+    print(para2d)
+    center2d = []
+    center2d.append(para2d.pop(0))
+    center2d.append(para2d.pop(0))
+    # 中心座標を3次元射影
+    center3d = np.dot(center2d, uv) + O
+    # パラメータ = 中心座標(3d) + 座標抜きパラメータ
+    para3d = np.concatenate([center3d, para2d])
+    print(para3d)
+
+    return para3d, points3d

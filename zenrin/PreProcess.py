@@ -5,11 +5,10 @@ import open3d
 from loadOBJ import loadOBJ
 from method import *
 
-def PreProcess(path):
+def NormalEstimate(points):
 	#objファイルから点群取得
-    points = loadOBJ(path)
+    # points = loadOBJ(path)
     print("points:{}".format(points.shape[0]))
-
 
     #点群をnp配列⇒open3d形式に
     pointcloud = open3d.PointCloud()
@@ -38,4 +37,4 @@ def PreProcess(path):
     # _, _, length = buildOBB(points)
     # print("OBB_length: {}".format(length))
     
-    return points, normals
+    return normals

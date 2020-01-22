@@ -6,7 +6,7 @@ from MakeDataset import MakePointSet
 
 def TransPix(points, path, x_pix=1000):
     # AABBの横長dx, 縦長dyを出す
-    max_p, min_p, _, _, _ = buildAABB(points)
+    max_p, min_p, _, _, _ = buildAABB2d(points)
     print(max_p, min_p)
     dx = abs(max_p[0] - min_p[0])
     dy = abs(max_p[1] - min_p[1])
