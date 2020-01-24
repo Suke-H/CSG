@@ -114,45 +114,45 @@ def CheckClossNum3(p, contour):
     else:
         return True
 
-import time
+# import time
 
-n = 2000
-x = (np.random.rand(n) - 0.5)*2.5
-y = (np.random.rand(n) - 0.5)*2.5
-x1, y1 = [], []
+# n = 2000
+# x = (np.random.rand(n) - 0.5)*2.5
+# y = (np.random.rand(n) - 0.5)*2.5
+# x1, y1 = [], []
     
-# define a polygon
-for i in range(5):
-    x1.append(np.cos(i*2.*np.pi/5.))
-    y1.append(np.sin(i*2.*np.pi/5.))
+# # define a polygon
+# for i in range(5):
+#     x1.append(np.cos(i*2.*np.pi/5.))
+#     y1.append(np.sin(i*2.*np.pi/5.))
 
-# x1 = [-1,-1,1,1]
-# y1 = [1,-1,-1,1]
+# # x1 = [-1,-1,1,1]
+# # y1 = [1,-1,-1,1]
 
-# x = (np.random.rand(4) - 0.5)*2.5
-# y = np.array(y1[:])
+# # x = (np.random.rand(4) - 0.5)*2.5
+# # y = np.array(y1[:])
 
-points = Composition2d(x, y)
-contour = Composition2d(x1, y1)
+# points = Composition2d(x, y)
+# contour = Composition2d(x1, y1)
 
-print(points.shape)
+# print(points.shape)
 
-start = time.time()
+# start = time.time()
 
-inside = np.array([CheckClossNum3(points[i], contour) for i in range(points.shape[0])])
-#inside = CheckClossNum2(points, contour)
+# inside = np.array([CheckClossNum3(points[i], contour) for i in range(points.shape[0])])
+# #inside = CheckClossNum2(points, contour)
 
-print(inside)
+# print(inside)
 
-end = time.time()
+# end = time.time()
 
-print("time:{}s".format(end-start))
+# print("time:{}s".format(end-start))
 
-x1.extend([x1[0]])
-y1.extend([y1[0]])
+# x1.extend([x1[0]])
+# y1.extend([y1[0]])
 
-plt.plot(x[inside], y[inside], marker=".",linestyle="None",color="red")
-plt.plot(x[inside==False], y[inside==False], marker=".",linestyle="None",color="black")
-plt.plot(x1, y1)
-plt.savefig("data/inpoly.png")
-plt.show()
+# plt.plot(x[inside], y[inside], marker=".",linestyle="None",color="red")
+# plt.plot(x[inside==False], y[inside==False], marker=".",linestyle="None",color="black")
+# plt.plot(x1, y1)
+# plt.savefig("data/inpoly.png")
+# plt.show()

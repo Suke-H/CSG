@@ -5,7 +5,7 @@ import csv
 
 from method2d import *
 import figure2d as F
-from IoUtest import CalcIoU, CalcIoU2, CalcIoU3
+from IoUtest import *
 
 class person:
     def __init__(self, fig_type, figure):
@@ -20,9 +20,9 @@ class person:
         print("para: {}".format(self.figure.p))
         print("score: {}".format(self.score))
 
-def EntireGA(points, out_points, out_area, \
-    fig=[0,1,2], n_epoch=1000, N=200, add_num=30, save_num=5, tournament_size=10, \
-    mutate_rate=1, path=None, half_reset_num=50, all_reset_num=30):
+def EntireGA(points, out_points, out_area, score_f, imgPath,
+    fig=[0,1,2], n_epoch=100, N=200, add_num=0, save_num=5, tournament_size=10, 
+    cross_rate=1, path=None, half_reset_num=100, all_reset_num=100):
 
     # reset指数
     half_list = [0 for i in range(len(fig))]
@@ -53,7 +53,7 @@ def EntireGA(points, out_points, out_area, \
             # 新しいクリーチャー追加
             #people = np.concatenate([people, CreateRandomPopulation(add_num, max_p, min_p, l, f)])
             # スコア順に並び替え
-            people, _ = Rank(people, points, out_points, out_area)
+            people, _ = Rank(score_f, people, points, out_points, out_area)
             # 上位n人は保存
             next_people = people[:save_num]
             
@@ -77,11 +77,11 @@ def EntireGA(points, out_points, out_area, \
                     num = 6
 
                 # 上位num+1人選択
-                winners, _ = Rank(entry, points, out_points, out_area)[:num+1]
+                winners, _ = Rank(score_f, entry, points, out_points, out_area)[:num+1]
                 # 突然変異させる人を選択
                 mutate_index = np.random.choice(num+1)
                 # それ以外を交叉
-                cross_child = Crossover2(np.delete(winners, mutate_index), f, max_p, min_p, l)
+                cross_child = Crossover2(np.delete(winners, mutate_index), f, max_p, min_p, l, cross_rate=cross_rate)
                 # 突然変異
                 #mutate_child = Mutate(winners[mutate_index], max_p, min_p, l, rate=mutate_rate)
 
@@ -89,7 +89,7 @@ def EntireGA(points, out_points, out_area, \
                 next_people = np.append(next_people, cross_child)
                 
             ##### RESET処理 ############################################################################
-            people, score_list = Rank(next_people, points, out_points, out_area)
+            people, score_list = Rank(score_f, next_people, points, out_points, out_area)
             current_score = score_list[0]
         
             # スコアが変わらないようならhalf_nを増やす
@@ -135,22 +135,22 @@ def EntireGA(points, out_points, out_area, \
             group[i] = people
         
         # 途中経過表示
-        if epoch % 100 == 0:
-            print("{}回目成果".format(int(epoch/100)))
+        # if epoch % 100 == 0:
+        #     print("{}回目成果".format(int(epoch/100)))
 
-            for i in range(len(fig)):
-                _, score_list = Rank(group[i], points, out_points, out_area)
-                print(score_list[:10])
-                print(group[i][0].figure.p)
-                #DrawFig(points, group[i][0], out_points, out_area)
+        #     for i in range(len(fig)):
+        #         _, score_list = Rank(score_f, group[i], points, out_points, out_area)
+        #         print(score_list[:10])
+        #         print(group[i][0].figure.p)
+        #         #DrawFig(points, group[i][0], out_points, out_area)
     
         
     # 最終結果表示
     for i in range(len(fig)):
         
         # 最終世代   
-        people, score_list = Rank(group[i], points, out_points, out_area)
-        print(score_list[:10])
+        people, score_list = Rank(score_f, group[i], points, out_points, out_area)
+        # print(score_list[:10])
 
         # 記録した図形を呼び出す
         if len(records[i]) != 0:
@@ -160,23 +160,28 @@ def EntireGA(points, out_points, out_area, \
 
             # 最終世代の一位と記録図形の一位を比較
             if score_list[0] >= record_score:
-                print("最終世代1位の勝ち")
-                print(people[0].figure.p)
+                # print("最終世代1位の勝ち")
+                # print(people[0].figure.p)
                 result_list.append(people[0])
             else:
-                print("記録1位の勝ち")
-                print(record_fig.figure.p)
+                # print("記録1位の勝ち")
+                # print(record_fig.figure.p)
                 result_list.append(record_fig)
 
         else:
-            print("最終世代1位の不戦勝")
-            print(people[0].figure.p)
+            # print("最終世代1位の不戦勝")
+            # print(people[0].figure.p)
             result_list.append(people[0])
 
         # 描画
-        DrawFig(points, result_list[i], out_points, out_area)
+        # DrawFig(points, result_list[i], out_points, out_area, imgPath)
 
-    return result_list
+    score_list = [result_list[i].score for i in range(len(fig))]
+    max_index = score_list.index(max(score_list))
+    #print("種類:{}".format(max_index))
+    DrawFig(points, result_list[1], out_points, out_area, imgPath)
+
+    return result_list[max_index]
 
 
 def CreateRandomPerson(fig_type, max_p, min_p, l):
@@ -226,19 +231,20 @@ def CreateRandomPopulation(num, max_p, min_p, l, fig):
 
     return population
 
-def Score(person, points, out_points, out_area):
+def Score(score_f, person, points, out_points, out_area):
     # scoreFlagが立ってなかったらIoUを計算
     if person.scoreFlag == False:
         #person.score = CalcIoU(points, person.figure)
         #person.score = CalcIoU2(points, person.figure)
-        person.score = CalcIoU3(points, out_points, out_area, person.figure)
+        #person.score = CalcIoU3(points, out_points, out_area, person.figure)
+        person.score = score_f(points, out_points, out_area, person.figure)
         person.scoreFlag = True
 
     return person.score
 
-def Rank(people, points, out_points, out_area):
+def Rank(score_f, people, points, out_points, out_area):
     # リストにスコアを記録していく
-    score_list = [Score(people[i], points, out_points, out_area) for i in range(len(people))]
+    score_list = [Score(score_f, people[i], points, out_points, out_area) for i in range(len(people))]
     # Scoreの大きい順からインデックスを読み上げ、リストに記録
     index_list = sorted(range(len(score_list)), reverse=True, key=lambda k: score_list[k])
     # index_listの順にPeopleを並べる
@@ -366,7 +372,11 @@ def BLX(x1, x2, xmin, xmax, alpha):
         return BLX(x1, x2, xmin, xmax, alpha)
 
 # ブレンド交叉を採用
-def Crossover2(parents, fig, max_p, min_p, l):
+def Crossover2(parents, fig, max_p, min_p, l, cross_rate):
+
+    if np.random.rand() >= cross_rate:
+        print("真だがいい")
+        return np.random.choice(parents)
 
     # n: パラメータの数, x: n+1人の親のパラメータのリスト
     n = len(parents[0].figure.p)
@@ -410,30 +420,33 @@ def Crossover2(parents, fig, max_p, min_p, l):
 
     return person(fig, figure)
 
-def CheckIB(child, fig, max_p, min_p, l):
-    # 円
-    if fig==0:
-        x, y, r = child
-        w, h, t_tri, t_rec = l/2, l/2, np.pi/6, np.pi/6
-    # 正三角形
-    elif fig==1:
-        x, y, r, t_tri = child
-        w, h, t_rec = l/2, l/2, np.pi/6
-    # 長方形
-    elif fig==2:
-        x, y, w, h, t_rec = child
-        r, t_tri = l/2, np.pi/6
+# def CheckIB(child, fig, max_p, min_p, l):
+#     # 円
+#     if fig==0:
+#         x, y, r = child
+#         w, h, t_tri, t_rec = l/2, l/2, np.pi/6, np.pi/6
+#     # 正三角形
+#     elif fig==1:
+#         x, y, r, t_tri = child
+#         w, h, t_rec = l/2, l/2, np.pi/6
+#     # 長方形
+#     elif fig==2:
+#         x, y, w, h, t_rec = child
+#         r, t_tri = l/2, np.pi/6
 
-    if (min_p[0] < x < max_p[0]) and (min_p[1] < y < max_p[1]) and (0 < r < l) and (0 < w < l) and (0 < h < l):
-        #and (0 < t_tri < np.pi*2/3) and (0 < t_rec < np.pi/2)
-        return True
+#     if (min_p[0] < x < max_p[0]) and (min_p[1] < y < max_p[1]) and (0 < r < l) and (0 < w < l) and (0 < h < l):
+#         #and (0 < t_tri < np.pi*2/3) and (0 < t_rec < np.pi/2)
+#         return True
 
-    else:
-        return False
+#     else:
+#         return False
             
 
-def DrawFig(points, person, out_points, out_area, AABB_size=1.5):
-    print(CalcIoU3(points, out_points, out_area, person.figure, flag=True))
+def DrawFig(points, person, out_points, out_area, path, AABB_size=1.5):
+    # print(CalcIoU3(points, out_points, out_area, person.figure, flag=True))
+
+    # Figureの初期化
+    #fig = plt.figure(figsize=(12, 8))
 
     # 目標点群プロット
     X1, Y1= Disassemble2d(points)
@@ -448,7 +461,8 @@ def DrawFig(points, person, out_points, out_area, AABB_size=1.5):
     X2, Y2= Disassemble2d(points2)
     plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
 
-    plt.show()
+    plt.savefig(path)
+    plt.close()
 
 def SaveCSV(person, epoch, path):
     with open(path, 'a', newline="") as f:

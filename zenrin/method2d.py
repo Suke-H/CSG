@@ -164,11 +164,7 @@ def InteriorPoints(fn, AABB, sampling_size, grid_step=50):
     # start = time.time()
     xmin, xmax, ymin, ymax = AABB
 
-    c=0
-
     while True:
-        c+=1
-        print(c)
 
         # 点群X, Y, Z, pointsを作成
         x = np.linspace(xmin, xmax, grid_step)

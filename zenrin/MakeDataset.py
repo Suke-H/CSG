@@ -111,7 +111,7 @@ def MakePointSet(fig_type, N, rate=Random(0.5, 1),  low=-100, high=100, grid_ste
     # 平面点群の割合をランダムで決める
     #rate = Random(0.5, 1)
     size = int(N*rate//1)
-    print(size)
+    #print(size)
 
     # AABBランダム生成
     while True:
@@ -275,6 +275,10 @@ def MakePointSet3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_st
     plt.show()
 
 
+    # plane = F.plane([0,0,1,1])
+
+    # points = MakePoints(plane.f_rep)
+
     # #点群をnp配列⇒open3d形式に
     # pointcloud = open3d.PointCloud()
     # pointcloud.points = open3d.Vector3dVector(points)
@@ -287,19 +291,19 @@ def MakePointSet3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_st
 
     # # 法線推定
     # open3d.estimate_normals(
-    # 	pointcloud,
-    # 	search_param = open3d.KDTreeSearchParamHybrid(
-    # 	radius = l*0.05, max_nn = 100))
+    # pointcloud,
+    # search_param = open3d.KDTreeSearchParamHybrid(
+    # radius = l*0.05, max_nn = 100))
 
-	# # 法線の方向を視点ベースでそろえる
+    # # 法線の方向を視点ベースでそろえる
     # open3d.orient_normals_towards_camera_location(
-    #     pointcloud,
-    #     camera_location = np.array([0., 10., 10.], 
-    #     dtype="float64"))
+    # pointcloud,
+    # camera_location = np.array([0., 10., 10.], 
+    # dtype="float64"))
 
     # #nキーで法線表示
     # open3d.draw_geometries([pointcloud])
 
     return para3d, points, AABB
 
-_, _, _ = MakePointSet3D(1, 4000, rate=0.5)
+#_, _, _ = MakePointSet3D(1, 4000, rate=0.5)

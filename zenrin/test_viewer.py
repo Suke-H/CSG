@@ -13,50 +13,7 @@ from IoUtest import CalcIoU, CalcIoU2, LastIoU
 from GA import *
 from MakeDataset import MakePointSet, MakePointSet3D
 from TransPix import MakeOuterFrame
-from ClossNum import CheckClossNum, CheckClossNum2
-
-def PlaneDetect(points):
-
-    #法線, 取得
-    normals = NormalEstimate(points)
-
-    _, _, l = buildOBB(points)
-    print("l:{}".format(l))
-
-    # 平面検出
-    # index: pointsからフィットした点のインデックス
-    plane, index, num = RANSAC(points, normals, epsilon=l*0.05, alpha=np.pi/8)
-
-    # フィット点を平面射影
-    # plane_points: 射影後の3d座標点群
-    # UVvector: 射影後の2d座標点群
-    plane_points, UVvector, u, v, O = Plane2DProjection(points[index], plane)
-
-    # プロット準備
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
-    # 点群描画
-    X, Y, Z = Disassemble(points)
-    MX, MY, MZ = X[index], Y[index], Z[index]
-    PX, PY, PZ = Disassemble(plane_points)
-    ax.plot(X, Y, Z, marker="o", linestyle='None', color="white")
-    ax.plot(MX, MY, MZ, marker=".", linestyle='None', color="red")
-    ax.plot(PX, PY, PZ, marker=".", linestyle='None', color="blue")
-    # 平面描画
-    plot_implicit(ax, plane.f_rep, points, AABB_size=1, contourNum=15)
-
-    plt.show()
-
-    # 射影2d点群描画
-    UX, UY = Disassemble2d(UVvector)
-    plt.plot(UX, UY, marker="o",linestyle="None",color="red")
-
-    plt.show()
-
-    return UVvector, plane, u, v, O
+from ClossNum import CheckClossNum, CheckClossNum2, CheckClossNum3
 
 # PlaneViewer("data/FC_00652.jpg_0.txt", "data/FC_00652")
 # PlaneViewer("data/点群データFC_00587.jpg_0.txt", "data/FC_00587")
@@ -75,8 +32,8 @@ print(out_area)
 print("="*50)
 
 # 外枠内の点群だけにする
-#inside = np.array([CheckClossNum(points[i], out_contour) for i in range(points.shape[0])])
-inside = CheckClossNum2(sign2d, out_points)
+inside = np.array([CheckClossNum3(points[i], out_contour) for i in range(points.shape[0])])
+#inside = CheckClossNum3(sign2d, out_points)
 sign2d = sign2d[inside]
 
 # GAにより最適パラメータ出力
