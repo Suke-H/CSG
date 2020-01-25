@@ -30,6 +30,8 @@ def PlaneDetect(points):
     # index: pointsからフィットした点のインデックス
     plane, index, num = RANSAC(points, normals, epsilon=l*0.05, alpha=np.pi/8)
 
+    selectIndex = np.array([True if i in index[0] else False for i in range(points.shape[0])])
+
     # フィット点を平面射影
     # plane_points: 射影後の3d座標点群
     # UVvector: 射影後の2d座標点群
@@ -52,100 +54,37 @@ def PlaneDetect(points):
     plot_implicit(ax, plane.f_rep, points, AABB_size=1, contourNum=15)
 
     plt.show()
+    plt.close()
 
     # 射影2d点群描画
     UX, UY = Disassemble2d(UVvector)
     plt.plot(UX, UY, marker="o",linestyle="None",color="red")
 
     plt.show()
+    plt.close()
 
-    return UVvector, plane, u, v, O
+    return UVvector, plane, u, v, O, selectIndex
 
-def test2D(fig_type, loop, csvPath):
+# input: [1,1,1,1,0,1,1,0]
+# output: [1,1,1,1,0,1]
+#                    
+# result: [1,1,1,1,0,0,1,0]
+#          ^ ^ ^ ^   ^ ^
+def SelectIndex(input, output):
 
-    count = 0
-    total_time = 0
-    while count != loop:
-        print("epoch:{}".format(count))
-        start = time.time()
+    result = []
+    j = 0
+    for i in input:
+        if i == 0:
+            result.append(False)
 
-        # 2d図形点群作成
-        fig, sign2d, AABB = MakePointSet(fig_type, 500)
+        else:
+            if output[j] == 1:
+                result.append(True)
+            else:
+                result.append(False)
 
-        # 外枠作成
-        out_points, out_area = MakeOuterFrame(sign2d, path="data/GAtest/out" + str(count) + ".png")
-
-        # 外枠内の点群だけにする
-        inside = np.array([CheckClossNum3(sign2d[i], out_points) for i in range(sign2d.shape[0])])
-        #inside = CheckClossNum2(sign2d, out_points)
-        sign2d = sign2d[inside]
-
-        # GAにより最適パラメータ出力
-        #best = GA(sign)
-        best0 = EntireGA(sign2d, out_points, out_area, CalcIoU0, "data/GAtest/" + str(count) + "_score0.png")
-        best1 = EntireGA(sign2d, out_points, out_area, CalcIoU1, "data/GAtest/" + str(count) + "_score1.png")
-        best2 = EntireGA(sign2d, out_points, out_area, CalcIoU2, "data/GAtest/" + str(count) + "_score2.png")
-        best3 = EntireGA(sign2d, out_points, out_area, CalcIoU3, "data/GAtest/" + str(count) + "_score3.png")
-
-        IoU0 = LastIoU(fig, best0.figure, AABB)
-        IoU1 = LastIoU(fig, best1.figure, AABB)
-        IoU2 = LastIoU(fig, best2.figure, AABB)
-        IoU3 = LastIoU(fig, best3.figure, AABB)
-
-        print([IoU0, IoU1, IoU2, IoU3])
-
-        with open(csvPath, 'a', newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([IoU0, IoU1, IoU2, IoU3])
-
-        end = time.time()
-        print("time:{}".format(end-start))
-        total_time += end-start
-        count+=1
-
-    print("total:{}m".format(total_time/60))
-
-# def test2D2(fig_type, path, csvPath):
-
-#     fig_list = np.load(path + "fig.npy")
-#     AABB_list = np.load(path + "AABB.npy")
-#     out_area_list = np.load(path + "outArea.npy")
-#     points_list = np.load(path + "points.npy")
-#     out_points_list = np.load(path + "outPoints.npy")
-
-#     for (fig, AABB, out_area, points, out_points) in zip(fig_list, AABB_list, out_area_list, points_list, out_points_list):
-#         print("epoch:{}".format(count))
-#         start = time.time()
-
-#         # 外枠内の点群だけにする
-#         inside = np.array([CheckClossNum3(sign2d[i], out_points) for i in range(sign2d.shape[0])])
-#         #inside = CheckClossNum2(sign2d, out_points)
-#         sign2d = sign2d[inside]
-
-#         # GAにより最適パラメータ出力
-#         #best = GA(sign)
-#         best0 = EntireGA(sign2d, out_points, out_area, CalcIoU0, "data/GAtest/" + str(count) + "_score0.png")
-#         best1 = EntireGA(sign2d, out_points, out_area, CalcIoU1, "data/GAtest/" + str(count) + "_score1.png")
-#         best2 = EntireGA(sign2d, out_points, out_area, CalcIoU2, "data/GAtest/" + str(count) + "_score2.png")
-#         best3 = EntireGA(sign2d, out_points, out_area, CalcIoU3, "data/GAtest/" + str(count) + "_score3.png")
-
-#         IoU0 = LastIoU(fig, best0.figure, AABB, "data/GAtest/" + str(count) + "_IoU0.png")
-#         IoU1 = LastIoU(fig, best1.figure, AABB, "data/GAtest/" + str(count) + "_IoU1.png")
-#         IoU2 = LastIoU(fig, best2.figure, AABB, "data/GAtest/" + str(count) + "_IoU2.png")
-#         IoU3 = LastIoU(fig, best3.figure, AABB, "data/GAtest/" + str(count) + "_IoU3.png")
-
-#         print([IoU0, IoU1, IoU2, IoU3])
-
-#         with open(csvPath, 'a', newline="") as f:
-#             writer = csv.writer(f)
-#             writer.writerow([IoU0, IoU1, IoU2, IoU3])
-
-#         end = time.time()
-#         print("time:{}".format(end-start))
-#         total_time += end-start
-#         count+=1
-
-#     print("total:{}m".format(total_time/60))
+    return np.array(result)
 
 def write_dataset(fig_type, num, dir_path="data/dataset/tri/"):
 
@@ -156,11 +95,13 @@ def write_dataset(fig_type, num, dir_path="data/dataset/tri/"):
     out_points_list = []
 
     for i in range(num):
+        rate = Random(0.5, 1)
         # 2d図形点群作成
-        fig, sign2d, AABB = MakePointSet(fig_type, 500)
+        fig, sign2d, AABB = MakePointSet(fig_type, 500, rate=rate)
 
         # 外枠作成
-        out_points, out_area = MakeOuterFrame(sign2d, path=dir_path+"contour/"+str(i)+".png")
+        out_points, out_area = MakeOuterFrame(sign2d, fig.CalcArea(), path=dir_path+"contour/"+str(i)+".png", 
+        dilate_size=30, close_size=0, open_size=50, add_size=5)
 
         # 外枠内の点群だけにする
         inside = np.array([CheckClossNum3(sign2d[i], out_points) for i in range(sign2d.shape[0])])
@@ -248,9 +189,10 @@ def use_dataset(fig_type, num, dir_path="data/dataset/tri/", out_path="data/GAte
 
         print([IoU0, IoU1, IoU2, IoU3])
 
-        # with open(csvPath, 'a', newline="") as f:
-        #     writer = csv.writer(f)
-        #     writer.writerow([IoU0, IoU1, IoU2, IoU3])
+        with open(out_path+"IoU.csv", 'a', newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([IoU0, IoU1, IoU2, IoU3])
+
 
 
 
@@ -259,31 +201,33 @@ def use_dataset(fig_type, num, dir_path="data/dataset/tri/", out_path="data/GAte
 
 #     while count != loop:
 #         # 2d図形点群作成
-#         para3d, sign3d, AABB3d = MakePointSet3D(fig_type, 500, rate=0.8)
+#         para3d, sign3d, AABB3d, trueIndex = MakePointSet3D(fig_type, 500, rate=0.8)
 
 #         # 平面検出, 2d変換
-#         sign2d, plane, u, v, O = PlaneDetect(sign3d)
-
-#         # 2d図形点群作成
-#         #fig, sign2d, AABB = MakePointSet(fig_type, 500)
+#         sign2d, plane, u, v, O, index1 = PlaneDetect(sign3d)
 
 #         # 外枠作成
 #         out_points, out_area = MakeOuterFrame(sign2d, path="data/GAtest/" + str(count) + ".png")
 
 #         # 外枠内の点群だけにする
-#         inside = np.array([CheckClossNum3(sign2d[i], out_points) for i in range(sign2d.shape[0])])
+#         index2 = np.array([CheckClossNum3(sign2d[i], out_points) for i in range(sign2d.shape[0])])
 #         #inside = CheckClossNum2(sign2d, out_points)
-#         sign2d = sign2d[inside]
+#         sign2d = sign2d[index2]
 
 #         # GAにより最適パラメータ出力
 #         #best = GA(sign)
 #         best = EntireGA(sign2d, out_points, out_area)
 #         print("="*50)
 
+#         X, Y = Disassemble2d(sign2d)
+#         index3 = (best.figure.f_rep(X, Y) >= 0)
+
+#         estiIndex = SelectIndex(index1, SelectIndex(index2, index3))
+
 #         print(best[fig_type].figure.p)
 
 #         count+=1
 
-#write_dataset(1, 50)
-use_dataset(1, 3)
+#write_dataset(1, 50, dir_path="data/dataset/tri4/")
+use_dataset(1, 50, dir_path="data/dataset/tri4/")
 #test2D(1, 3, "data/GAtest/IoU.csv")

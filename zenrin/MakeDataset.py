@@ -48,45 +48,13 @@ def RandomPlane(high=1000):
 
     return F2.plane([a, b, c, d])
 
-def CheckInternal(fig_type, figure, AABB):
+def CheckPolygonInternal(vertices, AABB):
     xmin, xmax, ymin, ymax = AABB
 
-    # 円なら
-    if fig_type == 0:
-        x, y, r = figure.p
-        ## 描画
-        sign = MakePoints2d(figure.f_rep, AABB=AABB ,grid_step=100, epsilon=0.01, down_rate = 0.5)
-        signX, signY = Disassemble2d(sign)
-        plt.plot(signX, signY, marker=".",linestyle="None",color="orange")
-        max_p = [AABB[1], AABB[3]]
-        min_p = [AABB[0], AABB[2]]
-        AABBViewer2d(max_p, min_p)
-
-        plt.show()
-
-        if (abs(xmax-x) > r) and (abs(xmin-x) > r) and (abs(ymax-y) > r) and (abs(ymax-y) > r):
-            return True
-
-        else:
-            return False
-
-    # 多角形なら頂点を取得する
-    vertices = figure.CalcVertices()
     X, Y = Disassemble2d(vertices)
 
-    ## 描画
-    #plt.plot(X, Y, marker="o",linestyle="None",color="red")
-    # sign = MakePoints(figure.f_rep, AABB=AABB ,grid_step=100, epsilon=0.01, down_rate = 0.5)
-    # signX, signY = Disassemble2d(sign)
-    # plt.plot(signX, signY, marker=".",linestyle="None",color="orange")
-    # max_p = [AABB[1], AABB[3]]
-    # min_p = [AABB[0], AABB[2]]
-    # AABBViewer(max_p, min_p)
-
-    # plt.show()
-
     # 全ての頂点がAABB内にあればTrue
-    if np.all((xmin <= X) & (X <= xmax)) and np.all((ymin <= Y) & (Y <= ymax)):
+    if np.all((xmin <= X) & (X <= xmax) & (ymin <= Y) & (Y <= ymax)):
         return True
 
     return False
@@ -150,10 +118,19 @@ def MakePointSet(fig_type, N, rate=Random(0.5, 1),  low=-100, high=100, grid_ste
             fig = RandomRectangle(x_min=xmin, x_max=xmax, y_min=ymin, y_max=ymax, w_min=w/8, w_max=w/1.5, h_min=h/8, h_max=h/1.5)
 
         # AABB内に図形がなければ再生成
-        if CheckInternal(fig_type, fig, AABB):
-            break
+        if fig_type != 0:
+            # 円以外なら、頂点の内外判定でOK
+            vertices = fig.CalcVertices()
+            if CheckPolygonInternal(vertices, AABB):
+                break
 
-    # 平面点群を生成
+        else:
+            # 円なら上下左右の4点をとり、内外判定
+            u, v, r = fig.p
+            vertices = np.array([[u+r, v], [u-r, v], [u, v+r], [u, v-r]])
+            if CheckPolygonInternal(vertices, AABB):
+                break
+
     fig_points = InteriorPoints(fig.f_rep, AABB, size, grid_step=grid_step)
 
     # N-size点のノイズ生成
@@ -198,7 +175,7 @@ def MakePointSet3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_st
     print("size:{}".format(size))
 
     ## 平面図形設定 + 点群作成 ##
-    fig2d, points2d, _ = MakePointSet(fig_type, N, rate=1.0)
+    fig2d, points2d, _ = MakePointSet(fig_type, size, rate=1.0)
 
     ## 平面ランダム生成 ##
     plane = RandomPlane()
@@ -253,57 +230,41 @@ def MakePointSet3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_st
     else:
         # AABBにランダムにノイズ生成
         noise = np.array([[Random(xmin, xmax), Random(ymin, ymax), Random(zmin, zmax)] for i in range(N-size)])
-        # 平面点群とノイズの結合
-        # シャッフルもしておく
+        # 平面点群とノイズの結合 
         points = np.concatenate([points3d, noise])
-        #np.random.shuffle(points)
 
+    # 図形点群は1, ノイズは0でラベル付け
+    trueIndex = np.array([True if i < size else False for i in range(points.shape[0])])
 
-    ## 確認用 ##
+    # シャッフルしておく
+    perm = np.random.permutation(points.shape[0])
+    points = points[perm]
+    trueIndex = trueIndex[perm]
 
-    fig_plt = plt.figure()
-    ax = Axes3D(fig_plt)
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
+    #点群をnp配列⇒open3d形式に
+    pointcloud = open3d.PointCloud()
+    pointcloud.points = open3d.Vector3dVector(points)
 
-    X, Y, Z = Disassemble(points)
+    # color
+    colors3 = np.asarray(pointcloud.colors)
+    colors3 = np.array([[255, 130, 0] if trueIndex[i] else [0, 0, 255] for i in range(points.shape[0])]) / 255
+    pointcloud.colors = open3d.Vector3dVector(colors3)
 
-    ax.plot(X, Y, Z, marker=".", linestyle='None', color="red")
+    # 法線推定
+    open3d.estimate_normals(
+    pointcloud,
+    search_param = open3d.KDTreeSearchParamHybrid(
+    radius = l*0.05, max_nn = 100))
 
-    AABBViewer(ax, max_p, min_p)
-    plt.show()
+    # 法線の方向を視点ベースでそろえる
+    open3d.orient_normals_towards_camera_location(
+    pointcloud,
+    camera_location = np.array([0., 10., 10.], 
+    dtype="float64"))
 
+    #nキーで法線表示
+    open3d.draw_geometries([pointcloud])
 
-    # plane = F.plane([0,0,1,1])
+    return para3d, points, AABB, trueIndex
 
-    # points = MakePoints(plane.f_rep)
-
-    # #点群をnp配列⇒open3d形式に
-    # pointcloud = open3d.PointCloud()
-    # pointcloud.points = open3d.Vector3dVector(points)
-
-    # # color
-    # colors3 = np.asarray(pointcloud.colors)
-    # print(colors3.shape)
-    # colors3 = np.array([[255, 130, 0] if i < points3d.shape[0] else [0, 0, 255] for i in range(points.shape[0])]) / 255
-    # pointcloud.colors = open3d.Vector3dVector(colors3)
-
-    # # 法線推定
-    # open3d.estimate_normals(
-    # pointcloud,
-    # search_param = open3d.KDTreeSearchParamHybrid(
-    # radius = l*0.05, max_nn = 100))
-
-    # # 法線の方向を視点ベースでそろえる
-    # open3d.orient_normals_towards_camera_location(
-    # pointcloud,
-    # camera_location = np.array([0., 10., 10.], 
-    # dtype="float64"))
-
-    # #nキーで法線表示
-    # open3d.draw_geometries([pointcloud])
-
-    return para3d, points, AABB
-
-#_, _, _ = MakePointSet3D(1, 4000, rate=0.5)
+#MakePointSet3D(1, 1000, rate=0.5)

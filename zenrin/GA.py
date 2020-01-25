@@ -21,7 +21,7 @@ class person:
         print("score: {}".format(self.score))
 
 def EntireGA(points, out_points, out_area, score_f, imgPath,
-    fig=[0,1,2], n_epoch=100, N=200, add_num=0, save_num=5, tournament_size=10, 
+    fig=[0,1,2], n_epoch=300, N=100, add_num=0, save_num=5, tournament_size=10, 
     cross_rate=1, path=None, half_reset_num=100, all_reset_num=100):
 
     # reset指数
@@ -177,9 +177,12 @@ def EntireGA(points, out_points, out_area, score_f, imgPath,
         # DrawFig(points, result_list[i], out_points, out_area, imgPath)
 
     score_list = [result_list[i].score for i in range(len(fig))]
+    # print(result_list[0].figure.p, score_list[0])
+    # print(result_list[1].figure.p, score_list[1])
+    # print(result_list[2].figure.p, score_list[2])
     max_index = score_list.index(max(score_list))
     #print("種類:{}".format(max_index))
-    DrawFig(points, result_list[1], out_points, out_area, imgPath)
+    DrawFig(points, result_list[max_index], out_points, out_area, imgPath)
 
     return result_list[max_index]
 
