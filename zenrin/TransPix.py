@@ -195,7 +195,7 @@ def MakeOuterFrame(points, figArea, path, dilate_size=25, close_size=30, open_si
     dx, dy, px, py, cx, cy, originPath = TransPix2(points, figArea)
 
     # 画像からモルフォロジーを利用して、領域面積最大の輪郭点抽出
-    contour = Morphology(originPath, dilate_size=dilate_size, close_size=close_size, open_size=open_size, add_size=open_size)
+    contour = Morphology(originPath, dilate_size=dilate_size, close_size=close_size, open_size=open_size, add_size=add_size)
 
     # 画像座標の輪郭点を点群に変換
     contour_points = TransPoints(contour, dx, dy, px, py, cx, cy)

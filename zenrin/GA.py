@@ -184,7 +184,7 @@ def EntireGA(points, out_points, out_area, score_f, imgPath,
     #print("種類:{}".format(max_index))
     DrawFig(points, result_list[max_index], out_points, out_area, imgPath)
 
-    return result_list[max_index]
+    return result_list[max_index], half_list[1]
 
 
 def CreateRandomPerson(fig_type, max_p, min_p, l):

@@ -54,20 +54,20 @@ def Record(fig_type, dir_path):
         pointNum = points.shape[0]
         rate = figArea/AABBArea
 
-        with open(dir_path+"rec.csv", 'a', newline="") as f:
+        with open(dir_path+"circle4.csv", 'a', newline="") as f:
             writer = csv.writer(f)
             writer.writerow([AABBArea, figArea, pointNum, rate, pointNum*rate, pointNum/rate])
 
 def test(points, fig, strings):
     # out_points, out_area = MakeOuterFrame(sign2d, path=dir_path+"contour/"+str(i)+".png")
     out_points, out_area = MakeOuterFrame(points, fig.CalcArea(), path="data/Contour/"+strings+".png"
-    , dilate_size=30, close_size=0, open_size=50, add_size=5)
+    , dilate_size=30, close_size=0, open_size=50, add_size=10)
 
-#Record(0, "data/dataset/circle2/")
-fig_type = 0
-num = 500
-rate = 0.5
-fig, points, AABB = MakePointSet(fig_type, num, rate=rate)
-# points = np.load("data/dataset/circle2/points/29.npy")
-strings = str(fig_type) + "_" + str(num) + "_" + str(rate)
-test(points, fig, strings)
+Record(0, "data/dataset/circle4/")
+# fig_type = 0
+# num = 500
+# rate = 0.5
+# fig, points, AABB = MakePointSet(fig_type, num, rate=rate)
+# # points = np.load("data/dataset/circle2/points/29.npy")
+# strings = str(fig_type) + "_" + str(num) + "_" + str(rate)
+# test(points, fig, strings)

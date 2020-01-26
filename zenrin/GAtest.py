@@ -86,6 +86,30 @@ def SelectIndex(input, output):
 
     return np.array(result)
 
+# TP:1, TN:2, FP:3, FN:4
+
+#    true  opti
+# TP: 1  ->  1
+# TF: 0  ->  0
+# FP: 0  ->  1
+# FN: 1  ->  0
+def ConfusionLabeling(trueIndex, optiIndex):
+    confusionIndex = []
+
+    for (true, opti) in zip(trueIndex, optiIndex):
+        if true==1 and opti==1:
+            confusionIndex.append(1)
+        elif true==0 and opti==0:
+            confusionIndex.append(2)
+        elif true==0 and opti==1:
+            confusionIndex.append(3)
+        elif true==1 and opti==0:
+            confusionIndex.append(4)
+        else:
+            print("そんなことある？")
+
+    return np.array(confusionIndex)
+
 def write_dataset(fig_type, num, dir_path="data/dataset/tri/"):
 
     fig_list = []
@@ -101,7 +125,7 @@ def write_dataset(fig_type, num, dir_path="data/dataset/tri/"):
 
         # 外枠作成
         out_points, out_area = MakeOuterFrame(sign2d, fig.CalcArea(), path=dir_path+"contour/"+str(i)+".png", 
-        dilate_size=30, close_size=0, open_size=50, add_size=5)
+        dilate_size=30, close_size=0, open_size=50, add_size=50)
 
         # 外枠内の点群だけにする
         inside = np.array([CheckClossNum3(sign2d[i], out_points) for i in range(sign2d.shape[0])])
@@ -177,21 +201,32 @@ def use_dataset(fig_type, num, dir_path="data/dataset/tri/", out_path="data/GAte
             fig = F.rect(fig_p)
 
         # GAにより最適パラメータ出力
-        best0 = EntireGA(points, outPoints, outArea, CalcIoU0, out_path+"score0/"+str(i)+".png")
-        best1 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score1/"+str(i)+".png")
-        best2 = EntireGA(points, outPoints, outArea, CalcIoU2, out_path+"score2/"+str(i)+".png")
-        best3 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score3/"+str(i)+".png")
+        
+        # step1
+        # best0 = EntireGA(points, outPoints, outArea, CalcIoU0, out_path+"score0/"+str(i)+".png")
+        # best1 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score1/"+str(i)+".png")
+        # best2 = EntireGA(points, outPoints, outArea, CalcIoU2, out_path+"score2/"+str(i)+".png")
+        # best3 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score3/"+str(i)+".png")
+
+        # step1.5
+        best0, n = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+str(i)+".png")
+
+        # step2
+        # best0 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score0/"+str(i)+".png")
+        # best1 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score1/"+str(i)+".png",
+        #                 half_reset_num=15, all_reset_num=9)
+        # best2 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score2/"+str(i)+".png",
+        #                 add_num=30)
+        # best3 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score3/"+str(i)+".png", 
+        #                 add_num=30, half_reset_num=15, all_reset_num=9)
 
         IoU0 = LastIoU(fig, best0.figure, AABB)
-        IoU1 = LastIoU(fig, best1.figure, AABB)
-        IoU2 = LastIoU(fig, best2.figure, AABB)
-        IoU3 = LastIoU(fig, best3.figure, AABB)
 
-        print([IoU0, IoU1, IoU2, IoU3])
+        print([IoU0, n])
 
         with open(out_path+"IoU.csv", 'a', newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([IoU0, IoU1, IoU2, IoU3])
+            writer.writerow([IoU0, n])
 
 
 
@@ -228,6 +263,6 @@ def use_dataset(fig_type, num, dir_path="data/dataset/tri/", out_path="data/GAte
 
 #         count+=1
 
-#write_dataset(1, 50, dir_path="data/dataset/tri4/")
-use_dataset(1, 50, dir_path="data/dataset/tri4/")
+#write_dataset(0, 50, dir_path="data/dataset/circle4/")
+use_dataset(1, 50, dir_path="data/dataset/tri4/", out_path="data/GAtest/step1.5/")
 #test2D(1, 3, "data/GAtest/IoU.csv")
