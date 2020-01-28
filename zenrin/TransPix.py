@@ -3,8 +3,9 @@ import cv2 as cv
 
 from method2d import *
 from MakeDataset import MakePointSet
+from ClossNum import CheckClossNum3
 
-def TransPix(points, x_pix=1000):
+def TransPix(points, dir_path, num, x_pix=1000):
     # AABBの横長dx, 縦長dyを出す
     max_p, min_p, _, _, _ = buildAABB2d(points)
     # print(max_p, min_p)
@@ -42,39 +43,35 @@ def TransPix(points, x_pix=1000):
     RGB_pix = np.array([pix, pix, pix])
     RGB_pix = np.transpose(RGB_pix, (1,2,0))
 
-    cv.imwrite('data/Contour/origin.png', RGB_pix)
+    # originPath = 'data/Contour/origin.png'
+    originPath = dir_path+'origin/'+str(num)+'.png'
 
-    return dx, dy, px, py, cx, cy
+    cv.imwrite(originPath, RGB_pix)
 
-def TransPix2(points, figArea, goalDensity=10000, x_pix=1000):
+    return dx, dy, px, py, cx, cy, originPath
+
+def TransPix2(points, contourArea, density, goalDensity, dir_path, num, x_pix=1000):
     # AABBの横長dx, 縦長dyを出す
     max_p, min_p, _, _, _ = buildAABB2d(points)
     xmax, ymax = max_p
     xmin, ymin = min_p
     dx = abs(xmax - xmin)
     dy = abs(ymax - ymin)
+    
+    # 面積をa倍する -> 辺を√a倍する
+    a = goalDensity / density
+    delta = (np.sqrt(a) - 1) / 2
+    xmax = xmax + delta*dx
+    xmin = xmin - delta*dx
+    ymax = ymax + delta*dy
+    ymin = ymin - delta*dy
+
+    dx = abs(xmax - xmin)
+    dy = abs(ymax - ymin)
 
     # 相対密度
-    num = points.shape[0]
     AABBArea = dx*dy
-    density = AABBArea/figArea*num
-
-    if density < goalDensity:
-        # 面積をa倍する -> 辺を√a倍する
-        a = goalDensity / density
-        delta = (np.sqrt(a) - 1) / 2
-        xmax = xmax + delta*dx
-        xmin = xmin - delta*dx
-        ymax = ymax + delta*dy
-        ymin = ymin - delta*dy
-
-        dx = abs(xmax - xmin)
-        dy = abs(ymax - ymin)
-
-        # 相対密度
-        AABBArea = dx*dy
-        print("density:{}".format(AABBArea/figArea*num))
-
+    # print("density:{}".format(AABBArea/figArea*num))
 
     # 画像ではxを1000に固定する -> yはint(dy/dx*1000)
     px, py = x_pix, int(dy/dx*x_pix)
@@ -107,14 +104,15 @@ def TransPix2(points, figArea, goalDensity=10000, x_pix=1000):
     RGB_pix = np.array([pix, pix, pix])
     RGB_pix = np.transpose(RGB_pix, (1,2,0))
 
-    originPath = 'data/Contour/origin.png'
+    #originPath = 'data/Contour/origin.png'
+    originPath = dir_path+'origin2/'+str(num)+'.png'
 
     cv.imwrite(originPath, RGB_pix)
 
     return dx, dy, px, py, cx, cy, originPath
 
 
-def Morphology(originPath, dilate_size=25, erode_size=10, close_size=30, open_size=30, add_size=35):
+def Morphology(dir_path, originPath, i, dilate_size=25, erode_size=10, close_size=30, open_size=30, add_size=35):
      # ファイルを読み込み
     #pix = cv.imread(path, cv.IMREAD_GRAYSCALE)
     pix = cv.imread(originPath, cv.IMREAD_COLOR)
@@ -128,7 +126,8 @@ def Morphology(originPath, dilate_size=25, erode_size=10, close_size=30, open_si
     # モルフォロジー
     dilate_kernel = np.ones((dilate_size,dilate_size),np.uint8)
     dst = cv.dilate(dst, dilate_kernel, iterations = 1)
-    cv.imwrite('data/Contour/dilRGB.png', dst)
+    # cv.imwrite('data/Contour/dilRGB.png', dst)
+    cv.imwrite(dir_path+'dil/'+str(i)+'.png', dst)
 
     # erode_kernel = np.ones((erode_size,erode_size),np.uint8)
     # dst = cv2.erode(pix,erode_kernel,iterations = 1)
@@ -136,15 +135,16 @@ def Morphology(originPath, dilate_size=25, erode_size=10, close_size=30, open_si
 
     close_kernel = np.ones((close_size, close_size),np.uint8)
     dst = cv.morphologyEx(dst, cv.MORPH_CLOSE, close_kernel)
-    cv.imwrite('data/Contour/closeRGB.png', dst)
+    # cv.imwrite('data/Contour/closeRGB.png', dst)
+    cv.imwrite(dir_path+'close/'+str(i)+'.png', dst)
 
     open_kernel = np.ones((open_size,open_size),np.uint8)
     dst = cv.morphologyEx(dst, cv.MORPH_OPEN, open_kernel)
-    cv.imwrite('data/Contour/openRGB.png', dst)
+    cv.imwrite(dir_path+'open/'+str(i)+'.png', dst)
 
     add_kernel = np.ones((add_size,add_size),np.uint8)
     dst = cv.dilate(dst, add_kernel, iterations = 1)
-    cv.imwrite('data/Contour/dil2RGB.png', dst)
+    cv.imwrite(dir_path+'add/'+str(i)+'.png', dst)
 
     # 輪郭を抽出
     #dst, contours, hierarchy = cv.findContours(dst, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
@@ -152,9 +152,9 @@ def Morphology(originPath, dilate_size=25, erode_size=10, close_size=30, open_si
     #print(contours)
 
     # この時点での状態をデバッグ出力
-    dst = cv.imread(originPath, cv.IMREAD_COLOR)
-    after_pix = cv.drawContours(dst, contours, -1, (0, 0, 255, 255), 2, cv.LINE_AA)
-    cv.imwrite('data/Contour/output.png', dst)
+    # dst = cv.imread(originPath, cv.IMREAD_COLOR)
+    # after_pix = cv.drawContours(dst, contours, -1, (0, 0, 255, 255), 2, cv.LINE_AA)
+    # cv.imwrite('data/Contour/output.png', dst)
 
     # 面積最大の輪郭点を取り出す
     max_area = 0
@@ -189,13 +189,13 @@ def TransPoints(contour, dx, dy, px, py, cx, cy):
     return points
 
 # 点群から外枠の輪郭点を出す
-def MakeOuterFrame(points, figArea, path, dilate_size=25, close_size=30, open_size=30, add_size=35):
+def MakeOuterFrame(points, dir_path, i,  dilate_size=25, close_size=30, open_size=30, add_size=35):
     # 点群->画像
-    #dx, dy, px, py, cx, cy, originPath = TransPix(points)
-    dx, dy, px, py, cx, cy, originPath = TransPix2(points, figArea)
+    dx, dy, px, py, cx, cy, originPath = TransPix(points, dir_path, i)
+    #dx, dy, px, py, cx, cy, originPath = TransPix2(points, figArea)
 
     # 画像からモルフォロジーを利用して、領域面積最大の輪郭点抽出
-    contour = Morphology(originPath, dilate_size=dilate_size, close_size=close_size, open_size=open_size, add_size=add_size)
+    contour = Morphology(dir_path, originPath, i, dilate_size=dilate_size, close_size=close_size, open_size=open_size, add_size=add_size)
 
     # 画像座標の輪郭点を点群に変換
     contour_points = TransPoints(contour, dx, dy, px, py, cx, cy)
@@ -207,7 +207,55 @@ def MakeOuterFrame(points, figArea, path, dilate_size=25, close_size=30, open_si
     plt.plot(X2, Y2, marker=".",linestyle="None",color="red")
     plt.plot(X1, Y1, marker="o",linestyle="None",color="orange")
     #plt.show()
-    plt.savefig(path)
+    plt.savefig(dir_path+'contour/'+str(i)+'.png')
     plt.close()
 
     return contour_points, area
+
+
+# 点群から外枠の輪郭点を出す
+def MakeOuterFrame2(points, dir_path, i, dilate_size1, close_size1, open_size1, add_size1, 
+             dilate_size2, close_size2, open_size2, add_size2, goalDensity=10000):
+    # 点群->画像
+    dx, dy, px, py, cx, cy, originPath = TransPix(points, dir_path, i)
+    #dx, dy, px, py, cx, cy, originPath = TransPix2(points, figArea)
+
+    # 画像からモルフォロジーを利用して、領域面積最大の輪郭点抽出
+    contour = Morphology(dir_path, originPath, i, 
+                dilate_size=dilate_size1, close_size=close_size1, open_size=open_size1, add_size=add_size1)
+
+    # 画像座標の輪郭点を点群に変換
+    contour_points = TransPoints(contour, dx, dy, px, py, cx, cy)
+
+    #####################################################################################
+
+    # AABBの面積
+    max_p, min_p, _, _, _ = buildAABB2d(points)
+    AABBArea = abs(max_p[0] - min_p[0])*abs(max_p[1] - min_p[1])
+    # 点群座標上での面積
+    contourArea = cv.contourArea(np.array(contour_points, dtype=np.float32))
+    # 輪郭内の点の数
+    inside = np.array([CheckClossNum3(points[i], contour_points) for i in range(points.shape[0])])
+    inside_num = np.count_nonzero(inside)
+
+    # 相対密度 = 点数/(contourArea/AABBArea)
+    density = inside_num / (contourArea/AABBArea)
+
+    ### 相対密度が目標以下ならやり直し ###
+    if density < goalDensity:
+        dx, dy, px, py, cx, cy, originPath = TransPix2(points, contourArea, density, goalDensity, dir_path, i)
+        contour = Morphology(dir_path, originPath, i, 
+                    dilate_size=dilate_size2, close_size=close_size2, open_size=open_size2, add_size=add_size2)
+        contour_points = TransPoints(contour, dx, dy, px, py, cx, cy)
+        contourArea = cv.contourArea(np.array(contour_points, dtype=np.float32))
+        
+
+    X1, Y1 = Disassemble2d(points)
+    X2, Y2 = Disassemble2d(contour_points)
+    plt.plot(X2, Y2, marker=".",linestyle="None",color="red")
+    plt.plot(X1, Y1, marker="o",linestyle="None",color="orange")
+    #plt.show()
+    plt.savefig(dir_path+'contour/'+str(i)+'.png')
+    plt.close()
+
+    return contour_points, contourArea

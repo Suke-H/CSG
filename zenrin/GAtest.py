@@ -15,53 +15,47 @@ import figure2d as F
 #from IoUtest import CalcIoU, CalcIoU2, LastIoU
 from GA import *
 from MakeDataset import MakePointSet, MakePointSet3D
-from TransPix import MakeOuterFrame
+from TransPix import MakeOuterFrame, MakeOuterFrame2
 from ClossNum import CheckClossNum, CheckClossNum2, CheckClossNum3
 
-def PlaneDetect(points):
-
-    #法線, 取得
-    normals = NormalEstimate(points)
-
-    _, _, l = buildOBB(points)
-    print("l:{}".format(l))
+def PlaneDetect(points, normals, epsilon, alpha):
 
     # 平面検出
     # index: pointsからフィットした点のインデックス
-    plane, index, num = RANSAC(points, normals, epsilon=l*0.05, alpha=np.pi/8)
+    plane, index, num = RANSAC(points, normals, epsilon=epsilon, alpha=alpha)
 
-    selectIndex = np.array([True if i in index[0] else False for i in range(points.shape[0])])
+    selectIndex = np.array([True if i in index else False for i in range(points.shape[0])])
 
     # フィット点を平面射影
     # plane_points: 射影後の3d座標点群
     # UVvector: 射影後の2d座標点群
     plane_points, UVvector, u, v, O = Plane2DProjection(points[index], plane)
 
-    # プロット準備
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
-    # 点群描画
-    X, Y, Z = Disassemble(points)
-    MX, MY, MZ = X[index], Y[index], Z[index]
-    PX, PY, PZ = Disassemble(plane_points)
-    ax.plot(X, Y, Z, marker="o", linestyle='None', color="white")
-    ax.plot(MX, MY, MZ, marker=".", linestyle='None', color="red")
-    ax.plot(PX, PY, PZ, marker=".", linestyle='None', color="blue")
-    # 平面描画
-    plot_implicit(ax, plane.f_rep, points, AABB_size=1, contourNum=15)
+    # # プロット準備
+    # fig = plt.figure()
+    # ax = Axes3D(fig)
+    # ax.set_xlabel("X")
+    # ax.set_ylabel("Y")
+    # ax.set_zlabel("Z")
+    # # 点群描画
+    # X, Y, Z = Disassemble(points)
+    # MX, MY, MZ = X[index], Y[index], Z[index]
+    # PX, PY, PZ = Disassemble(plane_points)
+    # ax.plot(X, Y, Z, marker="o", linestyle='None', color="white")
+    # ax.plot(MX, MY, MZ, marker=".", linestyle='None', color="red")
+    # ax.plot(PX, PY, PZ, marker=".", linestyle='None', color="blue")
+    # # 平面描画
+    # plot_implicit(ax, plane.f_rep, points, AABB_size=1, contourNum=15)
 
-    plt.show()
-    plt.close()
+    # plt.show()
+    # plt.close()
 
-    # 射影2d点群描画
-    UX, UY = Disassemble2d(UVvector)
-    plt.plot(UX, UY, marker="o",linestyle="None",color="red")
+    # # 射影2d点群描画
+    # UX, UY = Disassemble2d(UVvector)
+    # plt.plot(UX, UY, marker="o",linestyle="None",color="red")
 
-    plt.show()
-    plt.close()
+    # plt.show()
+    # plt.close()
 
     return UVvector, plane, u, v, O, selectIndex
 
@@ -75,14 +69,15 @@ def SelectIndex(input, output):
     result = []
     j = 0
     for i in input:
-        if i == 0:
+        if i == False:
             result.append(False)
 
         else:
-            if output[j] == 1:
+            if output[j] == True:
                 result.append(True)
             else:
                 result.append(False)
+            j+=1
 
     return np.array(result)
 
@@ -97,16 +92,14 @@ def ConfusionLabeling(trueIndex, optiIndex):
     confusionIndex = []
 
     for (true, opti) in zip(trueIndex, optiIndex):
-        if true==1 and opti==1:
+        if true==True and opti==True:
             confusionIndex.append(1)
-        elif true==0 and opti==0:
+        elif true==False and opti==False:
             confusionIndex.append(2)
-        elif true==0 and opti==1:
+        elif true==False and opti==True:
             confusionIndex.append(3)
-        elif true==1 and opti==0:
+        elif true==True and opti==False:
             confusionIndex.append(4)
-        else:
-            print("そんなことある？")
 
     return np.array(confusionIndex)
 
@@ -124,8 +117,11 @@ def write_dataset(fig_type, num, dir_path="data/dataset/tri/"):
         fig, sign2d, AABB = MakePointSet(fig_type, 500, rate=rate)
 
         # 外枠作成
-        out_points, out_area = MakeOuterFrame(sign2d, fig.CalcArea(), path=dir_path+"contour/"+str(i)+".png", 
-        dilate_size=30, close_size=0, open_size=50, add_size=50)
+        # out_points, out_area = MakeOuterFrame(sign2d, dir_path, i, 
+        #                         dilate_size=30, close_size=20, open_size=50, add_size=50)
+        out_points, out_area = MakeOuterFrame2(sign2d, dir_path, i, 
+                                dilate_size1=30, close_size1=20, open_size1=50, add_size1=50,
+                                dilate_size2=28, close_size2=0, open_size2=50, add_size2=5, goalDensity=10000)
 
         # 外枠内の点群だけにする
         inside = np.array([CheckClossNum3(sign2d[i], out_points) for i in range(sign2d.shape[0])])
@@ -209,7 +205,7 @@ def use_dataset(fig_type, num, dir_path="data/dataset/tri/", out_path="data/GAte
         # best3 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score3/"+str(i)+".png")
 
         # step1.5
-        best0, n = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+str(i)+".png")
+        #best0, n = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+str(i)+".png")
 
         # step2
         # best0 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score0/"+str(i)+".png")
@@ -217,19 +213,75 @@ def use_dataset(fig_type, num, dir_path="data/dataset/tri/", out_path="data/GAte
         #                 half_reset_num=15, all_reset_num=9)
         # best2 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score2/"+str(i)+".png",
         #                 add_num=30)
-        # best3 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score3/"+str(i)+".png", 
-        #                 add_num=30, half_reset_num=15, all_reset_num=9)
+        best3 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+str(i)+".png", 
+                        add_num=30, half_reset_num=15, all_reset_num=9)
 
-        IoU0 = LastIoU(fig, best0.figure, AABB)
+        IoU0 = LastIoU(fig, best3.figure, AABB)
 
-        print([IoU0, n])
+        print([IoU0])
 
         with open(out_path+"IoU.csv", 'a', newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([IoU0, n])
+            writer.writerow([IoU0])
 
 
+def check_exam(fig_type, i, dir_path="data/dataset/tri/", out_path="data/GAtest/tri/"):
+    # データセット読み込み
+    fig_list = np.load(dir_path+"fig.npy")
+    AABB_list = np.load(dir_path+"AABB.npy")
+    outArea_list = np.load(dir_path+"outArea.npy")
 
+    print("fig:{}".format(np.array(fig_list).shape))
+    print("AABB:{}".format(np.array(AABB_list).shape))
+    print("outArea:{}".format(np.array(outArea_list).shape))
+
+    # points, outPointsはまずパスを読み込み
+    points_paths = sorted(glob(dir_path + "points/**.npy"),\
+                        key=lambda s: int(re.findall(r'\d+', s)[len(re.findall(r'\d+', s))-1]))
+    outPoints_paths = sorted(glob(dir_path + "outPoints/**.npy"),\
+                        key=lambda s: int(re.findall(r'\d+', s)[len(re.findall(r'\d+', s))-1]))
+
+    print("epoch:{}".format(i))
+
+    # points, outPoints読み込み
+    points = np.load(points_paths[i])
+    outPoints = np.load(outPoints_paths[i])
+
+    # 他も参照
+    fig_p = fig_list[i]
+    AABB = AABB_list[i]
+    outArea = outArea_list[i]
+
+    if fig_type==0:
+        fig = F.circle(fig_p)
+    elif fig_type==1:
+        fig = F.tri(fig_p)
+    else:
+        fig = F.rect(fig_p)
+
+    # GAにより最適パラメータ出力
+    
+    # step1
+    # best0 = EntireGA(points, outPoints, outArea, CalcIoU0, out_path+"score0/"+str(i)+".png")
+    # best1 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score1/"+str(i)+".png")
+    # best2 = EntireGA(points, outPoints, outArea, CalcIoU2, out_path+"score2/"+str(i)+".png")
+    # best3 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score3/"+str(i)+".png")
+
+    # step1.5
+    # best0, n = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+str(i)+".png")
+
+    # step2
+    # best0 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score0/"+str(i)+".png")
+    # best1 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score1/"+str(i)+".png",
+    #                 half_reset_num=15, all_reset_num=9)
+    # best2 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score2/"+str(i)+".png",
+    #                 add_num=30)
+    best3 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+str(i)+".png", 
+                    n_epoch=300, N=100, add_num=30, half_reset_num=15, all_reset_num=9)
+
+    IoU = LastIoU(fig, best3.figure, AABB)
+    
+    print(IoU)
 
 # def test3D(fig_type, loop):
 #     count = 0
@@ -263,6 +315,7 @@ def use_dataset(fig_type, num, dir_path="data/dataset/tri/", out_path="data/GAte
 
 #         count+=1
 
-#write_dataset(0, 50, dir_path="data/dataset/circle4/")
-use_dataset(1, 50, dir_path="data/dataset/tri4/", out_path="data/GAtest/step1.5/")
+#write_dataset(0, 50, dir_path="data/dataset/2D/circle_dil28/")
+#use_dataset(2, 50, dir_path="data/dataset/2D/rect4/", out_path="data/GAtest/checkIB/rect4rere/")
 #test2D(1, 3, "data/GAtest/IoU.csv")
+#check_exam(1, 1, dir_path="data/dataset/2D/tri4/", out_path="data/GAtest/")

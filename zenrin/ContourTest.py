@@ -58,16 +58,24 @@ def Record(fig_type, dir_path):
             writer = csv.writer(f)
             writer.writerow([AABBArea, figArea, pointNum, rate, pointNum*rate, pointNum/rate])
 
-def test(points, fig, strings):
-    # out_points, out_area = MakeOuterFrame(sign2d, path=dir_path+"contour/"+str(i)+".png")
-    out_points, out_area = MakeOuterFrame(points, fig.CalcArea(), path="data/Contour/"+strings+".png"
-    , dilate_size=30, close_size=0, open_size=50, add_size=10)
 
-Record(0, "data/dataset/circle4/")
+def test(points, i):
+    # out_points, out_area = MakeOuterFrame(sign2d, path=dir_path+"contour/"+str(i)+".png")
+    out_points, out_area = MakeOuterFrame(points,  "data/Contour/test/", i,
+    dilate_size=30, close_size=40, open_size=50, add_size=50)
+
+# Record(1, "data/dataset/tri4/")
 # fig_type = 0
 # num = 500
 # rate = 0.5
 # fig, points, AABB = MakePointSet(fig_type, num, rate=rate)
-# # points = np.load("data/dataset/circle2/points/29.npy")
+# points = np.load("data/dataset/circle2/points/29.npy")
 # strings = str(fig_type) + "_" + str(num) + "_" + str(rate)
-# test(points, fig, strings)
+dir_path = "data/dataset/2D/rect_re/"
+points_paths = sorted(glob(dir_path + "points/**.npy"),\
+                        key=lambda s: int(re.findall(r'\d+', s)[len(re.findall(r'\d+', s))-1]))
+
+print(points_paths)
+points = np.load(points_paths[31])
+
+test(points, 31)

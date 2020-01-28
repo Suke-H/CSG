@@ -19,7 +19,7 @@ def CheckIB(child, fig, max_p, min_p, l):
         x, y, w, h, _ = child
         r = l/2
 
-    if (min_p[0] < x < max_p[0]) and (min_p[1] < y < max_p[1]) and (l*0.05 < r < l) and (l*0.05 < w < l) and (l*0.05 < h < l):
+    if (min_p[0] < x < max_p[0]) and (min_p[1] < y < max_p[1]) and (l*0.2 < r < l) and (l*0.2 < w < l) and (l*0.2 < h < l):
         return True
 
     else:

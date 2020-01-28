@@ -134,7 +134,7 @@ def EntireGA(points, out_points, out_area, score_f, imgPath,
 
             group[i] = people
         
-        # 途中経過表示
+        #途中経過表示
         # if epoch % 100 == 0:
         #     print("{}回目成果".format(int(epoch/100)))
 
@@ -184,7 +184,7 @@ def EntireGA(points, out_points, out_area, score_f, imgPath,
     #print("種類:{}".format(max_index))
     DrawFig(points, result_list[max_index], out_points, out_area, imgPath)
 
-    return result_list[max_index], half_list[1]
+    return result_list[max_index]
 
 
 def CreateRandomPerson(fig_type, max_p, min_p, l):

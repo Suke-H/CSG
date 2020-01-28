@@ -145,7 +145,9 @@ def buildAABB(points):
     max_p = np.amax(points, axis=0)
     min_p = np.amin(points, axis=0)
 
-    return max_p, min_p
+    l = np.sqrt((max_p[0]-min_p[0])**2 + (max_p[1]-min_p[1])**2 + (max_p[2]-min_p[2])**2)
+
+    return max_p, min_p, l
     
 
 def MakePoints(fn, bbox=(-2.5,2.5), grid_step=50, down_rate = 0.5, epsilon=0.05):
