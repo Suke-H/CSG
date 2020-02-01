@@ -111,7 +111,6 @@ def TransPix2(points, contourArea, density, goalDensity, dir_path, num, x_pix=10
 
     return dx, dy, px, py, cx, cy, originPath
 
-
 def Morphology(dir_path, originPath, i, dilate_size=25, erode_size=10, close_size=30, open_size=30, add_size=35):
      # ファイルを読み込み
     #pix = cv.imread(path, cv.IMREAD_GRAYSCALE)
@@ -168,9 +167,8 @@ def Morphology(dir_path, originPath, i, dilate_size=25, erode_size=10, close_siz
             max_area = area
             max_contour = contour
 
-    if contour is None:
-        print("ooo")
-        a = input()
+    if max_contour is None:
+        return None
 
     # contourの形式はなんか変なのでシンプルなnumpyに変換
     max_contour = np.array(max_contour).reshape([len(max_contour), 2])
@@ -196,6 +194,9 @@ def MakeOuterFrame(points, dir_path, i,  dilate_size=25, close_size=30, open_siz
 
     # 画像からモルフォロジーを利用して、領域面積最大の輪郭点抽出
     contour = Morphology(dir_path, originPath, i, dilate_size=dilate_size, close_size=close_size, open_size=open_size, add_size=add_size)
+
+    if contour is None:
+        return None, 0
 
     # 画像座標の輪郭点を点群に変換
     contour_points = TransPoints(contour, dx, dy, px, py, cx, cy)
@@ -224,6 +225,7 @@ def MakeOuterFrame2(points, dir_path, i, dilate_size1, close_size1, open_size1, 
     contour = Morphology(dir_path, originPath, i, 
                 dilate_size=dilate_size1, close_size=close_size1, open_size=open_size1, add_size=add_size1)
 
+
     # 画像座標の輪郭点を点群に変換
     contour_points = TransPoints(contour, dx, dy, px, py, cx, cy)
 
@@ -232,14 +234,22 @@ def MakeOuterFrame2(points, dir_path, i, dilate_size1, close_size1, open_size1, 
     # AABBの面積
     max_p, min_p, _, _, _ = buildAABB2d(points)
     AABBArea = abs(max_p[0] - min_p[0])*abs(max_p[1] - min_p[1])
-    # 点群座標上での面積
-    contourArea = cv.contourArea(np.array(contour_points, dtype=np.float32))
-    # 輪郭内の点の数
-    inside = np.array([CheckClossNum3(points[i], contour_points) for i in range(points.shape[0])])
-    inside_num = np.count_nonzero(inside)
 
-    # 相対密度 = 点数/(contourArea/AABBArea)
-    density = inside_num / (contourArea/AABBArea)
+    # 輪郭抽出に失敗したら、図形領域がAABBの7割の面積を持っていると仮定
+    if contour is None:
+        print("yapaari")
+        contourArea = AABBArea * 0.7
+        inside_num = points.shape[0]
+        density = inside_num / (contourArea/AABBArea)
+
+    else:
+        # 点群座標上での面積
+        contourArea = cv.contourArea(np.array(contour_points, dtype=np.float32))
+        # 輪郭内の点の数
+        inside = np.array([CheckClossNum3(points[i], contour_points) for i in range(points.shape[0])])
+        inside_num = np.count_nonzero(inside)
+        # 相対密度 = 点数/(contourArea/AABBArea)
+        density = inside_num / (contourArea/AABBArea)
 
     ### 相対密度が目標以下ならやり直し ###
     if density < goalDensity:

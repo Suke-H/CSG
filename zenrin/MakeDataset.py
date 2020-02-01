@@ -30,7 +30,27 @@ def RandomRectangle(x_min=-100, x_max=100, y_min=-100, y_max=100, w_min=0, w_max
     y = Random(y_min, y_max)
     w = Random(w_min, w_max)
     h = Random(h_min, h_max)
+    t = Random(0, np.pi/2)
+
+    return F.rect([x, y, w, h, t])
+
+def RandomCircle2(r, x_min=-100, x_max=100, y_min=-100, y_max=100):
+    x = Random(x_min, x_max)
+    y = Random(y_min, y_max)
+
+    return F.circle([x, y, r])
+
+def RandomTriangle2(r, x_min=-100, x_max=100, y_min=-100, y_max=100):
+    x = Random(x_min, x_max)
+    y = Random(y_min, y_max)
     t = Random(0, np.pi*2/3)
+
+    return F.tri([x, y, r, t])
+
+def RandomRectangle2(w, h, x_min=-100, x_max=100, y_min=-100, y_max=100):
+    x = Random(x_min, x_max)
+    y = Random(y_min, y_max)
+    t = Random(0, np.pi/2)
 
     return F.rect([x, y, w, h, t])
 
@@ -138,18 +158,21 @@ def MakePointSet(fig_type, N, rate=Random(0.5, 1),  low=-100, high=100, grid_ste
 
     # ノイズなし
     if N == size:
-        return fig, fig_points, AABB
+        points = fig_points[:, :]
 
-    noise = np.array([[Random(xmin, xmax), Random(ymin, ymax)] for i in range(N-size)])
+    else:
+        noise = np.array([[Random(xmin, xmax), Random(ymin, ymax)] for i in range(N-size)])
+        points = np.concatenate([fig_points, noise])
 
-    #print(plane_points.shape, noise.shape)
+     # 図形点群は1, ノイズは0でラベル付け
+    trueIndex = np.array([True if i < size else False for i in range(points.shape[0])])
 
-    # 平面点群とノイズの結合
-    # シャッフルもしておく
-    points = np.concatenate([fig_points, noise])
-    np.random.shuffle(points)
+    # シャッフルしておく
+    perm = np.random.permutation(points.shape[0])
+    points = points[perm]
+    trueIndex = trueIndex[perm]
 
-    return fig, points, AABB
+    return fig, points, AABB, trueIndex
 
 def ConstructAABBObject(max_p, min_p):
     px1 = F2.plane([1, 0, 0, max_p[0]])
@@ -266,98 +289,70 @@ def MakePointSet3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_st
 
     return center, fig2d.p, plane.p, points, AABB, trueIndex
 
-# 図形の点群＋ランダムに生成したAABB内にノイズ作成
-# <条件>
-# 1. 図形の点群+ノイズの合計値はNとし、図形点群の割合(最低0.5以上)をランダムで出す
-# 2. AABB内に図形が入っていなかったら再生成
-def MakeSign2D(fig_type, N, rate=Random(0.5, 1),  low=-100, high=100, grid_step=50):
-    # 平面点群の割合をランダムで決める
-    #rate = Random(0.5, 1)
-    size = int(N*rate//1)
-    #print(size)
+# いろんな種類の標識作成
+# 1～3は倍率が2/3, 1, 1.5, 2の4種類ある
+# 0: 半径0.3mの円
+# 1: 1辺0.8mの正三角形
+# 2: 1辺0.9mの正方形
+# 3. 1辺0.45mのひし形(てか正方形)
+# 4. 1辺が0.05～1のどれかの長方形
+def MakeSign2D(sign_type, scale):
 
-    # AABBランダム生成
-    while True:
-        AABB = []
-        for i in range(2):
-            x1 = Random(low, high)
-            x2 = Random(low, high)
-            if x1>=x2:
-                x_axis = [x2, x1]
-            else:
-                x_axis = [x1, x2]
-            AABB.extend(x_axis)
+    # 標識作成
+    if sign_type == 0:
+        r = 0.3*scale
+        fig = F.circle([0,0,r])
+        fig_type = 0
+        AABB = np.array([-0.35, 0.35, -0.35, 0.35])*scale
 
-        #print(AABB)
-        xmin, xmax, ymin, ymax = AABB
-        w = abs(xmax-xmin)
-        h = abs(ymax-ymin)
+    elif sign_type == 1:
+        r = 0.8/np.sqrt(3)*scale
+        fig = F.tri([0,0,r,Random(0,np.pi*2/3)])
+        fig_type = 1
+        AABB = np.array([-0.45, 0.45, -0.45, 0.45])*scale
+        
+    elif sign_type == 2:
+        r = 0.9*scale
+        fig = F.rect([0,0,r,r,Random(0,np.pi/2)])
+        fig_type = 2
+        AABB = np.array([-0.55, 0.55, -0.55, 0.55])*scale
 
-        # 縦横比が8割以下ならやり直し
-        # (横が大きいなら縦 >= 0.8*横)
-        if (w >= h and h >= 0.8*w) or (h >= w and w >= 0.8*h):
-            break
 
-    # 半径の生成条件に対角線の長さを利用する    
-    #l = w if w <= h else h
-    l = np.sqrt((xmax-xmin)**2 + (ymax-ymin)**2)
+    elif sign_type == 3:
+        r = 0.45*scale
+        fig = F.rect([0,0,r,r,Random(0,np.pi/2)])
+        fig_type = 2
+        AABB = np.array([-0.3, 0.3, -0.3, 0.3])*scale
 
-    while True:
 
-        # 図形ランダム生成
-        if fig_type == 0:
-            fig = RandomCircle(x_min=xmin, x_max=xmax, y_min=ymin, y_max=ymax, r_min=l/10, r_max=l/2)
-        elif fig_type == 1:
-            fig = RandomTriangle(x_min=xmin, x_max=xmax, y_min=ymin, y_max=ymax, r_min=l/10, r_max=l/2)
-        elif fig_type == 2:
-            fig = RandomRectangle(x_min=xmin, x_max=xmax, y_min=ymin, y_max=ymax, w_min=w/8, w_max=w/1.5, h_min=h/8, h_max=h/1.5)
+    else:
+        w = Random(0.5,2)
+        h = Random(0.5,2)
+        fig = F.rect([0,0,w,h,Random(0,np.pi/2)])
+        fig_type = 2
+        AABB = np.array([-w/2-0.05, w/2+0.05, -h/2-0.05, h/2+0.05])*scale
 
-        # AABB内に図形がなければ再生成
-        if fig_type != 0:
-            # 円以外なら、頂点の内外判定でOK
-            vertices = fig.CalcVertices()
-            if CheckPolygonInternal(vertices, AABB):
-                break
+    # X, Y = Disassemble2d(sign_points)
+    # plt.plot(X, Y, marker=".", linestyle='None', color="red")
+    # plt.show()
 
-        else:
-            # 円なら上下左右の4点をとり、内外判定
-            u, v, r = fig.p
-            vertices = np.array([[u+r, v], [u-r, v], [u, v+r], [u, v-r]])
-            if CheckPolygonInternal(vertices, AABB):
-                break
-
-    fig_points = InteriorPoints(fig.f_rep, AABB, size, grid_step=grid_step)
-
-    # N-size点のノイズ生成
-    xmin, xmax, ymin, ymax = AABB
-
-    # ノイズなし
-    if N == size:
-        return fig, fig_points, AABB
-
-    noise = np.array([[Random(xmin, xmax), Random(ymin, ymax)] for i in range(N-size)])
-
-    #print(plane_points.shape, noise.shape)
-
-    # 平面点群とノイズの結合
-    # シャッフルもしておく
-    points = np.concatenate([fig_points, noise])
-    np.random.shuffle(points)
-
-    return fig, points, AABB
+    return fig, fig_type, AABB
 
 # 図形の点群＋ランダムに生成したAABB内にノイズ作成
 # <条件>
 # 1. 図形の点群+ノイズの合計値はN, rateによって図形点群の割合が変わる
 # 2. AABBは射影した図形点群のAABBの1~1.5割増に作成
-def MakeSign3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_step=50):
-
-    print("rate:{}".format(rate))
-    size = int(N*rate//1)
-    print("size:{}".format(size))
+def MakeSign3D(sign_type, scale, density, noise_rate, error_rate, error_step, low=-100, high=100, grid_step=50):
 
     ## 平面図形設定 + 点群作成 ##
-    fig2d, points2d, _ = MakePointSet(fig_type, size, rate=1.0)
+    fig2d, fig_type, AABB2d = MakeSign2D(sign_type, scale)
+    fig_size = int(density*fig2d.CalcArea()//1)
+    points2d = InteriorPoints(fig2d.f_rep, AABB2d, fig_size, grid_step=grid_step)
+
+    # ノイズ点群の数と全点群数を出しておく
+    noise_size = int(noise_rate/(1-noise_rate)*fig_size//1)
+    N = fig_size + noise_size
+    print(fig2d.CalcArea(), fig_size, noise_size, N)
 
     ## 平面ランダム生成 ##
     plane = RandomPlane()
@@ -376,14 +371,16 @@ def MakeSign3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_step=5
     n = np.array([a, b, c])
     v = norm(np.cross(u, n))
     # 平面3d射影
-    para3d, points3d = Plane3DProjection(points2d, fig2d, u, v, O)
+    center, points3d = Plane3DProjection(points2d, fig2d.p, u, v, O)
+
+    print("points3d:{}".format(points3d.shape))
 
     max_p, min_p, l = buildAABB(points3d)
 
     ## ノイズ用AABBを、図形点群のAABBの1~1.5倍増しに作成 ##
     xmax, ymax, zmax = max_p
     xmin, ymin, zmin = min_p
-    AABB = [xmin, xmax, ymin, ymax, zmax, zmin]
+    AABB3d = [xmin, xmax, ymin, ymax, zmax, zmin]
 
     p = [Random(1, 1.5) for i in range(6)]
 
@@ -397,25 +394,37 @@ def MakeSign3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_step=5
     max_p = np.array([xmax, ymax, zmax])
     min_p = np.array([xmin, ymin, zmin])
 
-    ## 点群を法線方向に"微量な値"分動かす ##
-    # AABBの対角線の長さlを"微量な値"に利用
-    tn = np.array([Random(0, 0.01)*l*n for i in range(points3d.shape[0])])
-    points3d += tn
-    # print("l:{}".format(l))
+    # 点群をランダムに選択し、ランダムな方向に正規分布の値だけ動かす ##
+
+    if error_rate != 0:
+        # 点群から誤差を起こすものだけ抽出
+        error_size = int(fig_size*error_rate//1)
+        error_index = np.random.choice(fig_size, error_size, replace=False)
+        error_points = points3d[error_index]
+        points3d = np.delete(points3d, error_index, axis=0)
+        # 抽出した点群に誤差を与える
+        n_set = np.array([norm(np.array([Random(0,10), Random(0,10), Random(0,10)])) for i in range(error_size)])
+        error_set = np.random.randn(error_size) * error_step
+        tn = np.array([error_set[i]*n_set[i] for i in range(error_size)])
+        error_points += tn
+        # 元の点群と再結合
+        points3d = np.concatenate([points3d, error_points])
 
     ## ノイズ生成、図形点群と結合 ##
-    if N == size:
+    if noise_size == 0:
         # ノイズなし
         points = points3d[:, :]
 
     else:
         # AABBにランダムにノイズ生成
-        noise = np.array([[Random(xmin, xmax), Random(ymin, ymax), Random(zmin, zmax)] for i in range(N-size)])
+        noise = np.array([[Random(xmin, xmax), Random(ymin, ymax), Random(zmin, zmax)] for i in range(noise_size)])
         # 平面点群とノイズの結合 
         points = np.concatenate([points3d, noise])
 
-    # 図形点群は1, ノイズは0でラベル付け
-    trueIndex = np.array([True if i < size else False for i in range(points.shape[0])])
+        print("points:{}".format(points.shape))
+
+    # 図形点群はTrue, ノイズはFalseでラベル付け
+    trueIndex = np.array([True if i < fig_size else False for i in range(points.shape[0])])
 
     # シャッフルしておく
     perm = np.random.permutation(points.shape[0])
@@ -446,6 +455,23 @@ def MakeSign3D(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_step=5
     # #nキーで法線表示
     # open3d.draw_geometries([pointcloud])
 
-    return para3d, fig2d.p, plane.p, points, AABB, trueIndex
+    # プロット準備
+    # fig = plt.figure()
+    # ax = Axes3D(fig)
+    # ax.set_xlabel("X")
+    # ax.set_ylabel("Y")
+    # ax.set_zlabel("Z")
+    # X, Y, Z = Disassemble(points[trueIndex])
+    # OX, OY, OZ = Disassemble(points[trueIndex==False])
+    # ax.plot(X, Y, Z, marker=".", linestyle='None', color="orange")
+    # ax.plot(OX, OY, OZ, marker=".", linestyle='None', color="blue")
 
-#MakePointSet3D(1, 1000, rate=0.5)
+    # plt.show()
+
+    return center, fig2d.p, plane.p, points, AABB3d, AABB2d, trueIndex, u, v, O
+
+# fig, fig_type, sign2d = MakeSign2D(4, 1, 500)
+# X, Y = Disassemble2d(sign2d)
+# plt.plot(X, Y, marker=".", linestyle='None', color="red")
+# plt.show()
+# MakeSign3D(sign_type=1, scale=1, density=500, noise_rate=0, error_rate=0, error_step=0)

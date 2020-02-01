@@ -26,7 +26,6 @@ def Plane2DProjection(points, plane):
     # p = p0 + t n
     tn = np.array([t[i]*n for i in range(N)])
     plane_points = points + tn
-    print(plane_points.shape)
 
     # 新しい原点を適当に選んだ1点にする
     O = plane_points[0]
@@ -36,7 +35,6 @@ def Plane2DProjection(points, plane):
     v = norm(np.cross(u, n))
     # UV座標に変換
     UVvector = np.array([[np.dot((plane_points[i]-O), u), np.dot((plane_points[i]-O), v)]for i in range(N)])
-    print(UVvector.shape)
 
     # reshape
     #UVvector = np.reshape(UVvector, (N, 2))

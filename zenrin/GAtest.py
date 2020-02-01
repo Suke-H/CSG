@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from glob import glob
 import re
 import time
+import os
 
 # main
 from method import *
@@ -14,7 +15,7 @@ from Projection import Plane2DProjection, Plane3DProjection
 import figure2d as F
 #from IoUtest import CalcIoU, CalcIoU2, LastIoU
 from GA import *
-from MakeDataset import MakePointSet, MakePointSet3D
+from MakeDataset import MakePointSet, MakePointSet3D, MakeSign3D
 from TransPix import MakeOuterFrame, MakeOuterFrame2
 from ClossNum import CheckClossNum, CheckClossNum2, CheckClossNum3
 
@@ -110,6 +111,18 @@ def write_dataset(fig_type, num, dir_path="data/dataset/tri/"):
     out_area_list = []
     points_list = []
     out_points_list = []
+
+    os.mkdir(dir_path)
+    os.mkdir(dir_path+"origin")
+    # os.mkdir(dir_path+"origin2")
+    os.mkdir(dir_path+"dil")
+    os.mkdir(dir_path+"close")
+    os.mkdir(dir_path+"open")
+    os.mkdir(dir_path+"add")
+    os.mkdir(dir_path+"contour")
+    os.mkdir(dir_path+"outPoints")
+    os.mkdir(dir_path+"points")
+    # os.mkdir(dir_path+"GA")
 
     for i in range(num):
         rate = Random(0.5, 1)
@@ -208,21 +221,39 @@ def use_dataset(fig_type, num, dir_path="data/dataset/tri/", out_path="data/GAte
         #best0, n = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+str(i)+".png")
 
         # step2
-        # best0 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score0/"+str(i)+".png")
-        # best1 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score1/"+str(i)+".png",
-        #                 half_reset_num=15, all_reset_num=9)
-        # best2 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score2/"+str(i)+".png",
-        #                 add_num=30)
-        best3 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+str(i)+".png", 
+        best0, alt0 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score0/"+str(i)+".png", fig_type)
+        best1, alt1 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score1/"+str(i)+".png", fig_type, 
+                        half_reset_num=15, all_reset_num=9)
+        best2, alt2 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score2/"+str(i)+".png", fig_type,
+                        add_num=30)
+        best3, alt3 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score3/"+str(i)+".png", fig_type,
                         add_num=30, half_reset_num=15, all_reset_num=9)
 
-        IoU0 = LastIoU(fig, best3.figure, AABB)
+        rec_list = []
 
-        print([IoU0])
+        IoU0 = LastIoU(fig, best0.figure, AABB, out_path+"IoU0/"+str(i)+".png")
+        IoU1 = LastIoU(fig, best1.figure, AABB, out_path+"IoU1/"+str(i)+".png")
+        IoU2 = LastIoU(fig, best2.figure, AABB, out_path+"IoU2/"+str(i)+".png")
+        IoU3 = LastIoU(fig, best3.figure, AABB, out_path+"IoU3/"+str(i)+".png")
 
-        with open(out_path+"IoU.csv", 'a', newline="") as f:
+        rec_list.append(IoU0)
+        if IoU0 == -1:
+            rec_list.append(LastIoU(fig, alt0.figure, AABB, out_path+"IoU0/"+str(i)+"re.png"))
+        rec_list.append(IoU1)
+        if IoU1 == -1:
+            rec_list.append(LastIoU(fig, alt1.figure, AABB, out_path+"IoU1/"+str(i)+"re.png"))
+        rec_list.append(IoU2)
+        if IoU2 == -1:
+            rec_list.append(LastIoU(fig, alt2.figure, AABB, out_path+"IoU2/"+str(i)+"re.png"))
+        rec_list.append(IoU3)
+        if IoU3 == -1:
+            rec_list.append(LastIoU(fig, alt3.figure, AABB, out_path+"IoU3/"+str(i)+"re.png"))
+
+        print(rec_list)
+
+        with open(out_path+"rect4go.csv", 'a', newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([IoU0])
+            writer.writerow(rec_list)
 
 
 def check_exam(fig_type, i, dir_path="data/dataset/tri/", out_path="data/GAtest/tri/"):
@@ -276,12 +307,12 @@ def check_exam(fig_type, i, dir_path="data/dataset/tri/", out_path="data/GAtest/
     #                 half_reset_num=15, all_reset_num=9)
     # best2 = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+"score2/"+str(i)+".png",
     #                 add_num=30)
-    best3 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+str(i)+".png", 
-                    n_epoch=300, N=100, add_num=30, half_reset_num=15, all_reset_num=9)
+    # best3 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+str(i)+".png", 
+    #                 n_epoch=300, N=100, add_num=30, half_reset_num=15, all_reset_num=9)
 
-    IoU = LastIoU(fig, best3.figure, AABB)
+    #IoU = LastIoU(fig, best3.figure, AABB, path=out_path)
     
-    print(IoU)
+    #print(IoU)
 
 # def test3D(fig_type, loop):
 #     count = 0
@@ -315,7 +346,11 @@ def check_exam(fig_type, i, dir_path="data/dataset/tri/", out_path="data/GAtest/
 
 #         count+=1
 
-#write_dataset(0, 50, dir_path="data/dataset/2D/circle_dil28/")
-#use_dataset(2, 50, dir_path="data/dataset/2D/rect4/", out_path="data/GAtest/checkIB/rect4rere/")
+# import time
+# start = time.time()
+# write_dataset(0, 50, dir_path="data/ContourTest/circle/")
+# use_dataset(2, 50, dir_path="data/dataset/2D/rect4/", out_path="data/GAtest/checkIB/rect4go/")
+# end = time.time()
+# print("time:{}m".format((end-start)/60))
 #test2D(1, 3, "data/GAtest/IoU.csv")
 #check_exam(1, 1, dir_path="data/dataset/2D/tri4/", out_path="data/GAtest/")

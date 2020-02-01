@@ -250,36 +250,36 @@ def CalcIoU3(points, out_contour, out_area, figure, flag=False):
     return Cin/(Ain+np.sqrt(Cin)) - Cout/(Aout+np.sqrt(Cout))
 
 # 目標図形と最適図形でIoUを算出
-def LastIoU(goal, opti, AABB):
+def LastIoU(goal, opti, AABB, path):
     # Figureの初期化
     #fig = plt.figure(figsize=(12, 8))
     
     # intersectionの面積
     inter_fig = F.inter(goal, opti)
-    inter_points = ContourPoints(inter_fig.f_rep, AABB=AABB)
+    inter_points = ContourPoints(inter_fig.f_rep, AABB=AABB, grid_step=5000)
     inter_points = np.array(inter_points, dtype=np.float32)
+
+    inter_area = cv2.contourArea(cv2.convexHull(inter_points))
+
+    # unionの面積
+    union_fig = F.union(goal, opti)
+    union_points = ContourPoints(union_fig.f_rep, AABB=AABB, grid_step=5000)
+    union_points = np.array(union_points, dtype=np.float32)
+    union_area = cv2.contourArea(cv2.convexHull(union_points))
+
+    X1, Y1 = Disassemble2d(inter_points)
+    X2, Y2 = Disassemble2d(union_points)
+
+    plt.plot(X1, Y1, marker=".",linestyle="None",color="red")
+    plt.plot(X2, Y2, marker=".",linestyle="None",color="yellow")
+    plt.savefig(path)
+    plt.close()
 
     if len(goal.p) != len(opti.p):
         return -1
 
     if inter_points.shape[0] <= 2:
         return -2
-
-    inter_area = cv2.contourArea(cv2.convexHull(inter_points))
-
-    # unionの面積
-    union_fig = F.union(goal, opti)
-    union_points = ContourPoints(union_fig.f_rep, AABB=AABB)
-    union_points = np.array(union_points, dtype=np.float32)
-    union_area = cv2.contourArea(cv2.convexHull(union_points))
-
-    # X1, Y1 = Disassemble2d(inter_points)
-    # X2, Y2 = Disassemble2d(union_points)
-
-    # plt.plot(X1, Y1, marker=".",linestyle="None",color="red")
-    # plt.plot(X2, Y2, marker=".",linestyle="None",color="yellow")
-    # plt.savefig(path)
-    # plt.close()
 
     # print("{} / {}".format(inter_area, union_area))
 

@@ -20,9 +20,9 @@ class person:
         print("para: {}".format(self.figure.p))
         print("score: {}".format(self.score))
 
-def EntireGA(points, out_points, out_area, score_f, imgPath,
+def EntireGA(points, out_points, out_area, score_f, imgPath, fig_type,
     fig=[0,1,2], n_epoch=300, N=100, add_num=0, save_num=5, tournament_size=10, 
-    cross_rate=1, path=None, half_reset_num=100, all_reset_num=100):
+    cross_rate=1, path=None, half_reset_num=10000, all_reset_num=10000):
 
     # reset指数
     half_list = [0 for i in range(len(fig))]
@@ -184,7 +184,7 @@ def EntireGA(points, out_points, out_area, score_f, imgPath,
     #print("種類:{}".format(max_index))
     DrawFig(points, result_list[max_index], out_points, out_area, imgPath)
 
-    return result_list[max_index]
+    return result_list[max_index], result_list[fig_type]
 
 
 def CreateRandomPerson(fig_type, max_p, min_p, l):
@@ -378,7 +378,6 @@ def BLX(x1, x2, xmin, xmax, alpha):
 def Crossover2(parents, fig, max_p, min_p, l, cross_rate):
 
     if np.random.rand() >= cross_rate:
-        print("真だがいい")
         return np.random.choice(parents)
 
     # n: パラメータの数, x: n+1人の親のパラメータのリスト
@@ -460,9 +459,9 @@ def DrawFig(points, person, out_points, out_area, path, AABB_size=1.5):
     
     AABB = [min_p[0], max_p[0], min_p[1], max_p[1]]
 
-    points2 = ContourPoints(person.figure.f_rep, AABB=AABB, AABB_size=AABB_size, grid_step=1000, epsilon=0.02, down_rate=1)
+    points2 = ContourPoints(person.figure.f_rep, AABB=AABB, AABB_size=AABB_size, grid_step=1000, epsilon=0.01, down_rate=1)
     X2, Y2= Disassemble2d(points2)
-    plt.plot(X2, Y2, marker="o",linestyle="None",color="red")
+    plt.plot(X2, Y2, marker=".",linestyle="None",color="red")
 
     plt.savefig(path)
     plt.close()
