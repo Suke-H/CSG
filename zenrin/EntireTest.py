@@ -2,11 +2,12 @@ from GAtest import *
 import open3d
 import os
 
+import time
 
 def write_any_data3d(num, root_path):
     sign_type_set = np.array([0,1,2,3,4])
     scale_set = np.array([1])
-    density_set = np.array([1000])
+    density_set = np.array([1000, 2500, 5000, 10000])
     noise_rate_set = np.array([0])
     error_rate_set = np.array([0])
     error_step_set = np.array([0])
@@ -68,12 +69,16 @@ def write_data3D(sign_type, scale, density, noise_rate, error_rate, error_step, 
     np.save(dir_path+"v", np.array(v_list))
     np.save(dir_path+"O", np.array(O_list))
    
-def use_any_data3D(root_path, out_root_path):
+def use_any_data3D(root_path, out_root_path, from_num, to_num):
+
+    start = time.time()
 
     folder_paths = sorted(glob(root_path + "**"),\
                         key=lambda s: int(re.findall(r'\d+', s)[len(re.findall(r'\d+', s))-1]))
 
-    for i, folder in enumerate(folder_paths):
+    a = [i for i in range(len(folder_paths))]
+
+    for i, folder in zip(a[from_num:to_num], folder_paths[from_num:to_num]):
         print("="*60)
         print("folder:{}".format(i))
 
@@ -82,6 +87,9 @@ def use_any_data3D(root_path, out_root_path):
             sign_type = int(float(sign_type))
 
             use_data3D(sign_type, folder+"/", out_root_path+str(i)+"/")
+        
+    end = time.time()
+    print("total_time:{}m".format((end-start)/60))
 
 
 def use_data3D(sign_type, dir_path, out_path):
@@ -115,6 +123,7 @@ def use_data3D(sign_type, dir_path, out_path):
     opti_O_list = []
     opti_AABB2d_list = []
 
+
     if sign_type == 0:
         fig_type = 0
     elif sign_type == 1:
@@ -142,6 +151,8 @@ def use_data3D(sign_type, dir_path, out_path):
         # 2d図形点群作成
         #center, para2d, plane_para, points3d, AABB, trueIndex = MakePointSet3D(fig_type, 500, rate=0.8)
 
+        start = time.time()
+
         _, _, l = buildAABB(points3d)
 
         # 法線推定
@@ -152,10 +163,21 @@ def use_data3D(sign_type, dir_path, out_path):
 
         opti_plane_para = opti_plane.p
 
+        end = time.time()
+        # print("平面検出:{}m".format((end-start)/60))
+
+        start = time.time()
+
         # 外枠作成
-        out_points, out_area = MakeOuterFrame2(points2d, out_path, i, 
-                                dilate_size1=30, close_size1=20, open_size1=50, add_size1=50,
-                                dilate_size2=30, close_size2=0, open_size2=50, add_size2=5, goalDensity=10000)
+        # out_points, out_area = MakeOuterFrame2(points2d, out_path, i, 
+        #                         dilate_size1=30, close_size1=20, open_size1=50, add_size1=50,
+        #                         dilate_size2=30, close_size2=0, open_size2=50, add_size2=5, goalDensity=10000)
+
+        out_points, out_area = MakeOuterFrame(points2d, out_path, i, 
+                              dilate_size=50, close_size=20, open_size=70, add_size=20)
+
+        end = time.time()
+        # print("輪郭抽出:{}m".format((end-start)/60))
 
         # 輪郭抽出に失敗したら終了
         if out_points is None:
@@ -172,11 +194,28 @@ def use_data3D(sign_type, dir_path, out_path):
         max_p, min_p, _, _, _ = buildAABB2d(points2d)
         opti_AABB2d = [min_p[0], max_p[0], min_p[1], max_p[1]]
 
+        start = time.time()
+
         # GAにより最適パラメータ出力
         #best = GA(sign)
         # print("GA開始")
-        best, _ = EntireGA(points2d, out_points, out_area, CalcIoU1, out_path+"/GA/"+str(i)+".png", fig_type, 
-                        n_epoch=1000, N=300, add_num=90, half_reset_num=50, all_reset_num=30)
+        best_circle = EntireGA(points2d, out_points, out_area, CalcIoU1, out_path+"/GA/circle"+str(i)+".png", fig_type, 
+                                fig=[0], n_epoch=100, N=100, add_num=30, half_reset_num=10, all_reset_num=5)
+
+        best_tri = EntireGA(points2d, out_points, out_area, CalcIoU1, out_path+"/GA/tri"+str(i)+".png", fig_type, 
+                                fig=[1], n_epoch=300, N=100, add_num=30, half_reset_num=15, all_reset_num=9)
+
+        best_rect = EntireGA(points2d, out_points, out_area, CalcIoU1, out_path+"/GA/rect"+str(i)+".png", fig_type, 
+                                fig=[2], n_epoch=600, N=100, add_num=30, half_reset_num=30, all_reset_num=10)
+
+        people_list = [best_circle, best_tri, best_rect]
+        score_list = [best_circle.score, best_tri.score, best_rect.score]
+
+        max_index = score_list.index(max(score_list))
+        best = people_list[max_index]
+
+        end = time.time()
+        # print("GA:{}m".format((end-start)/60))
 
         # 検出図形の中心座標を3次元に射影
         opti_para2d = best.figure.p
@@ -194,73 +233,81 @@ def use_data3D(sign_type, dir_path, out_path):
         else:
             opti_fig_type = 2
 
-        if fig_type == opti_fig_type:
-            rec_list.append(1)
+        # 一致してなかったらこれ以上評価しない
+        if fig_type != opti_fig_type:
+            rec_list.append(-1)
 
-            # 位置: 3次元座標上の中心座標の距離
-            pos = LA.norm(center - opti_center)
-            rec_list.append(pos)
+            with open(out_path+"test.csv", 'a', newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(rec_list)
 
-            # 大きさ: 円と三角形ならr, 長方形なら長辺と短辺
-            if fig_type != 2:
-                size = abs(para2d[2] - opti_para2d[2])
-                rec_list.append(size)
+            continue
 
-            else:
-                if para2d[2] > para2d[3]:
-                    long_edge, short_edge = para2d[2], para2d[3]
-                else:
-                    long_edge, short_edge = para2d[3], para2d[2]
+        rec_list.append(1)
 
-                if opti_para2d[2] > opti_para2d[3]:
-                    opti_long_edge, opti_short_edge = opti_para2d[2], opti_para2d[3]
-                else:
-                    opti_long_edge, opti_short_edge = opti_para2d[3], opti_para2d[2]
+        # 位置: 3次元座標上の中心座標の距離
+        pos = LA.norm(center - opti_center)
+        rec_list.append(pos)
 
-                size1 = abs(long_edge - opti_long_edge)
-                size2 = abs(short_edge - opti_short_edge)
-                rec_list.append(size1)
-                rec_list.append(size2)
+        # 大きさ: 円と三角形ならr, 長方形なら長辺と短辺
+        if fig_type != 2:
+            size = abs(para2d[2] - opti_para2d[2])
+            rec_list.append(size)
 
-            # 平面の法線の角度
-            n_goal = np.array([plane_para[0], plane_para[1], plane_para[2]])
-            n_opt = np.array([opti_plane_para[0], opti_plane_para[1], opti_plane_para[2]])
-            angle = np.arccos(np.dot(n_opt, n_goal))
-            angle = angle / np.pi * 180
-            rec_list.append(angle)
-
-            # 形: 混合行列で見る
-            X, Y = Disassemble2d(points2d)
-            index3 = (best.figure.f_rep(X, Y) >= 0)
-
-            # print(index1.shape, np.count_nonzero(index1))
-            # print(index2.shape, np.count_nonzero(index2))
-            # print(index3.shape, np.count_nonzero(index3))
-
-            estiIndex = SelectIndex(index1, SelectIndex(index2, index3))
-
-            # print(estiIndex.shape, np.count_nonzero(estiIndex))
-
-            confusionIndex = ConfusionLabeling(trueIndex, estiIndex)
-
-            TP = np.count_nonzero(confusionIndex==1)
-            TN = np.count_nonzero(confusionIndex==2)
-            FP = np.count_nonzero(confusionIndex==3)
-            FN = np.count_nonzero(confusionIndex==4)
-
-            acc = (TP+TN)/(TP+TN+FP+FN)
-            prec = TP/(TP+FN)
-            rec = TP/(TP+FP)
-            F_measure = 2*prec*rec/(prec+rec)
-
-            rec_list.extend([TP, TN, FP, FN, acc, prec, rec, F_measure])
 
         else:
-            rec_list.append(-1)
+            if para2d[2] > para2d[3]:
+                long_edge, short_edge = para2d[2], para2d[3]
+            else:
+                long_edge, short_edge = para2d[3], para2d[2]
+
+            if opti_para2d[2] > opti_para2d[3]:
+                opti_long_edge, opti_short_edge = opti_para2d[2], opti_para2d[3]
+            else:
+                opti_long_edge, opti_short_edge = opti_para2d[3], opti_para2d[2]
+
+            size1 = abs(long_edge - opti_long_edge)
+            size2 = abs(short_edge - opti_short_edge)
+            rec_list.append(size1)
+            rec_list.append(size2)
+
+        # 平面の法線の角度
+        n_goal = np.array([plane_para[0], plane_para[1], plane_para[2]])
+        n_opt = np.array([opti_plane_para[0], opti_plane_para[1], opti_plane_para[2]])
+        angle = np.arccos(np.dot(n_opt, n_goal))
+        angle = angle / np.pi * 180
+        rec_list.append(angle)
+
+        # 形: 混合行列で見る
+        X, Y = Disassemble2d(points2d)
+        index3 = (best.figure.f_rep(X, Y) >= 0)
+
+        # print(index1.shape, np.count_nonzero(index1))
+        # print(index2.shape, np.count_nonzero(index2))
+        # print(index3.shape, np.count_nonzero(index3))
+
+        estiIndex = SelectIndex(index1, SelectIndex(index2, index3))
+
+        # print(estiIndex.shape, np.count_nonzero(estiIndex))
+
+        confusionIndex = ConfusionLabeling(trueIndex, estiIndex)
+
+        TP = np.count_nonzero(confusionIndex==1)
+        TN = np.count_nonzero(confusionIndex==2)
+        FP = np.count_nonzero(confusionIndex==3)
+        FN = np.count_nonzero(confusionIndex==4)
+
+        acc = (TP+TN)/(TP+TN+FP+FN)
+        prec = TP/(TP+FP)
+        rec = TP/(TP+FN)
+        F_measure = 2*prec*rec/(prec+rec)
+
+        rec_list.extend([TP, TN, FP, FN, acc, prec, rec, F_measure])
 
         with open(out_path+"test.csv", 'a', newline="") as f:
             writer = csv.writer(f)
             writer.writerow(rec_list)
+
 
         ######################################################
         opti_para2d_list.append(opti_para2d)
@@ -286,6 +333,6 @@ def use_data3D(sign_type, dir_path, out_path):
 
 # test3D(1, 1, 500, 10, out_path="data/EntireTest/test2/")
 # write_data3D(0, 500, 0.2, 0.4, 0.005, 20, "data/dataset/3D/4/")
-# write_any_data3d(3, "data/dataset/3D/TEST1000/")
-# use_any_data3D("data/dataset/3D/TEST1000/", "data/EntireTest/TEST1000/")
+# write_any_data3d(1, "data/dataset/3D/TEST/")
+use_any_data3D("data/dataset/3D/SET_DENSITY/", "data/EntireTest/SET_DENSITY/", 3, 15)
 # CheckView(4, 0, 0, "data/dataset/3D/0_500_test/", "data/EntireTest/testtest/")

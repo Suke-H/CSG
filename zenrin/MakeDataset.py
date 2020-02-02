@@ -352,7 +352,7 @@ def MakeSign3D(sign_type, scale, density, noise_rate, error_rate, error_step, lo
     # ノイズ点群の数と全点群数を出しておく
     noise_size = int(noise_rate/(1-noise_rate)*fig_size//1)
     N = fig_size + noise_size
-    print(fig2d.CalcArea(), fig_size, noise_size, N)
+    # print(fig2d.CalcArea(), fig_size, noise_size, N)
 
     ## 平面ランダム生成 ##
     plane = RandomPlane()
@@ -373,7 +373,7 @@ def MakeSign3D(sign_type, scale, density, noise_rate, error_rate, error_step, lo
     # 平面3d射影
     center, points3d = Plane3DProjection(points2d, fig2d.p, u, v, O)
 
-    print("points3d:{}".format(points3d.shape))
+    # print("points3d:{}".format(points3d.shape))
 
     max_p, min_p, l = buildAABB(points3d)
 

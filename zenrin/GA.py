@@ -184,7 +184,7 @@ def EntireGA(points, out_points, out_area, score_f, imgPath, fig_type,
     #print("種類:{}".format(max_index))
     DrawFig(points, result_list[max_index], out_points, out_area, imgPath)
 
-    return result_list[max_index], result_list[fig_type]
+    return result_list[max_index]
 
 
 def CreateRandomPerson(fig_type, max_p, min_p, l):
@@ -195,7 +195,7 @@ def CreateRandomPerson(fig_type, max_p, min_p, l):
         x = Random(min_p[0], max_p[0])
         y = Random(min_p[1], max_p[1])
         # 0 < r < 2/3*l
-        r = Random(l/10, 2/3*l)
+        r = Random(0.2*l, 2/3*l)
 
         figure = F.circle([x,y,r])
 
@@ -206,7 +206,7 @@ def CreateRandomPerson(fig_type, max_p, min_p, l):
         x = Random(min_p[0], max_p[0])
         y = Random(min_p[1], max_p[1])
         # 0 < r < 2/3*l
-        r = Random(l/10, 2/3*l)
+        r = Random(0.2*l, 2/3*l)
         # 0 < t < pi*2/3
         t = Random(0, np.pi*2/3)
 
@@ -219,8 +219,8 @@ def CreateRandomPerson(fig_type, max_p, min_p, l):
         x = Random(min_p[0], max_p[0])
         y = Random(min_p[1], max_p[1])
         # 0 < w,h < l
-        w = Random(l/10, l)
-        h = Random(l/10, l)
+        w = Random(0.2*l, l)
+        h = Random(0.2*l, l)
         # 0 < t < pi
         t = Random(0, np.pi)
 

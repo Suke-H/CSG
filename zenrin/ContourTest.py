@@ -36,8 +36,10 @@ def write_contour_dataset(fig_type, num, dir_path="data/dataset/tri/"):
 
     for i in range(num):
         rate = Random(0.5, 1)
+        N_rate = Random(0.5, 1)
+        N = int(500*N_rate//1)
         # 2d図形点群作成
-        fig, points, AABB, trueIndex = MakePointSet(fig_type, 500, rate=rate)
+        fig, points, AABB, trueIndex = MakePointSet(fig_type, N, rate=rate)
 
         fig_list.append(fig.p)
         AABB_list.append(AABB)
@@ -48,7 +50,7 @@ def write_contour_dataset(fig_type, num, dir_path="data/dataset/tri/"):
     np.save(dir_path+"AABB", np.array(AABB_list))
     np.save(dir_path+"trueIndex", np.array(trueIndex_list))
 
-def test_contour(fig_type, num, dir_path, out_path):
+def test_contour(fig_type, num, dir_path, out_path, csv_name):
 
     # 読み込み
     fig_list = np.load(dir_path+"fig.npy")
@@ -66,6 +68,13 @@ def test_contour(fig_type, num, dir_path, out_path):
     os.mkdir(out_path+"add")
     os.mkdir(out_path+"contour")
 
+    csv_path = out_path + csv_name
+
+    with open(csv_path, 'a', newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["AABB", "fig", "num", "rate=fig/AABB", "num*rate", "num/rate",\
+                 "TP", "TN", "FP", "FN", "acc", "prec", "rec", "F_measure"])
+
     for i in range(num):
         print("epoch:{}".format(i))
 
@@ -81,7 +90,7 @@ def test_contour(fig_type, num, dir_path, out_path):
 
         # 輪郭抽出に失敗したら失敗を記録して次へ
         if out_points is None:
-            with open(out_path+"circle.csv", 'a', newline="") as f:
+            with open(csv_path, 'a', newline="") as f:
                 writer = csv.writer(f)
                 writer.writerow([-1])
 
@@ -92,11 +101,6 @@ def test_contour(fig_type, num, dir_path, out_path):
         points = points[inside]
 
         ####################################################
-
-        with open(out_path+"circle.csv", 'a', newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["AABB", "fig", "num", "rate=fig/AABB", "num*rate", "num/rate",\
-                 "TP", "TN", "FP", "FN", "acc", "prec", "rec", "F_measure"])
 
         if fig_type==0:
             fig = F.circle(fig_p)
@@ -124,13 +128,13 @@ def test_contour(fig_type, num, dir_path, out_path):
         FN = np.count_nonzero(confusionIndex==4)
 
         acc = (TP+TN)/(TP+TN+FP+FN)
-        prec = TP/(TP+FN)
-        rec = TP/(TP+FP)
+        prec = TP/(TP+FP)
+        rec = TP/(TP+FN)
         F_measure = 2*prec*rec/(prec+rec)
 
         rec_list.extend([TP, TN, FP, FN, acc, prec, rec, F_measure])
 
-        with open(out_path+"circle.csv", 'a', newline="") as f:
+        with open(csv_path, 'a', newline="") as f:
             writer = csv.writer(f)
             writer.writerow(rec_list)
 
@@ -191,5 +195,5 @@ def test(points, i):
     out_points, out_area = MakeOuterFrame(points, "data/Contour/test/", i,
                             dilate_size=30, close_size=40, open_size=50, add_size=50)
 
-# write_contour_dataset(2, 50, dir_path="data/Contour/rect2/")
-test_contour(0, 3, dir_path="data/Contour/circle2/", out_path="data/Contour/circle_40206030_2/")
+# write_contour_dataset(0, 50, dir_path="data/Contour/circle3/")
+test_contour(0, 50, dir_path="data/Contour/circle3/", out_path="data/Contour/circle_40206030_3/", csv_name="circle_40206030_3.csv")
