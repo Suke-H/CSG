@@ -111,70 +111,63 @@ def TransPix2(points, contourArea, density, goalDensity, dir_path, num, x_pix=10
 
     return dx, dy, px, py, cx, cy, originPath
 
+
 def Morphology(dir_path, originPath, i, dilate_size=25, erode_size=10, close_size=30, open_size=30, add_size=35):
-     # ファイルを読み込み
-    #pix = cv.imread(path, cv.IMREAD_GRAYSCALE)
+    # ファイルを読み込み
+    # pix = cv.imread(path, cv.IMREAD_GRAYSCALE)
     pix = cv.imread(originPath, cv.IMREAD_COLOR)
     # 画像の大きさ取得
     height, width, _ = pix.shape
     image_size = height * width
-
     # グレースケール変換
     dst = cv.cvtColor(pix, cv.COLOR_RGB2GRAY)
-
     # モルフォロジー
-    dilate_kernel = np.ones((dilate_size,dilate_size),np.uint8)
-    dst = cv.dilate(dst, dilate_kernel, iterations = 1)
+    dilate_kernel = np.ones((dilate_size, dilate_size), np.uint8)
+    dst = cv.dilate(dst, dilate_kernel, iterations=1)
     # cv.imwrite('data/Contour/dilRGB.png', dst)
-    cv.imwrite(dir_path+'dil/'+str(i)+'.png', dst)
-
+    cv.imwrite(dir_path + 'dil/' + str(i) + '.png', dst)
     # erode_kernel = np.ones((erode_size,erode_size),np.uint8)
     # dst = cv2.erode(pix,erode_kernel,iterations = 1)
     # cv.imwrite('data/erodeRGB.png', dst)
-
-    close_kernel = np.ones((close_size, close_size),np.uint8)
+    close_kernel = np.ones((close_size, close_size), np.uint8)
     dst = cv.morphologyEx(dst, cv.MORPH_CLOSE, close_kernel)
     # cv.imwrite('data/Contour/closeRGB.png', dst)
-    cv.imwrite(dir_path+'close/'+str(i)+'.png', dst)
-
-    open_kernel = np.ones((open_size,open_size),np.uint8)
+    cv.imwrite(dir_path + 'close/' + str(i) + '.png', dst)
+    open_kernel = np.ones((open_size, open_size), np.uint8)
     dst = cv.morphologyEx(dst, cv.MORPH_OPEN, open_kernel)
-    cv.imwrite(dir_path+'open/'+str(i)+'.png', dst)
-
-    add_kernel = np.ones((add_size,add_size),np.uint8)
-    dst = cv.dilate(dst, add_kernel, iterations = 1)
-    cv.imwrite(dir_path+'add/'+str(i)+'.png', dst)
-
+    cv.imwrite(dir_path + 'open/' + str(i) + '.png', dst)
+    add_kernel = np.ones((add_size, add_size), np.uint8)
+    dst = cv.dilate(dst, add_kernel, iterations=1)
+    cv.imwrite(dir_path + 'add/' + str(i) + '.png', dst)
     # 輪郭を抽出
-    #dst, contours, hierarchy = cv.findContours(dst, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    # dst, contours, hierarchy = cv.findContours(dst, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     dst, contours, hierarchy = cv.findContours(dst, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
-    #print(contours)
-
+    # print(contours)
     # この時点での状態をデバッグ出力
     # dst = cv.imread(originPath, cv.IMREAD_COLOR)
     # after_pix = cv.drawContours(dst, contours, -1, (0, 0, 255, 255), 2, cv.LINE_AA)
     # cv.imwrite('data/Contour/output.png', dst)
-
     # 面積最大の輪郭点を取り出す
     max_area = 0
     max_contour = None
     for i, contour in enumerate(contours):
         area = cv.contourArea(contour)
-
         # print("area:{} <> max_area:{}".format(area, max_area))
-
         if area > max_area:
             max_area = area
             max_contour = contour
-
     if max_contour is None:
         return None
-
+    # epsilon = 0.05*cv.arcLength(max_contour,True)
+    # max_contour = cv.approxPolyDP(max_contour,epsilon,True)
     # contourの形式はなんか変なのでシンプルなnumpyに変換
-    max_contour = np.array(max_contour).reshape([len(max_contour), 2])
-    # print(len(max_contour))
+    max_contour = np.array(max_contour, dtype=np.float32).reshape([len(max_contour), 2])
 
-    return max_contour
+    # 凸包をとる
+    hull = cv.convexHull(max_contour)
+    # print(hull)
+    hull = np.array(hull).reshape([len(hull), 2])
+    return hull
 
 # 画像->点群
 # 画像座標の輪郭点を点群座標に変換

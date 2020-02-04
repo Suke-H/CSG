@@ -1,5 +1,6 @@
 from GAtest import *
 import open3d
+import warnings
 import os
 
 import time
@@ -7,7 +8,7 @@ import time
 def write_any_data3d(num, root_path):
     sign_type_set = np.array([0,1,2,3,4])
     scale_set = np.array([1])
-    density_set = np.array([2000, 3000, 4000])
+    density_set = np.array([1000, 2000, 3000, 4000, 5000])
     noise_rate_set = np.array([0])
     error_rate_set = np.array([0])
     error_step_set = np.array([0])
@@ -214,7 +215,7 @@ def use_data3D(sign_type, dir_path, out_path):
 
         people_list = [best_circle, best_tri, best_rect]
         score_list = [best_circle.score, best_tri.score, best_rect.score]
-
+        print(score_list)
         max_index = score_list.index(max(score_list))
         best = people_list[max_index]
 
@@ -333,9 +334,11 @@ def use_data3D(sign_type, dir_path, out_path):
     np.save(out_path+"opti_O", np.array(opti_O_list))
     np.save(out_path+"opti_AABB2d", np.array(opti_AABB2d_list))
 
-
+warnings.simplefilter('ignore')
 # test3D(1, 1, 500, 10, out_path="data/EntireTest/test2/")
 # write_data3D(0, 500, 0.2, 0.4, 0.005, 20, "data/dataset/3D/4/")
 # write_any_data3d(20, "dataset/")
-use_any_data3D("dataset/circle/", "result/circle/")
+#use_any_data3D("dataset/circle/", "result/circle/")
+use_data3D(sign_type=0, dir_path="dataset/circle/1/", out_path="result/circle/1/")
+
 # CheckView(4, 0, 0, "data/dataset/3D/0_500_test/", "data/EntireTest/testtest/")

@@ -310,27 +310,26 @@ def MakeSign2D(sign_type, scale):
         fig = F.tri([0,0,r,Random(0,np.pi*2/3)])
         fig_type = 1
         AABB = np.array([-0.45, 0.45, -0.45, 0.45])*scale
-        
+
     elif sign_type == 2:
-        r = 0.9*scale
-        fig = F.rect([0,0,r,r,Random(0,np.pi/2)])
+        r = 0.9 * scale
+        fig = F.rect([0, 0, r, r, Random(0, np.pi / 2)])
         fig_type = 2
-        AABB = np.array([-0.55, 0.55, -0.55, 0.55])*scale
-
-
+        l = 0.9 * np.sqrt(2) / 2
+        AABB = np.array([-l * 1.1, l * 1.1, -l * 1.1, l * 1.1]) * scale
     elif sign_type == 3:
-        r = 0.45*scale
-        fig = F.rect([0,0,r,r,Random(0,np.pi/2)])
+        r = 0.45 * scale
+        fig = F.rect([0, 0, r, r, Random(0, np.pi / 2)])
         fig_type = 2
-        AABB = np.array([-0.3, 0.3, -0.3, 0.3])*scale
-
-
+        l = 0.45 * np.sqrt(2) / 2
+        AABB = np.array([-l * 1.1, l * 1.1, -l * 1.1, l * 1.1]) * scale
     else:
-        w = Random(0.5,2)
-        h = Random(0.5,2)
-        fig = F.rect([0,0,w,h,Random(0,np.pi/2)])
+        w = Random(0.5, 2)
+        h = Random(0.5, 2)
+        fig = F.rect([0, 0, w, h, Random(0, np.pi / 2)])
         fig_type = 2
-        AABB = np.array([-w/2-0.05, w/2+0.05, -h/2-0.05, h/2+0.05])*scale
+        l = np.sqrt(w ** 2 + h ** 2) * np.sqrt(2) / 2
+        AABB = np.array([-l * 1.1, l * 1.1, -l * 1.1, l * 1.1]) * scale
 
     # X, Y = Disassemble2d(sign_points)
     # plt.plot(X, Y, marker=".", linestyle='None', color="red")
