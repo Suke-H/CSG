@@ -366,7 +366,3 @@ def plot_normal(ax, figure, X, Y, Z):
 
     #法線を描画
     ax.quiver(X, Y, Z, U, V, W,  length=0.1,color='red', normalize=True)
-
-
-points = np.array([[1,1],[2,2],[3,3],[4,4],[5,5]])
-print(K_neighbor2(points, 3))

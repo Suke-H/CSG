@@ -5,17 +5,20 @@ import os
 import time
 
 def write_any_data3d(num, root_path):
-    sign_type_set = np.array([0,1,2,3,4])
-    scale_set = np.array([1])
-    density_set = np.array([1000, 2500, 5000, 10000])
-    noise_rate_set = np.array([0])
-    error_rate_set = np.array([0])
-    error_step_set = np.array([0])
-    # noise_rate_set = np.array([0.2, 0.4])
-    # error_rate_set = np.array([0.2, 0.4])
-    # error_step_set = np.array([0.001, 0.005])
+    # sign_type_set = np.array([0,1,2,3,4])
+    # scale_set = np.array([1])
+    # density_set = np.array([1000, 2500, 5000, 10000])
+    # noise_rate_set = np.array([0])
+    # error_rate_set = np.array([0])
+    # error_step_set = np.array([0])
+    # # noise_rate_set = np.array([0.2, 0.4])
+    # # error_rate_set = np.array([0.2, 0.4])
+    # # error_step_set = np.array([0.001, 0.005])
 
-    para_set = np.array(list(itertools.product(sign_type_set, scale_set, density_set, noise_rate_set, error_rate_set, error_step_set)))
+    # para_set = np.array(list(itertools.product(sign_type_set, scale_set, density_set, noise_rate_set, error_rate_set, error_step_set)))
+
+    para_set = np.array([[0, 1, 2500, 0.2, 0, 0], [0, 1, 2500, 0.4, 0, 0], [1, 1, 2500, 0.2, 0, 0], [1, 1, 2500, 0.4, 0, 0], \
+                [2, 1, 1000, 0.2, 0, 0], [2, 1, 1000, 0.4, 0, 0]])
 
     for i, para in enumerate(para_set):
         sign_type, scale, density, noise_rate, error_rate, error_step = para
@@ -69,16 +72,17 @@ def write_data3D(sign_type, scale, density, noise_rate, error_rate, error_step, 
     np.save(dir_path+"v", np.array(v_list))
     np.save(dir_path+"O", np.array(O_list))
    
-def use_any_data3D(root_path, out_root_path, from_num, to_num):
+def use_any_data3D(root_path, out_root_path):
 
     start = time.time()
 
     folder_paths = sorted(glob(root_path + "**"),\
                         key=lambda s: int(re.findall(r'\d+', s)[len(re.findall(r'\d+', s))-1]))
 
-    a = [i for i in range(len(folder_paths))]
+    # a = [i for i in range(len(folder_paths))]
 
-    for i, folder in zip(a[from_num:to_num], folder_paths[from_num:to_num]):
+    # for i, folder in zip(a[from_num:to_num], folder_paths[from_num:to_num]):
+    for i, folder in enumerate(folder_paths):
         print("="*60)
         print("folder:{}".format(i))
 
@@ -219,9 +223,22 @@ def use_data3D(sign_type, dir_path, out_path):
 
         # 検出図形の中心座標を3次元に射影
         opti_para2d = best.figure.p
-        opti_center, _ = Plane3DProjection(points2d, opti_para2d, u, v, O)
+        opti_center, _ = Plane3DProjection(points2d, opti_para2d, opti_u, opti_v, opti_O)
         
         #######################################################################
+
+        # 検出結果を保存
+
+        opti_para2d_list.append(opti_para2d)
+        opti_plane_list.append(opti_plane_para)
+        opti_u_list.append(opti_u)
+        opti_v_list.append(opti_v)
+        opti_O_list.append(opti_O)
+        opti_AABB2d_list.append(opti_AABB2d)
+
+        #########################################################################
+
+        # 評価
         
         rec_list = []
 
@@ -309,20 +326,6 @@ def use_data3D(sign_type, dir_path, out_path):
             writer.writerow(rec_list)
 
 
-        ######################################################
-        opti_para2d_list.append(opti_para2d)
-        opti_plane_list.append(opti_plane_para)
-        opti_u_list.append(opti_u)
-        opti_v_list.append(opti_v)
-        opti_O_list.append(opti_O)
-        opti_AABB2d_list.append(opti_AABB2d)
-
-
-        # ViewTest(points3d, trueIndex,  # 点群
-        #         para2d, fig_type, plane_para, u, v, O, AABB2d, # 正解図形
-        #         opti_para2d, opti_fig_type, opti_plane_para, opti_u, opti_v, opti_O, opti_AABB2d) # 検出図形
-
-
     np.save(out_path+"opti_para2d", np.array(opti_para2d_list))
     np.save(out_path+"opti_plane", np.array(opti_plane_list))
     np.save(out_path+"opti_u", np.array(opti_u_list))
@@ -333,6 +336,6 @@ def use_data3D(sign_type, dir_path, out_path):
 
 # test3D(1, 1, 500, 10, out_path="data/EntireTest/test2/")
 # write_data3D(0, 500, 0.2, 0.4, 0.005, 20, "data/dataset/3D/4/")
-# write_any_data3d(1, "data/dataset/3D/TEST/")
-use_any_data3D("data/dataset/3D/SET_DENSITY/", "data/EntireTest/SET_DENSITY/", 3, 15)
+# write_any_data3d(20, "data/dataset/3D/SET_NOISE/")
+# use_any_data3D("data/dataset/3D/SET_NOISE/", "data/EntireTest/SET_NOISE/")
 # CheckView(4, 0, 0, "data/dataset/3D/0_500_test/", "data/EntireTest/testtest/")
