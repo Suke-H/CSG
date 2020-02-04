@@ -5,20 +5,20 @@ import os
 import time
 
 def write_any_data3d(num, root_path):
-    # sign_type_set = np.array([0,1,2,3,4])
-    # scale_set = np.array([1])
-    # density_set = np.array([1000, 2500, 5000, 10000])
-    # noise_rate_set = np.array([0])
-    # error_rate_set = np.array([0])
-    # error_step_set = np.array([0])
+    sign_type_set = np.array([0,1,2,3,4])
+    scale_set = np.array([1])
+    density_set = np.array([2000, 3000, 4000])
+    noise_rate_set = np.array([0])
+    error_rate_set = np.array([0])
+    error_step_set = np.array([0])
     # # noise_rate_set = np.array([0.2, 0.4])
     # # error_rate_set = np.array([0.2, 0.4])
     # # error_step_set = np.array([0.001, 0.005])
 
-    # para_set = np.array(list(itertools.product(sign_type_set, scale_set, density_set, noise_rate_set, error_rate_set, error_step_set)))
+    para_set = np.array(list(itertools.product(sign_type_set, scale_set, density_set, noise_rate_set, error_rate_set, error_step_set)))
 
-    para_set = np.array([[0, 1, 2500, 0.2, 0, 0], [0, 1, 2500, 0.4, 0, 0], [1, 1, 2500, 0.2, 0, 0], [1, 1, 2500, 0.4, 0, 0], \
-                [2, 1, 1000, 0.2, 0, 0], [2, 1, 1000, 0.4, 0, 0]])
+    # para_set = np.array([[0, 1, 2500, 0.2, 0, 0], [0, 1, 2500, 0.4, 0, 0], [1, 1, 2500, 0.2, 0, 0], [1, 1, 2500, 0.4, 0, 0], \
+    #             [2, 1, 1000, 0.2, 0, 0], [2, 1, 1000, 0.4, 0, 0]])
 
     for i, para in enumerate(para_set):
         sign_type, scale, density, noise_rate, error_rate, error_step = para
@@ -336,6 +336,6 @@ def use_data3D(sign_type, dir_path, out_path):
 
 # test3D(1, 1, 500, 10, out_path="data/EntireTest/test2/")
 # write_data3D(0, 500, 0.2, 0.4, 0.005, 20, "data/dataset/3D/4/")
-# write_any_data3d(20, "data/dataset/3D/SET_NOISE/")
-# use_any_data3D("data/dataset/3D/SET_NOISE/", "data/EntireTest/SET_NOISE/")
+# write_any_data3d(20, "dataset/")
+use_any_data3D("dataset/circle/", "result/circle/")
 # CheckView(4, 0, 0, "data/dataset/3D/0_500_test/", "data/EntireTest/testtest/")

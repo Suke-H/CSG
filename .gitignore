@@ -1,5 +1,7 @@
 .idea
 venv
+zenrin/dataset
+zenrin/result
 AST/img/*
 data
 TestData
