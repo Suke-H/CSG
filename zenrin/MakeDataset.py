@@ -95,7 +95,7 @@ def ConstructAABBObject2d(max_p, min_p):
 # <条件>
 # 1. 図形の点群+ノイズの合計値はNとし、図形点群の割合(最低0.5以上)をランダムで出す
 # 2. AABB内に図形が入っていなかったら再生成
-def MakePointSet(fig_type, N, rate=Random(0.5, 1),  low=-100, high=100, grid_step=50):
+def MakePointSet(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_step=50):
     # 平面点群の割合をランダムで決める
     #rate = Random(0.5, 1)
     size = int(N*rate//1)
@@ -310,27 +310,26 @@ def MakeSign2D(sign_type, scale):
         fig = F.tri([0,0,r,Random(0,np.pi*2/3)])
         fig_type = 1
         AABB = np.array([-0.45, 0.45, -0.45, 0.45])*scale
-        
+
     elif sign_type == 2:
-        r = 0.9*scale
-        fig = F.rect([0,0,r,r,Random(0,np.pi/2)])
+        r = 0.9 * scale
+        fig = F.rect([0, 0, r, r, Random(0, np.pi / 2)])
         fig_type = 2
-        AABB = np.array([-0.55, 0.55, -0.55, 0.55])*scale
-
-
+        l = 0.9 * np.sqrt(2) / 2
+        AABB = np.array([-l * 1.1, l * 1.1, -l * 1.1, l * 1.1]) * scale
     elif sign_type == 3:
-        r = 0.45*scale
-        fig = F.rect([0,0,r,r,Random(0,np.pi/2)])
+        r = 0.45 * scale
+        fig = F.rect([0, 0, r, r, Random(0, np.pi / 2)])
         fig_type = 2
-        AABB = np.array([-0.3, 0.3, -0.3, 0.3])*scale
-
-
+        l = 0.45 * np.sqrt(2) / 2
+        AABB = np.array([-l * 1.1, l * 1.1, -l * 1.1, l * 1.1]) * scale
     else:
-        w = Random(0.5,2)
-        h = Random(0.5,2)
-        fig = F.rect([0,0,w,h,Random(0,np.pi/2)])
+        w = Random(0.5, 2)
+        h = Random(0.5, 2)
+        fig = F.rect([0, 0, w, h, Random(0, np.pi / 2)])
         fig_type = 2
-        AABB = np.array([-w/2-0.05, w/2+0.05, -h/2-0.05, h/2+0.05])*scale
+        l = np.sqrt(w ** 2 + h ** 2) * np.sqrt(2) / 2
+        AABB = np.array([-l * 1.1, l * 1.1, -l * 1.1, l * 1.1]) * scale
 
     # X, Y = Disassemble2d(sign_points)
     # plt.plot(X, Y, marker=".", linestyle='None', color="red")

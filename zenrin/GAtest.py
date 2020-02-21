@@ -125,16 +125,16 @@ def write_dataset(fig_type, num, dir_path="data/dataset/tri/"):
     # os.mkdir(dir_path+"GA")
 
     for i in range(num):
+        print("epoch:{}".format(i))
         rate = Random(0.5, 1)
         # 2d図形点群作成
-        fig, sign2d, AABB = MakePointSet(fig_type, 500, rate=rate)
+        fig, sign2d, AABB, _ = MakePointSet(fig_type, 500, rate=rate)
 
         # 外枠作成
         # out_points, out_area = MakeOuterFrame(sign2d, dir_path, i, 
         #                         dilate_size=30, close_size=20, open_size=50, add_size=50)
-        out_points, out_area = MakeOuterFrame2(sign2d, dir_path, i, 
-                                dilate_size1=30, close_size1=20, open_size1=50, add_size1=50,
-                                dilate_size2=28, close_size2=0, open_size2=50, add_size2=5, goalDensity=10000)
+        out_points, out_area = MakeOuterFrame(sign2d, dir_path, i,
+                                dilate_size1=30, close_size1=20, open_size1=50, add_size1=50)
 
         # 外枠内の点群だけにする
         inside = np.array([CheckClossNum3(sign2d[i], out_points) for i in range(sign2d.shape[0])])
@@ -221,30 +221,32 @@ def use_dataset(fig_type, num, dir_path="data/dataset/tri/", out_path="data/GAte
         #best0, n = EntireGA(points, outPoints, outArea, CalcIoU3, out_path+str(i)+".png")
 
         # step2
-        best0, alt0 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score0/"+str(i)+".png", fig_type)
-        best1, alt1 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score1/"+str(i)+".png", fig_type, 
-                        half_reset_num=15, all_reset_num=9)
-        best2, alt2 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score2/"+str(i)+".png", fig_type,
-                        add_num=30)
+        # best0, alt0 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score0/"+str(i)+".png", fig_type)
+        # best1, alt1 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score1/"+str(i)+".png", fig_type,
+        #                 half_reset_num=15, all_reset_num=9)
+        # best2, alt2 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score2/"+str(i)+".png", fig_type,
+        #                 add_num=30)
         best3, alt3 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score3/"+str(i)+".png", fig_type,
                         add_num=30, half_reset_num=15, all_reset_num=9)
+        best3, alt3 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path + "score3/" + str(i) + ".png", fig_type,
+                               add_num=30, half_reset_num=15, all_reset_num=9)
 
         rec_list = []
 
-        IoU0 = LastIoU(fig, best0.figure, AABB, out_path+"IoU0/"+str(i)+".png")
-        IoU1 = LastIoU(fig, best1.figure, AABB, out_path+"IoU1/"+str(i)+".png")
-        IoU2 = LastIoU(fig, best2.figure, AABB, out_path+"IoU2/"+str(i)+".png")
+        # IoU0 = LastIoU(fig, best0.figure, AABB, out_path+"IoU0/"+str(i)+".png")
+        # IoU1 = LastIoU(fig, best1.figure, AABB, out_path+"IoU1/"+str(i)+".png")
+        # IoU2 = LastIoU(fig, best2.figure, AABB, out_path+"IoU2/"+str(i)+".png")
         IoU3 = LastIoU(fig, best3.figure, AABB, out_path+"IoU3/"+str(i)+".png")
 
-        rec_list.append(IoU0)
-        if IoU0 == -1:
-            rec_list.append(LastIoU(fig, alt0.figure, AABB, out_path+"IoU0/"+str(i)+"re.png"))
-        rec_list.append(IoU1)
-        if IoU1 == -1:
-            rec_list.append(LastIoU(fig, alt1.figure, AABB, out_path+"IoU1/"+str(i)+"re.png"))
-        rec_list.append(IoU2)
-        if IoU2 == -1:
-            rec_list.append(LastIoU(fig, alt2.figure, AABB, out_path+"IoU2/"+str(i)+"re.png"))
+        # rec_list.append(IoU0)
+        # if IoU0 == -1:
+        #     rec_list.append(LastIoU(fig, alt0.figure, AABB, out_path+"IoU0/"+str(i)+"re.png"))
+        # rec_list.append(IoU1)
+        # if IoU1 == -1:
+        #     rec_list.append(LastIoU(fig, alt1.figure, AABB, out_path+"IoU1/"+str(i)+"re.png"))
+        # rec_list.append(IoU2)
+        # if IoU2 == -1:
+        #     rec_list.append(LastIoU(fig, alt2.figure, AABB, out_path+"IoU2/"+str(i)+"re.png"))
         rec_list.append(IoU3)
         if IoU3 == -1:
             rec_list.append(LastIoU(fig, alt3.figure, AABB, out_path+"IoU3/"+str(i)+"re.png"))
@@ -348,7 +350,7 @@ def check_exam(fig_type, i, dir_path="data/dataset/tri/", out_path="data/GAtest/
 
 # import time
 # start = time.time()
-# write_dataset(0, 50, dir_path="data/ContourTest/circle/")
+write_dataset(0, 10, dir_path="dataset/circle_GA/")
 # use_dataset(2, 50, dir_path="data/dataset/2D/rect4/", out_path="data/GAtest/checkIB/rect4go/")
 # end = time.time()
 # print("time:{}m".format((end-start)/60))

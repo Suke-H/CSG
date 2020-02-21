@@ -41,8 +41,6 @@ def CheckView(dir_path, out_path, miss_list=[]):
 
     for i in range(opti_para2d_list.shape[0]):
 
-        while j in miss_list:
-            j += 1
 
         if len(para2d_list[i]) == 3:
             fig_type = 0
@@ -62,9 +60,9 @@ def CheckView(dir_path, out_path, miss_list=[]):
                     para2d_list[j], fig_type, plane_list[j], u_list[j], v_list[j], O_list[j], AABB2d_list[j], # 正解図形
                     opti_para2d_list[i], opti_fig_type, opti_plane_list[i], opti_u_list[i], opti_v_list[i], opti_O_list[i], opti_AABB2d_list[i])# 検出図形
 
-        with open(out_path+"pos.csv", 'a', newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow([pos])
+        # with open(out_path+"pos.csv", 'a', newline="") as f:
+        #         writer = csv.writer(f)
+        #         writer.writerow([pos])
 
         j += 1
 
@@ -109,16 +107,16 @@ def ViewTest(points3d, trueIndex,  # 点群
     GX, GY, GZ = Disassemble(goal3d)
     OX, OY, OZ = Disassemble(opti3d)
 
-    return np.linalg.norm(center-opti_center)*1000
+    ax.plot(GX, GY, GZ, marker=".", linestyle='None', color="red")
+    ax.plot(OX, OY, OZ, marker=".", linestyle='None', color="green")
+    ax.plot([center[0]], [center[1]], [center[2]], marker="o", linestyle='None', color="red")
+    ax.plot([opti_center[0]], [opti_center[1]], [opti_center[2]], marker="o", linestyle='None', color="green")
 
-    # ax.plot(GX, GY, GZ, marker=".", linestyle='None', color="red")
-    # ax.plot(OX, OY, OZ, marker=".", linestyle='None', color="green")
-    # ax.plot([center[0]], [center[1]], [center[2]], marker="o", linestyle='None', color="red")
-    # ax.plot([opti_center[0]], [opti_center[1]], [opti_center[2]], marker="o", linestyle='None', color="green")
+    plt.show()
+    plt.close()
 
-    # plt.show()
-    # plt.close()
+    return np.linalg.norm(center - opti_center) * 1000
 
 # CheckView(0, "data/dataset/3D/SET_NOISE/1/", "data/EntireTest/SET_NOISE/1/", 0, 0)
 
-CheckView("data/dataset/3D/SET_DENSITY/18/", "data/EntireTest/SET_DENSITY/14/", miss_list=[1, 11])
+CheckView("dataset/circle/0/", "result/circle/1000/")
