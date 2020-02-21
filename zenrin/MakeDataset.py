@@ -95,7 +95,7 @@ def ConstructAABBObject2d(max_p, min_p):
 # <条件>
 # 1. 図形の点群+ノイズの合計値はNとし、図形点群の割合(最低0.5以上)をランダムで出す
 # 2. AABB内に図形が入っていなかったら再生成
-def MakePointSet(fig_type, N, rate=Random(0.5, 1),  low=-100, high=100, grid_step=50):
+def MakePointSet(fig_type, N, rate=Random(0.5, 1), low=-100, high=100, grid_step=50):
     # 平面点群の割合をランダムで決める
     #rate = Random(0.5, 1)
     size = int(N*rate//1)

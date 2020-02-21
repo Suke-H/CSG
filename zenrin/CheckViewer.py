@@ -119,4 +119,4 @@ def ViewTest(points3d, trueIndex,  # 点群
 
 # CheckView(0, "data/dataset/3D/SET_NOISE/1/", "data/EntireTest/SET_NOISE/1/", 0, 0)
 
-CheckView("dataset/circle/0/", "result/circle/0/")
+CheckView("dataset/circle/0/", "result/circle/1000/")
