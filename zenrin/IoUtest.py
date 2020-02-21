@@ -269,11 +269,11 @@ def CalcIoU3(points, out_contour, out_area, figure, flag=False):
     #return Cin/Ain - Cout/Aout
     return Cin/(Ain+np.sqrt(Cin)) - Cout/(Aout+np.sqrt(Cout))
 
-def calc_score(points, figure, flag=False, AABB=None):
+def calc_score2(points, out_contour, out_area, figure, flag=False):
     # AABB内にあるのかチェック
     max_p, min_p, _, l, AABB_area = buildAABB2d(points)
 
-    print(max_p, min_p)
+    # print(max_p, min_p)
 
     if len(figure.p) == 3:
         fig = 0
@@ -311,7 +311,161 @@ def calc_score(points, figure, flag=False, AABB=None):
     in_index = np.where(W >= 0)
     Cin = len(in_index[0])
 
-    print(in_index)
+    # Ain = 推定図形の面積
+    Ain = figure.CalcArea()
+
+    # Cout = outの点群数
+    # (外枠内の点群数 - inの点群数)
+    X2 = np.delete(X, in_index)
+    Y2 = np.delete(Y, in_index)
+    W2 = out_figure.f_rep(X2, Y2)
+    out_index = np.where(W2 >= 0)
+    Cout = len(out_index[0])
+
+    # Aout = outの面積 - Ain
+    Aout = out_figure.CalcArea() - Ain
+
+    if flag == True:
+        X = X[in_index]
+        Y = Y[in_index]
+        plt.plot(X, Y, marker=".", linestyle="None", color="blue")
+        X2 = X2[out_index]
+        Y2 = Y2[out_index]
+        plt.plot(X2, Y2, marker=".", linestyle="None", color="red")
+
+        fig1 = ContourPoints(figure.f_rep, AABB=AABB, grid_step=1000, epsilon=0.01)
+        Xin, Yin = Disassemble2d(fig1)
+        plt.plot(Xin, Yin, marker=".", linestyle="None", color="blue")
+        fig2 = ContourPoints(out_figure.f_rep, AABB=AABB,grid_step=1000, epsilon=0.01)
+        Xout, Yout = Disassemble2d(fig2)
+        plt.plot(Xout, Yout, marker=".", linestyle="None", color="red")
+
+        plt.show()
+
+        print(points.shape)
+        print("{}/{} - {}/{}".format(Cin, Ain, Cout, Aout))
+
+    return Cin / Ain - Cout / Aout
+
+def calc_score1_5(points, out_contour, out_area, figure, flag=False):
+    # AABB内にあるのかチェック
+    max_p, min_p, _, l, AABB_area = buildAABB2d(points)
+
+    # print(max_p, min_p)
+
+    if len(figure.p) == 3:
+        fig = 0
+    elif len(figure.p) == 4:
+        fig = 1
+    else:
+        fig = 2
+
+    if not CheckIB2(figure.p, fig, max_p, min_p, l):
+        return -100
+
+    ########################################################
+
+    # figureの2倍の図形を作成し、それを外枠とする
+    if fig == 0:
+        out_p = figure.p[:]
+        out_p[2] *= 1.5
+        out_figure = F.circle(out_p)
+
+    elif fig == 1:
+        out_p = figure.p[:]
+        out_p[2] *= 1.5
+        out_figure = F.tri(out_p)
+
+    else:
+        out_p = figure.p[:]
+        out_p[2] *= 1.5
+        out_p[3] *= 1.5
+        out_figure = F.rect(out_p)
+
+    # W >= 0(-図形の内部)のインデックスを取り出し、
+    # その数をCinとして保存
+    X, Y = Disassemble2d(points)
+    W = figure.f_rep(X, Y)
+    in_index = np.where(W >= 0)
+    Cin = len(in_index[0])
+
+    # Ain = 推定図形の面積
+    Ain = figure.CalcArea()
+
+    # Cout = outの点群数
+    # (外枠内の点群数 - inの点群数)
+    X2 = np.delete(X, in_index)
+    Y2 = np.delete(Y, in_index)
+    W2 = out_figure.f_rep(X2, Y2)
+    out_index = np.where(W2 >= 0)
+    Cout = len(out_index[0])
+
+    # Aout = outの面積 - Ain
+    Aout = out_figure.CalcArea() - Ain
+
+    if flag == True:
+        X = X[in_index]
+        Y = Y[in_index]
+        plt.plot(X, Y, marker=".", linestyle="None", color="blue")
+        X2 = X2[out_index]
+        Y2 = Y2[out_index]
+        plt.plot(X2, Y2, marker=".", linestyle="None", color="red")
+
+        fig1 = ContourPoints(figure.f_rep, AABB=AABB, grid_step=1000, epsilon=0.01)
+        Xin, Yin = Disassemble2d(fig1)
+        plt.plot(Xin, Yin, marker=".", linestyle="None", color="blue")
+        fig2 = ContourPoints(out_figure.f_rep, AABB=AABB,grid_step=1000, epsilon=0.01)
+        Xout, Yout = Disassemble2d(fig2)
+        plt.plot(Xout, Yout, marker=".", linestyle="None", color="red")
+
+        plt.show()
+
+        print(points.shape)
+        print("{}/{} - {}/{}".format(Cin, Ain, Cout, Aout))
+
+    return Cin / Ain - Cout / Aout
+
+def calc_score1_2(points, out_contour, out_area, figure, flag=False):
+    # AABB内にあるのかチェック
+    max_p, min_p, _, l, AABB_area = buildAABB2d(points)
+
+    # print(max_p, min_p)
+
+    if len(figure.p) == 3:
+        fig = 0
+    elif len(figure.p) == 4:
+        fig = 1
+    else:
+        fig = 2
+
+    if not CheckIB2(figure.p, fig, max_p, min_p, l):
+        return -100
+
+    ########################################################
+
+    # figureの2倍の図形を作成し、それを外枠とする
+    if fig == 0:
+        out_p = figure.p[:]
+        out_p[2] *= 1.2
+        out_figure = F.circle(out_p)
+
+    elif fig == 1:
+        out_p = figure.p[:]
+        out_p[2] *= 1.2
+        out_figure = F.tri(out_p)
+
+    else:
+        out_p = figure.p[:]
+        out_p[2] *= 1.2
+        out_p[3] *= 1.2
+        out_figure = F.rect(out_p)
+
+    # W >= 0(-図形の内部)のインデックスを取り出し、
+    # その数をCinとして保存
+    X, Y = Disassemble2d(points)
+    W = figure.f_rep(X, Y)
+    in_index = np.where(W >= 0)
+    Cin = len(in_index[0])
 
     # Ain = 推定図形の面積
     Ain = figure.CalcArea()
@@ -356,14 +510,14 @@ def LastIoU(goal, opti, AABB, path):
     
     # intersectionの面積
     inter_fig = F.inter(goal, opti)
-    inter_points = ContourPoints(inter_fig.f_rep, AABB=AABB, grid_step=5000)
+    inter_points = ContourPoints(inter_fig.f_rep, AABB=AABB, grid_step=1000)
     inter_points = np.array(inter_points, dtype=np.float32)
 
     inter_area = cv2.contourArea(cv2.convexHull(inter_points))
 
     # unionの面積
     union_fig = F.union(goal, opti)
-    union_points = ContourPoints(union_fig.f_rep, AABB=AABB, grid_step=5000)
+    union_points = ContourPoints(union_fig.f_rep, AABB=AABB, grid_step=1000)
     union_points = np.array(union_points, dtype=np.float32)
     union_area = cv2.contourArea(cv2.convexHull(union_points))
 

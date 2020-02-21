@@ -226,17 +226,31 @@ def use_dataset(fig_type, num, dir_path="data/dataset/tri/", out_path="data/GAte
         #                 half_reset_num=15, all_reset_num=9)
         # best2, alt2 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score2/"+str(i)+".png", fig_type,
         #                 add_num=30)
+        start = time.time()
         best3, alt3 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path+"score3/"+str(i)+".png", fig_type,
-                        add_num=30, half_reset_num=15, all_reset_num=9)
-        best3, alt3 = EntireGA(points, outPoints, outArea, CalcIoU1, out_path + "score3/" + str(i) + ".png", fig_type,
-                               add_num=30, half_reset_num=15, all_reset_num=9)
+                        tournament_size=25, n_epoch=600, add_num=30, half_reset_num=15, all_reset_num=9)
+        mid1 = time.time()
+        best4, alt4 = EntireGA(points, outPoints, outArea, calc_score2, out_path + "score4/" + str(i) + ".png", fig_type,
+                        tournament_size=25, n_epoch=600, add_num=30, half_reset_num=15, all_reset_num=9)
+        mid2 = time.time()
+        best5, alt5 = EntireGA(points, outPoints, outArea, calc_score1_5, out_path + "score5/" + str(i) + ".png",
+                               fig_type, tournament_size=25, n_epoch=600, add_num=30, half_reset_num=15, all_reset_num=9)
+        mid3 = time.time()
+        best6, alt6 = EntireGA(points, outPoints, outArea, calc_score1_2, out_path + "score6/" + str(i) + ".png",
+                               fig_type, tournament_size=25, n_epoch=600, add_num=30, half_reset_num=15, all_reset_num=9)
+        end = time.time()
+        print("score3:{}s, score4:{}s, score5:{}s, score6:{}s".format((mid1-start), (mid2-mid1), (mid3-mid2), (end-mid3)))
 
         rec_list = []
 
         # IoU0 = LastIoU(fig, best0.figure, AABB, out_path+"IoU0/"+str(i)+".png")
         # IoU1 = LastIoU(fig, best1.figure, AABB, out_path+"IoU1/"+str(i)+".png")
         # IoU2 = LastIoU(fig, best2.figure, AABB, out_path+"IoU2/"+str(i)+".png")
-        IoU3 = LastIoU(fig, best3.figure, AABB, out_path+"IoU3/"+str(i)+".png")
+        IoU3 = LastIoU(fig, best3.figure, AABB, out_path + "IoU3/"+str(i)+".png")
+        IoU4 = LastIoU(fig, best4.figure, AABB, out_path + "IoU4/" + str(i) + ".png")
+        IoU5 = LastIoU(fig, best5.figure, AABB, out_path + "IoU5/" + str(i) + ".png")
+        IoU6 = LastIoU(fig, best6.figure, AABB, out_path + "IoU6/" + str(i) + ".png")
+
 
         # rec_list.append(IoU0)
         # if IoU0 == -1:
@@ -250,10 +264,18 @@ def use_dataset(fig_type, num, dir_path="data/dataset/tri/", out_path="data/GAte
         rec_list.append(IoU3)
         if IoU3 == -1:
             rec_list.append(LastIoU(fig, alt3.figure, AABB, out_path+"IoU3/"+str(i)+"re.png"))
-
+        rec_list.append(IoU4)
+        if IoU4 == -1:
+            rec_list.append(LastIoU(fig, alt4.figure, AABB, out_path + "IoU4/" + str(i) + "re.png"))
+        rec_list.append(IoU5)
+        if IoU5 == -1:
+            rec_list.append(LastIoU(fig, alt5.figure, AABB, out_path + "IoU5/" + str(i) + "re.png"))
+        rec_list.append(IoU6)
+        if IoU5 == -1:
+            rec_list.append(LastIoU(fig, alt6.figure, AABB, out_path + "IoU6/" + str(i) + "re.png"))
         print(rec_list)
 
-        with open(out_path+"rect4go.csv", 'a', newline="") as f:
+        with open(out_path+"circle_k.csv", 'a', newline="") as f:
             writer = csv.writer(f)
             writer.writerow(rec_list)
 
@@ -350,8 +372,8 @@ def check_exam(fig_type, i, dir_path="data/dataset/tri/", out_path="data/GAtest/
 
 # import time
 # start = time.time()
-write_dataset(0, 10, dir_path="dataset/circle_GA/")
-# use_dataset(2, 50, dir_path="data/dataset/2D/rect4/", out_path="data/GAtest/checkIB/rect4go/")
+# write_dataset(0, 10, dir_path="dataset/circle_GA/")
+use_dataset(2, 50, dir_path="data/dataset/rect4/", out_path="data/result/rect_k/")
 # end = time.time()
 # print("time:{}m".format((end-start)/60))
 #test2D(1, 3, "data/GAtest/IoU.csv")
